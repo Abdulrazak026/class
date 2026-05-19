@@ -1,6 +1,6 @@
 import React, { useState, useCallback, useMemo } from 'react';
 import { motion } from 'motion/react';
-import { Calculator, RotateCcw, ArrowUpDown, Search, BarChart3, Filter, X, Table as TableIcon, Plus, Sliders } from 'lucide-react';
+import { Calculator, RotateCcw, ArrowUpDown, Search, BarChart3, Filter, X, Table as TableIcon, Plus } from 'lucide-react';
 import { evaluateFormula } from '../utils/spreadsheetEngine';
 import type { SpreadsheetData } from '../utils/spreadsheetEngine';
 import { getPreset } from '../utils/spreadsheetPresets';
