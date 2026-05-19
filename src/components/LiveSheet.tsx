@@ -67,6 +67,7 @@ export function LiveSheet({ topicId: externalTopicId, topicTitle, content }: { t
   const [showChart, setShowChart] = useState(false);
   const [chartCol, setChartCol] = useState<number | null>(null);
   const [chartLabelCol, setChartLabelCol] = useState<number | null>(null);
+  const [chartType, setChartType] = useState<'bar' | 'line' | 'pie'>('bar');
   const [pivotMode, setPivotMode] = useState(false);
   const [pivotRowField, setPivotRowField] = useState<number | null>(null);
   const [pivotColField, setPivotColField] = useState<number | null>(null);
@@ -248,7 +249,7 @@ export function LiveSheet({ topicId: externalTopicId, topicTitle, content }: { t
   const handleReset = useCallback(() => {
     setEditedData(null);
     setSortCol(null); setFilterCol(null); setFilterText('');
-    setShowChart(false); setChartCol(null); setChartLabelCol(null);
+    setShowChart(false); setChartCol(null); setChartLabelCol(null); setChartType('bar');
     setPivotMode(false); setPivotRowField(null); setPivotColField(null); setPivotValField(null);
     setShowSlicers(false); setSlicerSelections({});
     setShowCalcField(false); setCalculatedFields([]);
@@ -434,26 +435,100 @@ export function LiveSheet({ topicId: externalTopicId, topicTitle, content }: { t
       {showChart && chartData.length > 0 && (
         <div className="px-4 py-4 bg-deeper/30 border-b border-border">
           <div className="flex items-center justify-between mb-2">
-            <span className="text-xs font-bold text-slate-600 uppercase tracking-wider">Bar Chart</span>
+            <div className="flex items-center gap-2">
+              <span className="text-xs font-bold text-slate-600 uppercase tracking-wider">
+                {chartType === 'bar' ? 'Bar Chart' : chartType === 'line' ? 'Line Chart' : 'Pie Chart'}
+              </span>
+              <div className="flex rounded-lg border border-border overflow-hidden">
+                {(['bar', 'line', 'pie'] as const).map(t => (
+                  <button key={t} onClick={() => setChartType(t)}
+                    className={`text-[10px] px-2 py-0.5 font-mono ${chartType === t ? 'bg-accent text-white' : 'bg-deeper text-slate-500 hover:bg-surface'}`}>
+                    {t === 'bar' ? 'Bar' : t === 'line' ? 'Line' : 'Pie'}
+                  </button>
+                ))}
+              </div>
+            </div>
             <button onClick={() => setShowChart(false)} className="text-slate-400 hover:text-slate-600"><X className="w-3.5 h-3.5" /></button>
           </div>
-          <div className="space-y-1.5">
-            {chartData.map((d, i) => {
-              const maxVal = Math.max(...chartData.map(x => x.value), 1);
-              const colors = ['#7c3aed','#10b981','#f59e0b','#ef4444','#8b5cf6','#06b6d4','#f97316','#ec4899','#14b8a6','#84cc16'];
-              return (
-                <div key={i} className="flex items-center gap-2">
-                  <span className="text-[10px] font-mono text-slate-500 w-16 text-right truncate">{d.label}</span>
-                  <div className="flex-1 bg-deeper rounded-full h-4 overflow-hidden">
-                    <div className="h-full rounded-full flex items-center justify-end pr-1.5 text-[9px] font-bold text-white transition-all duration-500"
-                      style={{ width: `${(d.value / maxVal) * 100}%`, backgroundColor: colors[i % colors.length] }}>
-                      {d.value > maxVal * 0.15 ? d.value : ''}
-                    </div>
-                  </div>
-                  <span className="text-[10px] font-mono text-slate-500 w-12">{d.value}</span>
-                </div>
-              );
-            })}
+          <svg viewBox="0 0 500 280" className="w-full max-w-xl mx-auto" preserveAspectRatio="xMidYMid meet">
+            {chartType === 'bar' && (() => {
+              const maxVal = Math.max(...chartData.map(d => d.value), 1);
+              const colors = ['#6366f1','#10b981','#f59e0b','#ef4444','#8b5cf6','#06b6d4','#f97316','#ec4899','#14b8a6','#84cc16'];
+              const barW = Math.min(40, 320 / chartData.length);
+              const gap = Math.min(15, (320 - barW * chartData.length) / (chartData.length + 1));
+              return (<>
+                {chartData.map((d, i) => {
+                  const x = 160 + gap + i * (barW + gap);
+                  const h = (d.value / maxVal) * 180;
+                  return <g key={i}>
+                    <rect x={x} y={250 - h} width={barW} height={h} rx={3} fill={colors[i % colors.length]} opacity={0.85}>
+                      <title>{d.label}: {d.value}</title>
+                    </rect>
+                    <text x={x + barW / 2} y={268} textAnchor="middle" className="text-[8px]" fill="#64748b">{d.label}</text>
+                    <text x={x + barW / 2} y={250 - h - 4} textAnchor="middle" className="text-[8px]" fill="#334155" fontWeight="bold">{d.value}</text>
+                  </g>;
+                })}
+                <line x1={160} y1={250} x2={480} y2={250} stroke="#cbd5e1" strokeWidth={1} />
+              </>);
+            })()}
+            {chartType === 'line' && (() => {
+              const maxVal = Math.max(...chartData.map(d => d.value), 1);
+              const pts = chartData.map((d, i) => {
+                const x = 160 + (i / Math.max(chartData.length - 1, 1)) * 300;
+                const y = 250 - (d.value / maxVal) * 180;
+                return { x, y, ...d };
+              });
+              const pathD = pts.map((p, i) => `${i === 0 ? 'M' : 'L'}${p.x},${p.y}`).join(' ');
+              return (<>
+                <path d={pathD} fill="none" stroke="#6366f1" strokeWidth={2.5} />
+                {pts.map((p, i) => <g key={i}>
+                  <circle cx={p.x} cy={p.y} r={4} fill="#6366f1" stroke="white" strokeWidth={1.5}>
+                    <title>{p.label}: {p.value}</title>
+                  </circle>
+                  <text x={p.x} y={268} textAnchor="middle" className="text-[8px]" fill="#64748b">{p.label}</text>
+                </g>)}
+                <line x1={160} y1={250} x2={480} y2={250} stroke="#cbd5e1" strokeWidth={1} />
+              </>);
+            })()}
+            {chartType === 'pie' && (() => {
+              const total = chartData.reduce((s, d) => s + d.value, 0) || 1;
+              const colors = ['#6366f1','#10b981','#f59e0b','#ef4444','#8b5cf6','#06b6d4','#f97316','#ec4899','#14b8a6','#84cc16'];
+              let cumAngle = -Math.PI / 2;
+              const cx = 250, cy = 140, r = 90;
+              const slices = chartData.map((d, i) => {
+                const angle = (d.value / total) * 2 * Math.PI;
+                const startAngle = cumAngle;
+                cumAngle += angle;
+                const x1 = cx + r * Math.cos(startAngle);
+                const y1 = cy + r * Math.sin(startAngle);
+                const x2 = cx + r * Math.cos(startAngle + angle);
+                const y2 = cy + r * Math.sin(startAngle + angle);
+                const largeArc = angle > Math.PI ? 1 : 0;
+                const path = `M${cx},${cy} L${x1},${y1} A${r},${r} 0 ${largeArc} 1 ${x2},${y2} Z`;
+                const midAngle = startAngle + angle / 2;
+                const labelR = r * 0.65;
+                const lx = cx + labelR * Math.cos(midAngle);
+                const ly = cy + labelR * Math.sin(midAngle);
+                return { path, color: colors[i % colors.length], ...d, lx, ly, pct: ((d.value / total) * 100).toFixed(1) };
+              });
+              return (<>
+                {slices.map((s, i) => <g key={i}>
+                  <path d={s.path} fill={s.color} opacity={0.85} stroke="white" strokeWidth={1.5}>
+                    <title>{s.label}: {s.value} ({s.pct}%)</title>
+                  </path>
+                  {s.pct !== '0.0' && <text x={s.lx} y={s.ly} textAnchor="middle" className="text-[9px]" fill="white" fontWeight="bold" fontSize={s.pct.length > 3 ? 8 : 10}>{s.pct}%</text>}
+                </g>)}
+                {chartData.map((d, i) => <g key={`l${i}`}>
+                  <rect x={10} y={10 + i * 18} width={10} height={10} rx={2} fill={colors[i % colors.length]} opacity={0.85} />
+                  <text x={24} y={19 + i * 18} className="text-[9px]" fill="#334155" fontWeight="medium">{d.label}</text>
+                </g>)}
+              </>);
+            })()}
+          </svg>
+          <div className="flex justify-center mt-2 gap-4 text-[10px] text-slate-400 font-mono">
+            <span>Label: Col {chartLabelCol !== null ? colLabels[chartLabelCol] : '?'}</span>
+            <span>Value: Col {chartCol !== null ? colLabels[chartCol] : '?'}</span>
+            <span>{chartData.length} data points</span>
           </div>
         </div>
       )}

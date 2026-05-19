@@ -334,7 +334,7 @@ export function CoursePlayer({ curriculum, completedTasks, toggleTask, activeTop
   }, []);
 
   const shouldShowLiveSheet = useCallback((topic: Topic): boolean => {
-    const kw = ['formula', 'budget', 'vlookup', 'xlookup', 'text function', 'logical function', 'conditional formatting', 'cleaning data', 'pivot table', 'data validation', 'excel'];
+    const kw = ['formula', 'budget', 'vlookup', 'xlookup', 'text function', 'logical function', 'conditional formatting', 'cleaning data', 'pivot table', 'data validation', 'excel', 'chart'];
     const skip = ['w_pwr1-d3', 'w14-d2', 'w15-d3'];
     if (skip.includes(topic.id)) return false;
     const t = topic.title.toLowerCase(), d = topic.description.toLowerCase();
@@ -360,6 +360,8 @@ export function CoursePlayer({ curriculum, completedTasks, toggleTask, activeTop
   }, [wordMatch]);
 
   const shouldShowBI = useCallback((topic: Topic): boolean => {
+    const skip = ['w3-d4', 'w3-d5'];
+    if (skip.includes(topic.id)) return false;
     const kw = ['dashboard', 'power bi', 'tableau', 'dax', 'calculated field', 'interactive filter', 'visual best practice', 'slicer', 'star schema', 'data modeling in bi', 'connecting data', 'chart', 'visual'];
     const t = topic.title.toLowerCase(), d = topic.description.toLowerCase();
     return kw.some(k => k.includes(' ') ? t.includes(k) || d.includes(k) : wordMatch(t, k) || wordMatch(d, k)) || topic.content?.toLowerCase().includes('dashboard builder') === true;
