@@ -54,12 +54,13 @@ self.addEventListener('fetch', (event) => {
         if (cached) return cached;
         try {
           const net = await fetch(event.request);
-          if (net.ok) {
+          if (net.ok && event.request.method === 'GET') {
             const cache = await caches.open(CACHE_NAME);
             cache.put(event.request, net.clone());
           }
           return net;
         } catch {
+          const cached = await caches.match(event.request);
           return cached || new Response('', { status: 200, headers: { 'Content-Type': 'font/woff2' } });
         }
       })()
@@ -83,7 +84,7 @@ self.addEventListener('fetch', (event) => {
       (async () => {
         try {
           const net = await fetch(event.request);
-          if (net.ok) {
+          if (net.ok && event.request.method === 'GET') {
             const cache = await caches.open(CACHE_NAME);
             cache.put(event.request, net.clone());
           }
@@ -103,7 +104,7 @@ self.addEventListener('fetch', (event) => {
       (async () => {
         try {
           const net = await fetch(event.request);
-          if (net.ok) {
+          if (net.ok && event.request.method === 'GET') {
             const cache = await caches.open(CACHE_NAME);
             cache.put(event.request, net.clone());
           }
@@ -124,7 +125,7 @@ self.addEventListener('fetch', (event) => {
       const fetchPromise = (async () => {
         try {
           const net = await fetch(event.request);
-          if (net.ok) {
+          if (net.ok && event.request.method === 'GET') {
             const cache = await caches.open(CACHE_NAME);
             cache.put(event.request, net.clone());
           }
