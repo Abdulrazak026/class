@@ -75,10 +75,17 @@ function SidebarContent({ activeTab, setActiveTab, collapsed, onToggleCollapse, 
               <span className="text-[10px] text-slate-400 font-mono">v{version}</span>
             </div>
             <div className="flex items-center gap-2 px-2 pt-1">
-              <button onClick={() => window.location.reload()}
-                className="flex-1 text-[10px] px-2 py-1.5 rounded-lg bg-deeper hover:bg-accent/10 text-slate-500 hover:text-accent transition-all font-medium text-center">
-                Reload App
-              </button>
+              {window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' ? (
+                <button onClick={() => window.location.href = '/api/restart'}
+                  className="flex-1 text-[10px] px-2 py-1.5 rounded-lg bg-deeper hover:bg-amber-50 text-slate-500 hover:text-amber-600 transition-all font-medium text-center">
+                  Restart Server
+                </button>
+              ) : (
+                <button onClick={() => window.location.reload()}
+                  className="flex-1 text-[10px] px-2 py-1.5 rounded-lg bg-deeper hover:bg-accent/10 text-slate-500 hover:text-accent transition-all font-medium text-center">
+                  Reload App
+                </button>
+              )}
               <button onClick={() => { clearLiveData(); window.location.reload(); }}
                 className="flex-1 text-[10px] px-2 py-1.5 rounded-lg bg-deeper hover:bg-red-50 text-slate-500 hover:text-red-600 transition-all font-medium text-center">
                 Clear Cache
