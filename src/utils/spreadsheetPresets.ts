@@ -482,6 +482,23 @@ presets['w19-d1'] = {
   readOnlyCells: ['C10', 'C11'],
 };
 
+presets['w3-d3'] = {
+  cols: 5, rows: 15,
+  data: d([
+    ['A1', 'Respondent'], ['B1', 'Age'], ['C1', 'Rating (1-5)'], ['D1', 'Department'], ['E1', 'Feedback Date'],
+    ['A2', 'R001'], ['B2', '25'], ['C2', '4'], ['D2', 'Engineering'], ['E2', '2024-01-15'],
+    ['A3', 'R002'], ['B3', '34'], ['C3', '5'], ['D3', 'Marketing'], ['E3', '2024-02-20'],
+    ['A4', 'R003'], ['B4', '19'], ['C4', '2'], ['D4', 'Sales'], ['E4', '2024-03-10'],
+    ['A5', 'R004'], ['B5', '45'], ['C5', '3'], ['D5', 'Engineering'], ['E5', '2024-01-28'],
+    ['A6', 'R006'], ['B6', '28'], ['C6', '1'], ['D6', 'HR'], ['E6', '2024-04-05'],
+    ['A7', 'R007'], ['B7', '52'], ['C7', '5'], ['D7', 'Sales'], ['E7', '2023-12-01'],
+    ['A8', 'R008'], ['B8', '31'], ['C8', '4'], ['D8', 'Marketing'], ['E8', '2024-05-12'],
+    ['A9', 'R009'], ['B9', '22'], ['C9', '3'], ['D9', 'Engineering'], ['E9', '2025-01-01'],
+    ['A10', 'R010'], ['B10', '17'], ['C10', '6'], ['D10', 'Intern'], ['E10', 'not-a-date'],
+  ]),
+  highlightCells: ['A1', 'B1', 'C1', 'D1', 'E1'],
+};
+
 export function getPreset(topicId: string): SpreadsheetPreset | null {
   return presets[topicId] || null;
 }

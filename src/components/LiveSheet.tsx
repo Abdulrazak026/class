@@ -81,6 +81,69 @@ export function LiveSheet({ topicId: externalTopicId, topicTitle, content }: { t
   const [calcFieldFormula, setCalcFieldFormula] = useState('');
   const [calculatedFields, setCalculatedFields] = useState<{ name: string; formula: string }[]>([]);
 
+  const [showValidation, setShowValidation] = useState(false);
+  const [validationRules, setValidationRules] = useState<{ col: number; type: string; params: Record<string, string> }[]>([]);
+  const [validationCol, setValidationCol] = useState<number>(0);
+  const [validationType, setValidationType] = useState('dropdown');
+  const [validationParam, setValidationParam] = useState('');
+
+  const invalidCells = useMemo(() => {
+    const invalid = new Set<string>();
+    if (validationRules.length === 0) return invalid;
+    for (const rule of validationRules) {
+      for (let r = 2; r <= rows; r++) {
+        const ref = `${colLabels[rule.col]}${r}`;
+        const raw = data[ref] || '';
+        const val = raw.startsWith('=') ? getCellVal(ref) : raw;
+        if (!val) continue;
+        let ok = true;
+        switch (rule.type) {
+          case 'dropdown': {
+            const allowed = (rule.params.values || '').split(',').map(v => v.trim().toLowerCase());
+            if (!allowed.includes(val.toLowerCase())) ok = false;
+            break;
+          }
+          case 'number': {
+            const num = parseFloat(val);
+            const min = rule.params.min !== undefined ? parseFloat(rule.params.min) : -Infinity;
+            const max = rule.params.max !== undefined ? parseFloat(rule.params.max) : Infinity;
+            if (isNaN(num) || num < min || num > max) ok = false;
+            break;
+          }
+          case 'textLength': {
+            const maxLen = parseInt(rule.params.maxLength) || Infinity;
+            if (val.length > maxLen) ok = false;
+            break;
+          }
+          case 'required': {
+            if (!val.trim()) ok = false;
+            break;
+          }
+          case 'contains': {
+            const substr = (rule.params.substring || '').toLowerCase();
+            if (substr && !val.toLowerCase().includes(substr)) ok = false;
+            break;
+          }
+        }
+        if (!ok) invalid.add(ref);
+      }
+    }
+    return invalid;
+  }, [validationRules, data, rows, getCellVal]);
+
+  const addValidationRule = useCallback(() => {
+    const params: Record<string, string> = {};
+    if (validationType === 'dropdown') params.values = validationParam;
+    else if (validationType === 'number') {
+      const parts = validationParam.split(',').map(s => s.trim());
+      if (parts[0]) params.min = parts[0];
+      if (parts[1]) params.max = parts[1];
+    } else if (validationType === 'textLength') params.maxLength = validationParam;
+    else if (validationType === 'contains') params.substring = validationParam;
+    setValidationRules(prev => [...prev, { col: validationCol, type: validationType, params }]);
+    setValidationParam('');
+  }, [validationCol, validationType, validationParam]);
+
   const presetInfo = useMemo(() => {
     const result = externalTopicId ? createFromPreset(externalTopicId) : null;
     if (result) return result;
@@ -189,6 +252,7 @@ export function LiveSheet({ topicId: externalTopicId, topicTitle, content }: { t
     setPivotMode(false); setPivotRowField(null); setPivotColField(null); setPivotValField(null);
     setShowSlicers(false); setSlicerSelections({});
     setShowCalcField(false); setCalculatedFields([]);
+    setShowValidation(false); setValidationRules([]);
   }, []);
 
   const toggleSort = useCallback((colIdx: number) => {
@@ -317,6 +381,10 @@ export function LiveSheet({ topicId: externalTopicId, topicTitle, content }: { t
           <button onClick={() => setShowCalcField(!showCalcField)}
             className={`text-[11px] px-2 py-1 rounded font-mono border flex items-center gap-1 ${showCalcField ? 'bg-accent/10 text-accent border-accent/30' : 'bg-deeper text-slate-500 border-border'}`}>
             <Calculator className="w-3 h-3" /> Calc Field
+          </button>
+          <button onClick={() => setShowValidation(!showValidation)}
+            className={`text-[11px] px-2 py-1 rounded font-mono border flex items-center gap-1 ${showValidation ? 'bg-accent/10 text-accent border-accent/30' : 'bg-deeper text-slate-500 border-border'}`}>
+            <Filter className="w-3 h-3" /> Validn
           </button>
         </div>
 
@@ -469,6 +537,63 @@ export function LiveSheet({ topicId: externalTopicId, topicTitle, content }: { t
           )}
           <div className="mt-2 text-[9px] text-slate-400 font-mono">
             Use column letters (A, B, C...) to reference row values. Example: <span className="text-accent">=C*D</span> multiplies columns C and D for each row.
+          </div>
+        </div>
+      )}
+
+      {/* Data Validation panel */}
+      {showValidation && (
+        <div className="px-4 py-3 bg-surface border-b border-border">
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-xs font-bold text-slate-600 uppercase tracking-wider">Data Validation</span>
+            <button onClick={() => setShowValidation(false)} className="text-slate-400 hover:text-slate-600"><X className="w-3.5 h-3.5" /></button>
+          </div>
+          <div className="flex items-center gap-2 mb-3">
+            <select value={validationCol} onChange={e => setValidationCol(parseInt(e.target.value))}
+              className="text-[11px] bg-deeper border border-border rounded px-2 py-1 text-slate-600 font-mono">
+              {Array.from({ length: cols }, (_, i) => (<option key={i} value={i}>Col {colLabels[i]}</option>))}
+            </select>
+            <select value={validationType} onChange={e => setValidationType(e.target.value)}
+              className="text-[11px] bg-deeper border border-border rounded px-2 py-1 text-slate-600 font-mono">
+              <option value="dropdown">Dropdown</option>
+              <option value="number">Number Range</option>
+              <option value="textLength">Text Length</option>
+              <option value="contains">Contains</option>
+              <option value="required">Required</option>
+            </select>
+            {validationType !== 'required' && (
+              <input value={validationParam} onChange={e => setValidationParam(e.target.value)}
+                onKeyDown={e => { if (e.key === 'Enter') addValidationRule(); }}
+                className="text-[11px] bg-deeper border border-border rounded px-2 py-1 text-slate-600 font-mono flex-1"
+                placeholder={
+                  validationType === 'dropdown' ? 'comma-separated values (e.g. Yes,No,Maybe)' :
+                  validationType === 'number' ? 'min,max (e.g. 18,120)' :
+                  validationType === 'textLength' ? 'max length (e.g. 100)' :
+                  'required substring (e.g. @)'
+                } />
+            )}
+            <button onClick={addValidationRule}
+              className="text-[11px] px-3 py-1 rounded font-mono bg-accent text-white border border-accent hover:bg-accent/90 flex items-center gap-1">
+              <Plus className="w-3 h-3" /> Add
+            </button>
+          </div>
+          {validationRules.length > 0 && (
+            <div className="flex flex-wrap gap-2">
+              {validationRules.map((rule, i) => (
+                <div key={i}
+                  className="text-[10px] bg-deeper border border-border rounded px-2 py-1 font-mono text-slate-600 flex items-center gap-2">
+                  <span className="font-bold text-accent">Col {colLabels[rule.col]}</span>
+                  <span className="text-slate-400">|</span>
+                  <span>{rule.type}</span>
+                  <span className="text-slate-400">{Object.values(rule.params).join(', ')}</span>
+                  <button onClick={() => setValidationRules(prev => prev.filter((_, j) => j !== i))}
+                    className="text-slate-400 hover:text-red-500 ml-1"><X className="w-2.5 h-2.5" /></button>
+                </div>
+              ))}
+            </div>
+          )}
+          <div className="mt-2 text-[9px] text-slate-400 font-mono">
+            Invalid cells are highlighted with a <span className="text-red-500">red border</span>.
           </div>
         </div>
       )}
@@ -650,11 +775,14 @@ export function LiveSheet({ topicId: externalTopicId, topicTitle, content }: { t
                   const display = raw.startsWith('=') ? getCellVal(ref) : raw;
                   const isSelected = selectedCell === ref;
                   const isHighlighted = isReadOnly(ref);
+                  const isInvalid = invalidCells.has(ref);
                   return (
                     <td key={ref} onClick={() => handleCellClick(ref)} onDoubleClick={() => { if (!isReadOnly(ref)) { setEditing(true); setEditValue(data[ref] || ''); } }}
-                      className={`px-2 py-1 border-b border-r border-border cursor-pointer transition-colors text-[13px] font-mono ${
+                      className={`px-2 py-1 border-b border-r cursor-pointer transition-colors text-[13px] font-mono ${
                         isSelected ? 'bg-accent/10 ring-2 ring-inset ring-accent' : 'hover:bg-deeper/50'
-                      } ${isHighlighted ? 'bg-emerald-50' : ''} ${raw.startsWith('=') ? 'text-indigo-600' : 'text-slate-700'}`}
+                      } ${isHighlighted ? 'bg-emerald-50' : ''} ${raw.startsWith('=') ? 'text-indigo-600' : 'text-slate-700'} ${
+                        isInvalid ? 'border-red-400 bg-red-50' : 'border-border'
+                      }`}
                       title={raw.startsWith('=') ? raw : ''}>
                       {display || <span className="text-slate-300">—</span>}
                     </td>
