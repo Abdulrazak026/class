@@ -1,6 +1,6 @@
 import React, { useState, useCallback, useMemo } from 'react';
 import { motion } from 'motion/react';
-import { Calculator, RotateCcw, ArrowUpDown, Search, BarChart3, Filter, X, Table as TableIcon } from 'lucide-react';
+import { Calculator, RotateCcw, ArrowUpDown, Search, BarChart3, Filter, X, Table as TableIcon, Plus, Sliders } from 'lucide-react';
 import { evaluateFormula } from '../utils/spreadsheetEngine';
 import type { SpreadsheetData } from '../utils/spreadsheetEngine';
 import { getPreset } from '../utils/spreadsheetPresets';
@@ -73,6 +73,14 @@ export function LiveSheet({ topicId: externalTopicId, topicTitle, content }: { t
   const [pivotValField, setPivotValField] = useState<number | null>(null);
   const [pivotAggFn, setPivotAggFn] = useState<'SUM' | 'COUNT' | 'AVERAGE' | 'MIN' | 'MAX'>('SUM');
 
+  const [showSlicers, setShowSlicers] = useState(false);
+  const [slicerSelections, setSlicerSelections] = useState<Record<string, string[]>>({});
+
+  const [showCalcField, setShowCalcField] = useState(false);
+  const [calcFieldName, setCalcFieldName] = useState('');
+  const [calcFieldFormula, setCalcFieldFormula] = useState('');
+  const [calculatedFields, setCalculatedFields] = useState<{ name: string; formula: string }[]>([]);
+
   const presetInfo = useMemo(() => {
     const result = externalTopicId ? createFromPreset(externalTopicId) : null;
     if (result) return result;
@@ -106,13 +114,27 @@ export function LiveSheet({ topicId: externalTopicId, topicTitle, content }: { t
 
   const visibleRows = useMemo(() => {
     const rowNums = Array.from({ length: rows }, (_, i) => i + 1);
-    if (filterCol === null || !filterText) return rowNums;
-    return rowNums.filter(r => {
-      const ref = `${colLabels[filterCol]}${r}`;
-      const val = getCellVal(ref).toLowerCase();
-      return val.includes(filterText.toLowerCase());
-    });
-  }, [rows, filterCol, filterText, getCellVal]);
+    let filtered = rowNums;
+    if (filterCol !== null && filterText) {
+      filtered = filtered.filter(r => {
+        const ref = `${colLabels[filterCol]}${r}`;
+        const val = getCellVal(ref).toLowerCase();
+        return val.includes(filterText.toLowerCase());
+      });
+    }
+    const activeSlicerCols = Object.entries(slicerSelections).filter(([, sel]) => sel.length > 0);
+    if (activeSlicerCols.length > 0) {
+      filtered = filtered.filter(r =>
+        activeSlicerCols.every(([colIdxStr, sel]) => {
+          const colIdx = parseInt(colIdxStr);
+          const ref = `${colLabels[colIdx]}${r}`;
+          const val = getCellVal(ref).toLowerCase().trim();
+          return sel.includes(val);
+        })
+      );
+    }
+    return filtered;
+  }, [rows, filterCol, filterText, getCellVal, slicerSelections]);
 
   const sortedVisibleRows = useMemo(() => {
     if (sortCol === null) return visibleRows;
@@ -165,11 +187,23 @@ export function LiveSheet({ topicId: externalTopicId, topicTitle, content }: { t
     setSortCol(null); setFilterCol(null); setFilterText('');
     setShowChart(false); setChartCol(null); setChartLabelCol(null);
     setPivotMode(false); setPivotRowField(null); setPivotColField(null); setPivotValField(null);
+    setShowSlicers(false); setSlicerSelections({});
+    setShowCalcField(false); setCalculatedFields([]);
   }, []);
 
   const toggleSort = useCallback((colIdx: number) => {
     if (sortCol === colIdx) { setSortAsc(!sortAsc); } else { setSortCol(colIdx); setSortAsc(true); }
   }, [sortCol, sortAsc]);
+
+  const toggleSlicer = useCallback((colIdx: number, value: string) => {
+    const key = String(colIdx);
+    const val = value.toLowerCase().trim();
+    setSlicerSelections(prev => {
+      const curr = prev[key] || [];
+      const next = curr.includes(val) ? curr.filter(v => v !== val) : [...curr, val];
+      return { ...prev, [key]: next.length > 0 ? next : [] };
+    });
+  }, []);
 
   const chartData = useMemo(() => {
     if (chartCol === null || chartLabelCol === null) return [];
@@ -180,6 +214,39 @@ export function LiveSheet({ topicId: externalTopicId, topicTitle, content }: { t
   }, [chartCol, chartLabelCol, visibleRows, getCellVal]);
 
   const isReadOnly = (ref: string) => readOnlyCells.has(ref);
+
+  const slicerUniqueValues = useMemo(() => {
+    const map: Record<string, string[]> = {};
+    for (let c = 0; c < cols; c++) {
+      const vals: string[] = [];
+      for (let r = 2; r <= rows; r++) {
+        const v = getCellVal(`${colLabels[c]}${r}`).trim();
+        if (v && !vals.includes(v.toLowerCase())) vals.push(v.toLowerCase());
+      }
+      map[String(c)] = vals;
+    }
+    return map;
+  }, [cols, rows, getCellVal]);
+
+  const evaluateCalcField = useCallback((formula: string, row: number): string => {
+    try {
+      let expr = formula.replace(/^=/, '').trim();
+      expr = expr.replace(/\b([A-Z])\b/g, (_, col: string) => {
+        const ref = `${col.toUpperCase()}${row}`;
+        const raw = getCellVal(ref) || '0';
+        const num = parseFloat(raw);
+        return isNaN(num) ? '0' : String(num);
+      });
+      return String(Function('"use strict"; return (' + expr + ')')());
+    } catch { return '#ERROR'; }
+  }, [getCellVal]);
+
+  const addCalculatedField = useCallback(() => {
+    if (!calcFieldName.trim() || !calcFieldFormula.trim()) return;
+    setCalculatedFields(prev => [...prev, { name: calcFieldName.trim(), formula: calcFieldFormula.trim() }]);
+    setCalcFieldName('');
+    setCalcFieldFormula('');
+  }, [calcFieldName, calcFieldFormula]);
 
   return (
     <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
@@ -242,6 +309,14 @@ export function LiveSheet({ topicId: externalTopicId, topicTitle, content }: { t
           <button onClick={() => { setPivotMode(!pivotMode); if (!pivotMode) { setShowChart(false); } }}
             className={`text-[11px] px-2 py-1 rounded font-mono border flex items-center gap-1 ${pivotMode ? 'bg-accent/10 text-accent border-accent/30' : 'bg-deeper text-slate-500 border-border'}`}>
             <TableIcon className="w-3 h-3" /> Pivot
+          </button>
+          <button onClick={() => setShowSlicers(!showSlicers)}
+            className={`text-[11px] px-2 py-1 rounded font-mono border flex items-center gap-1 ${showSlicers ? 'bg-accent/10 text-accent border-accent/30' : 'bg-deeper text-slate-500 border-border'}`}>
+            <Filter className="w-3 h-3" /> Slicers
+          </button>
+          <button onClick={() => setShowCalcField(!showCalcField)}
+            className={`text-[11px] px-2 py-1 rounded font-mono border flex items-center gap-1 ${showCalcField ? 'bg-accent/10 text-accent border-accent/30' : 'bg-deeper text-slate-500 border-border'}`}>
+            <Calculator className="w-3 h-3" /> Calc Field
           </button>
         </div>
 
@@ -311,6 +386,89 @@ export function LiveSheet({ topicId: externalTopicId, topicTitle, content }: { t
                 </div>
               );
             })}
+          </div>
+        </div>
+      )}
+
+      {/* Slicers panel */}
+      {showSlicers && (
+        <div className="px-4 py-3 bg-surface border-b border-border">
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-xs font-bold text-slate-600 uppercase tracking-wider">Slicers</span>
+            <div className="flex items-center gap-2">
+              {Object.values(slicerSelections).some(s => s.length > 0) && (
+                <button onClick={() => setSlicerSelections({})}
+                  className="text-[10px] text-accent hover:underline font-mono">Clear all</button>
+              )}
+              <button onClick={() => setShowSlicers(false)} className="text-slate-400 hover:text-slate-600"><X className="w-3.5 h-3.5" /></button>
+            </div>
+          </div>
+          <div className="flex flex-wrap gap-4">
+            {Array.from({ length: cols }, (_, c) => {
+              const colVals = slicerUniqueValues[String(c)] || [];
+              if (colVals.length === 0) return null;
+              const activeSel = slicerSelections[String(c)] || [];
+              return (
+                <div key={c} className="min-w-[120px]">
+                  <div className="text-[10px] font-bold text-slate-500 mb-1.5 font-mono">Col {colLabels[c]}</div>
+                  <div className="flex flex-wrap gap-1 max-h-32 overflow-y-auto">
+                    {colVals.map(v => {
+                      const isOn = activeSel.includes(v);
+                      return (
+                        <button key={v} onClick={() => toggleSlicer(c, v)}
+                          className={`text-[10px] px-2 py-0.5 rounded font-mono border transition-colors ${
+                            isOn
+                              ? 'bg-accent text-white border-accent'
+                              : 'bg-deeper text-slate-600 border-border hover:border-accent/40'
+                          }`}>
+                          {v}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* Calculated Field dialog */}
+      {showCalcField && (
+        <div className="px-4 py-3 bg-surface border-b border-border">
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-xs font-bold text-slate-600 uppercase tracking-wider">Calculated Field</span>
+            <button onClick={() => setShowCalcField(false)} className="text-slate-400 hover:text-slate-600"><X className="w-3.5 h-3.5" /></button>
+          </div>
+          <div className="flex items-center gap-2 mb-3">
+            <input value={calcFieldName} onChange={e => setCalcFieldName(e.target.value)}
+              className="text-[11px] bg-deeper border border-border rounded px-2 py-1 text-slate-600 font-mono w-32"
+              placeholder="Field name (e.g. Profit)" />
+            <input value={calcFieldFormula} onChange={e => setCalcFieldFormula(e.target.value)}
+              onKeyDown={e => { if (e.key === 'Enter') addCalculatedField(); }}
+              className="text-[11px] bg-deeper border border-border rounded px-2 py-1 text-slate-600 font-mono flex-1"
+              placeholder="Formula, e.g. =C*D or =C2*0.05" />
+            <button onClick={addCalculatedField}
+              className="text-[11px] px-3 py-1 rounded font-mono bg-accent text-white border border-accent hover:bg-accent/90 flex items-center gap-1">
+              <Plus className="w-3 h-3" /> Add
+            </button>
+          </div>
+          {calculatedFields.length > 0 && (
+            <div className="flex flex-wrap gap-2">
+              {calculatedFields.map((cf, i) => (
+                <div key={i}
+                  className="text-[10px] bg-deeper border border-border rounded px-2 py-1 font-mono text-slate-600 flex items-center gap-2">
+                  <span className="font-bold text-accent">{cf.name}</span>
+                  <span className="text-slate-400">=</span>
+                  <span>{cf.formula}</span>
+                  <button onClick={() => setCalculatedFields(prev => prev.filter((_, j) => j !== i))}
+                    className="text-slate-400 hover:text-red-500 ml-1"><X className="w-2.5 h-2.5" /></button>
+                </div>
+              ))}
+            </div>
+          )}
+          <div className="mt-2 text-[9px] text-slate-400 font-mono">
+            Use column letters (A, B, C...) to reference row values. Example: <span className="text-accent">=C*D</span> multiplies columns C and D for each row.
           </div>
         </div>
       )}
@@ -475,6 +633,11 @@ export function LiveSheet({ topicId: externalTopicId, topicTitle, content }: { t
                   {sortCol === i && <span className="ml-1 text-accent">{sortAsc ? '↑' : '↓'}</span>}
                 </th>
               ))}
+              {calculatedFields.map((cf, i) => (
+                <th key={`cf-${i}`} className="px-2 py-1.5 bg-violet-50 border-b border-border text-[10px] text-violet-600 font-bold text-center">
+                  {cf.name}
+                </th>
+              ))}
             </tr>
           </thead>
           <tbody>
@@ -494,6 +657,15 @@ export function LiveSheet({ topicId: externalTopicId, topicTitle, content }: { t
                       } ${isHighlighted ? 'bg-emerald-50' : ''} ${raw.startsWith('=') ? 'text-indigo-600' : 'text-slate-700'}`}
                       title={raw.startsWith('=') ? raw : ''}>
                       {display || <span className="text-slate-300">—</span>}
+                    </td>
+                  );
+                })}
+                {calculatedFields.map((cf, ci) => {
+                  const cfVal = evaluateCalcField(cf.formula, row);
+                  return (
+                    <td key={`cf-${ci}`} className="px-2 py-1 border-b border-r border-border text-[13px] font-mono text-violet-700 bg-violet-50/30 text-center"
+                      title={`${cf.name}: ${cf.formula}`}>
+                      {cfVal}
                     </td>
                   );
                 })}
