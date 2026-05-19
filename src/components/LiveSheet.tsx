@@ -87,6 +87,30 @@ export function LiveSheet({ topicId: externalTopicId, topicTitle, content }: { t
   const [validationType, setValidationType] = useState('dropdown');
   const [validationParam, setValidationParam] = useState('');
 
+  const presetInfo = useMemo(() => {
+    const result = externalTopicId ? createFromPreset(externalTopicId) : null;
+    if (result) return result;
+    return { data: createDefaultData(), cols: DEFAULT_COLS, rows: DEFAULT_ROWS, readOnly: new Set<string>() };
+  }, [externalTopicId]);
+
+  const data = editedData || presetInfo.data;
+  const cols = presetInfo.cols;
+  const rows = presetInfo.rows;
+  const readOnlyCells = presetInfo.readOnly;
+
+  const ssData = useMemo(() => toSpreadsheetData(data, cols, rows), [data, cols, rows]);
+
+  const getCellVal = useCallback((ref: string): string => {
+    const v = data[ref.toUpperCase()];
+    if (!v) return '';
+    if (v.startsWith('=')) {
+      try {
+        return String(evaluateFormula(v, ssData));
+      } catch { return '#ERROR'; }
+    }
+    return v;
+  }, [data, ssData]);
+
   const invalidCells = useMemo(() => {
     const invalid = new Set<string>();
     if (validationRules.length === 0) return invalid;
@@ -143,30 +167,6 @@ export function LiveSheet({ topicId: externalTopicId, topicTitle, content }: { t
     setValidationRules(prev => [...prev, { col: validationCol, type: validationType, params }]);
     setValidationParam('');
   }, [validationCol, validationType, validationParam]);
-
-  const presetInfo = useMemo(() => {
-    const result = externalTopicId ? createFromPreset(externalTopicId) : null;
-    if (result) return result;
-    return { data: createDefaultData(), cols: DEFAULT_COLS, rows: DEFAULT_ROWS, readOnly: new Set<string>() };
-  }, [externalTopicId]);
-
-  const data = editedData || presetInfo.data;
-  const cols = presetInfo.cols;
-  const rows = presetInfo.rows;
-  const readOnlyCells = presetInfo.readOnly;
-
-  const ssData = useMemo(() => toSpreadsheetData(data, cols, rows), [data, cols, rows]);
-
-  const getCellVal = useCallback((ref: string): string => {
-    const v = data[ref.toUpperCase()];
-    if (!v) return '';
-    if (v.startsWith('=')) {
-      try {
-        return String(evaluateFormula(v, ssData));
-      } catch { return '#ERROR'; }
-    }
-    return v;
-  }, [data, ssData]);
 
   const displayedValue = useMemo(() => {
     if (!selectedCell) return '';
