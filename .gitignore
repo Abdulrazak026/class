@@ -1,4 +1,6 @@
 node_modules/
+nodejs/
+src/data.ts.backup
 build/
 dist/
 coverage/
