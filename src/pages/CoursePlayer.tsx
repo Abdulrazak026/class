@@ -335,6 +335,8 @@ export function CoursePlayer({ curriculum, completedTasks, toggleTask, activeTop
 
   const shouldShowLiveSheet = useCallback((topic: Topic): boolean => {
     const kw = ['formula', 'budget', 'vlookup', 'xlookup', 'text function', 'logical function', 'conditional formatting', 'cleaning data', 'pivot table', 'data validation', 'excel'];
+    const skip = ['w_pwr1-d3', 'w14-d2', 'w15-d3'];
+    if (skip.includes(topic.id)) return false;
     const t = topic.title.toLowerCase(), d = topic.description.toLowerCase();
     return kw.some(k => k.includes(' ') ? t.includes(k) || d.includes(k) : wordMatch(t, k) || wordMatch(d, k)) || topic.content?.toLowerCase().includes('spreadsheet below') === true;
   }, [wordMatch]);

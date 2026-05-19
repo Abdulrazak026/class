@@ -439,8 +439,48 @@ presets['w6-d5'] = {
   highlightCells: [],
 };
 
-// w4-d1 through w4-d5 (Git) - no presets needed, not spreadsheet topics
-// All non-Excel weeks get no preset
+presets['w4-d5'] = {
+  cols: 7, rows: 20,
+  data: d([
+    ['A1', 'Order ID'], ['B1', 'Date'], ['C1', 'Customer'], ['D1', 'Product'], ['E1', 'Category'], ['F1', 'Qty'], ['G1', 'Amount'],
+    ['A2', 'ORD001'], ['B2', '2024-01-05'], ['C2', 'Acme Corp'], ['D2', 'Widget A'], ['E2', 'Electronics'], ['F2', '10'], ['G2', '250'],
+    ['A3', 'ORD002'], ['B3', '2024-01-12'], ['C3', 'Beta Inc'], ['D3', 'Widget B'], ['E3', 'Electronics'], ['F3', '5'], ['G3', '175'],
+    ['A4', 'ORD003'], ['B4', '2024-01-20'], ['C4', 'Gamma LLC'], ['D4', 'Widget C'], ['E4', 'Clothing'], ['F4', '20'], ['G4', '300'],
+    ['A5', 'ORD004'], ['B5', '2024-02-02'], ['C5', 'Delta Co'], ['D5', 'Widget D'], ['E5', 'Food'], ['F5', '15'], ['G5', '90'],
+    ['A6', 'ORD005'], ['B6', '2024-02-10'], ['C6', 'Acme Corp'], ['D6', 'Widget A'], ['E6', 'Electronics'], ['F6', '8'], ['G6', '200'],
+    ['A7', 'ORD007'], ['B7', '2024-02-18'], ['C7', 'Beta Inc'], ['D7', 'Widget C'], ['E7', 'Clothing'], ['F7', '12'], ['G7', '180'],
+    ['A8', 'ORD008'], ['B8', '2024-03-01'], ['C8', 'Gamma LLC'], ['D8', 'Widget B'], ['E8', 'Electronics'], ['F8', '6'], ['G8', '210'],
+    ['A9', 'ORD009'], ['B9', '2024-03-10'], ['C9', 'Echo Ltd'], ['D9', 'Widget E'], ['E9', 'Food'], ['F9', '25'], ['G9', '125'],
+    ['A10', 'ORD010'], ['B10', '2024-03-15'], ['C10', 'Acme Corp'], ['D10', 'Widget B'], ['E10', 'Electronics'], ['F10', '14'], ['G10', '490'],
+    ['A11', ''], ['B11', ''], ['C11', ''], ['D11', ''], ['E11', ''], ['F11', ''], ['G11', ''],
+    ['A13', 'Total Sales'], ['G13', '=SUM(G2:G10)'],
+    ['A14', 'Electronics Total'], ['G14', '=SUMIF(E2:E10,"Electronics",G2:G10)'],
+    ['A15', 'Clothing Total'], ['G15', '=SUMIF(E2:E10,"Clothing",G2:G10)'],
+    ['A16', 'Food Total'], ['G16', '=SUMIF(E2:E10,"Food",G2:G10)'],
+    ['A17', 'Category Breakdown'],
+    ['A18', '=VLOOKUP(E2,$A$2:$G$10,7,FALSE)'],
+  ]),
+  highlightCells: ['A2', 'G2', 'G13', 'G18'],
+  readOnlyCells: ['G13', 'G14', 'G15', 'G16', 'G18'],
+};
+
+presets['w19-d1'] = {
+  cols: 5, rows: 12,
+  data: d([
+    ['A1', 'Product'], ['B1', 'Category'], ['C1', 'Sales'], ['D1', 'Month'], ['E1', 'Region'],
+    ['A2', 'Widget A'], ['B2', 'Electronics'], ['C2', '1200'], ['D2', 'Jan'], ['E2', 'North'],
+    ['A3', 'Widget B'], ['B3', 'Electronics'], ['C3', '800'], ['D3', 'Jan'], ['E3', 'South'],
+    ['A4', 'Widget C'], ['B4', 'Clothing'], ['C4', '1500'], ['D4', 'Jan'], ['E4', 'East'],
+    ['A5', 'Widget D'], ['B5', 'Food'], ['C5', '600'], ['D5', 'Feb'], ['E5', 'North'],
+    ['A6', 'Widget E'], ['B6', 'Clothing'], ['C6', '2000'], ['D6', 'Feb'], ['E6', 'South'],
+    ['A7', 'Widget A'], ['B7', 'Electronics'], ['C7', '900'], ['D7', 'Mar'], ['E7', 'West'],
+    ['A8', 'Widget C'], ['B8', 'Clothing'], ['C8', '1100'], ['D8', 'Mar'], ['E8', 'North'],
+    ['A10', 'Sum of Sales'], ['C10', '=SUM(C2:C8)'],
+    ['A11', 'Avg Sales'], ['C11', '=AVERAGE(C2:C8)'],
+  ]),
+  highlightCells: ['C2', 'C10', 'C11'],
+  readOnlyCells: ['C10', 'C11'],
+};
 
 export function getPreset(topicId: string): SpreadsheetPreset | null {
   return presets[topicId] || null;
