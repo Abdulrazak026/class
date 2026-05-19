@@ -1,7 +1,7 @@
 ﻿import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Home, BookOpen, BarChart3, MessageSquare, X, PanelLeftClose, PanelLeft, User, Moon, Sun, Cloud, CloudOff } from 'lucide-react';
-import { getLiveVersion, hasLiveData } from '../utils/dataLoader';
+import { getLiveVersion, hasLiveData, clearLiveData } from '../utils/dataLoader';
 
 export type Tab = 'overview' | 'syllabus' | 'projects' | 'studyroom';
 
@@ -74,6 +74,16 @@ function SidebarContent({ activeTab, setActiveTab, collapsed, onToggleCollapse, 
               </button>
               <span className="text-[10px] text-slate-400 font-mono">v{version}</span>
             </div>
+            <div className="flex items-center gap-2 px-2 pt-1">
+              <button onClick={() => window.location.reload()}
+                className="flex-1 text-[10px] px-2 py-1.5 rounded-lg bg-deeper hover:bg-accent/10 text-slate-500 hover:text-accent transition-all font-medium text-center">
+                Reload App
+              </button>
+              <button onClick={() => { clearLiveData(); window.location.reload(); }}
+                className="flex-1 text-[10px] px-2 py-1.5 rounded-lg bg-deeper hover:bg-red-50 text-slate-500 hover:text-red-600 transition-all font-medium text-center">
+                Clear Cache
+              </button>
+            </div>
             <div className="px-2 pt-1">
               <p className="text-[10px] text-slate-400/60">&copy; Savannix Tech Ltd.</p>
             </div>
@@ -87,6 +97,14 @@ function SidebarContent({ activeTab, setActiveTab, collapsed, onToggleCollapse, 
             <button onClick={() => onDarkModeChange(!darkMode)}
               className="text-slate-400 hover:text-slate-600 p-1 rounded-lg hover:bg-deeper transition-all" title="Toggle dark mode">
               {darkMode ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+            </button>
+            <button onClick={() => window.location.reload()}
+              className="text-slate-400 hover:text-slate-600 p-1 rounded-lg hover:bg-deeper transition-all" title="Reload app">
+              <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 2v6h-6M3 12a9 9 0 0115-6.7L21 8M3 22v-6h6M21 12a9 9 0 01-15 6.7L3 16"/></svg>
+            </button>
+            <button onClick={() => { clearLiveData(); window.location.reload(); }}
+              className="text-red-400 hover:text-red-600 p-1 rounded-lg hover:bg-red-50 transition-all" title="Clear cache">
+              <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>
             </button>
             <p className="text-[9px] text-slate-400/40">&copy; STL</p>
           </div>
