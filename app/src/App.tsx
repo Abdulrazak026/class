@@ -24,7 +24,7 @@ const StudyRoom = lazy(() => import('./pages/StudyRoom').then(m => ({ default: m
 export default function App() {
   const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
   const hasToken = !!localStorage.getItem('access-token');
-  const lastMsgCountRef = React.useRef(0);
+  const lastMsgCountRef = useRef(0);
   const [unreadCount, setUnreadCount] = useState(0);
   const [accessGranted, setAccessGranted] = useState(() => hasToken);
   const [activeTab, setActiveTab] = useLocalStorage<Tab>('active-tab', 'overview');

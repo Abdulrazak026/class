@@ -67,7 +67,7 @@ export function parseClassworks(content: string): { type: 'markdown' | 'classwor
       const langMatch = block.match(/^language:\s*(python|sql|text)/im);
       const expectedMatch = block.match(/^expected:\s*(.+)/im);
       const hintMatch = block.match(/^hint:\s*(.+)/im);
-      const codeMatch = block.match(/```(python|sql)\s*\n([\s\S]*?)```/i);
+      const codeMatch = block.match(/```(python|sql|text)\s*\n([\s\S]*?)```/i);
 
       if (taskMatch && langMatch) {
         const lang = langMatch[1].toLowerCase() as ClassworkLanguage;
