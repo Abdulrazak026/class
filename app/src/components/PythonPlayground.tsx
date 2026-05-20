@@ -183,10 +183,12 @@ export function PythonPlayground({ topicId, topicTitle, content }: { topicId?: s
     initialized.current = true;
   }, [topicId, content]);
 
+  const timerRef = useRef<ReturnType<typeof setTimeout>>();
   const handleRun = useCallback(() => {
+    if (timerRef.current) clearTimeout(timerRef.current);
     setLoading(true);
     setOutput([]);
-    setTimeout(() => {
+    timerRef.current = setTimeout(() => {
       const result = executePython(code);
       setOutput(result.length > 0 ? result : [{ type: 'info', text: '(no output)' }]);
       setLoading(false);

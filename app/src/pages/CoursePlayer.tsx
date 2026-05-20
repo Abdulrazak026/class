@@ -314,7 +314,7 @@ export function CoursePlayer({ curriculum, completedTasks, toggleTask, activeTop
     if (checkpoints.length === 0) return;
     const allCorrect = checkpoints.every((_, idx) => checkpointResults[`${activeTopic.id}-${idx}`] === true);
     if (allCorrect && !completedTasks.includes(activeTopic.id)) toggleTask(activeTopic.id);
-  }, [checkpointResults, activeTopic, completedTasks, toggleTask]);
+  }, [checkpointResults, activeTopic?.id, activeTopic?.content, completedTasks, toggleTask]);
 
   const handleNextTopic = () => {
     if (moduleIndex === -1) return;

@@ -211,7 +211,7 @@ export function GitTerminal() {
       <div className="flex items-center gap-2 px-4 py-2.5 bg-slate-800 border-t border-slate-700">
         <span className="text-emerald-400 font-mono text-sm">$</span>
         <input value={input} onChange={e => setInput(e.target.value)} onKeyDown={e => { if (e.key === 'Enter') { handleCommand(input); setInput(''); } }}
-          className="flex-1 bg-transparent text-slate-200 font-mono text-sm focus:outline-none placeholder-slate-600" placeholder-slate-500 placeholder="Type a command (try: help)" autoFocus />
+          className="flex-1 bg-transparent text-slate-200 font-mono text-sm focus:outline-none placeholder-slate-600" placeholder="Type a command (try: help)" autoFocus />
       </div>
     </motion.div>
   );

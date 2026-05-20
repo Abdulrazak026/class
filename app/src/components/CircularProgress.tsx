@@ -14,15 +14,17 @@ export function CircularProgress({ value, size = 120, strokeWidth = 10, label }:
     startValueRef.current = value;
     const increment = value - startValue;
     let startTime: number | null = null;
+    let rafId: number;
     const animate = (timestamp: number) => {
       if (!startTime) startTime = timestamp;
       const progress = Math.min((timestamp - startTime) / duration, 1);
       const easeOutQuart = 1 - Math.pow(1 - progress, 4);
       setCurrentValue(startValue + increment * easeOutQuart);
-      if (progress < 1) requestAnimationFrame(animate);
+      if (progress < 1) rafId = requestAnimationFrame(animate);
       else setCurrentValue(value);
     };
-    requestAnimationFrame(animate);
+    rafId = requestAnimationFrame(animate);
+    return () => cancelAnimationFrame(rafId);
   }, [value]);
 
   return (

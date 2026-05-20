@@ -212,7 +212,7 @@ presets['w3-d1'] = {
 
 presets['w3-d2'] = presets['w3-d1'];
 
-presets['w3-d3'] = {
+presets['w3-d3-template'] = {
   cols: 5, rows: 14,
   data: d([
     ['A1', 'Respondent'], ['B1', 'Age'], ['C1', 'Rating (1-5)'], ['D1', 'Department'], ['E1', 'Feedback Date'],
