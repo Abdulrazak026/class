@@ -612,13 +612,30 @@ function evaluate(expr: string, vars: Record<string, any>): any {
     const args = parsedArgs.positional;
     if (fn === 'len') return args[0]?.length ?? 0;
     if (fn === 'str') return String(args[0] ?? '');
-    if (fn === 'int') return parseInt(args[0]) || 0;
-    if (fn === 'float') return parseFloat(args[0]) || 0;
+    if (fn === 'int') return typeof args[0] === 'boolean' ? (args[0] ? 1 : 0) : (parseInt(args[0]) || 0);
+    if (fn === 'float') return typeof args[0] === 'boolean' ? (args[0] ? 1 : 0) : (parseFloat(args[0]) || 0);
     if (fn === 'list') return args[0] ? Array.from(args[0]) : [];
-    if (fn === 'range') return args.length <= 1 ? Array.from({ length: args[0] || 0 }, (_, i) => i) : Array.from({ length: Math.max(0, args[1] - (args[0] || 0)) }, (_, i) => i + (args[0] || 0));
-    if (fn === 'sum') return args.reduce((a: number, b: number) => a + (Number(b) || 0), 0);
-    if (fn === 'max') return args.length ? Math.max(...args.map(Number)) : -Infinity;
-    if (fn === 'min') return args.length ? Math.min(...args.map(Number)) : Infinity;
+    if (fn === 'range') {
+      if (args.length <= 1) {
+        const n = Math.max(0, args[0] || 0);
+        return Array.from({ length: n }, (_, i) => i);
+      }
+      const start = Math.max(0, args[0] || 0);
+      const end = Math.max(0, args[1] || 0);
+      return Array.from({ length: Math.max(0, end - start) }, (_, i) => i + start);
+    }
+    if (fn === 'sum') {
+      const nums = args.length === 1 && Array.isArray(args[0]) ? args[0] : args;
+      return nums.reduce((a: number, b: number) => a + (Number(b) || 0), 0);
+    }
+    if (fn === 'max') {
+      const nums = args.length === 1 && Array.isArray(args[0]) ? args[0] : args;
+      return nums.length ? Math.max(...nums.map(Number)) : -Infinity;
+    }
+    if (fn === 'min') {
+      const nums = args.length === 1 && Array.isArray(args[0]) ? args[0] : args;
+      return nums.length ? Math.min(...nums.map(Number)) : Infinity;
+    }
     if (fn === 'abs') return Math.abs(args[0] || 0);
     if (fn === 'round') return args.length === 2 ? Math.round(args[0] * Math.pow(10, args[1])) / Math.pow(10, args[1]) : Math.round(args[0]);
     if (fn === 'type') return typeof args[0];
@@ -646,7 +663,7 @@ function evaluate(expr: string, vars: Record<string, any>): any {
     }
   }
 
-  const opMatch = s.match(/^(.+?)\s*([+\-*/%]|==|!=|>=|<=|>|<|and|or|in|not\s+in)\s*(.+)$/);
+  const opMatch = s.match(/^(.+?)\s*(==|!=|>=|<=|not\s+in|>|<|[+\-*/%]|and|or|in)\s*(.+)$/);
   if (opMatch) {
     let left = opMatch[1].trim(), right = opMatch[3].trim(), op = opMatch[2];
 

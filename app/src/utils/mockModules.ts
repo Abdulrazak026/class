@@ -19,7 +19,7 @@ export class MockDataFrame {
   get dtypes() { return Object.fromEntries(Object.entries(this._data).map(([k, v]) => [k, typeof v[0]])); }
 
   get(key: string | number): any {
-    if (typeof key === 'number') return this.iloc[key];
+    if (typeof key === 'number') return this.iloc(key);
     return this._data[key];
   }
 

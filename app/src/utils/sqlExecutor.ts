@@ -311,10 +311,8 @@ function scalarCompare(row: Record<string, string>, col: string, op: string, val
   return true;
 }
 
-function evalStringFn(fn: string, val: string, args: string[]): string {
+function evalStringFn(fn: string, val: string, args: string[], row?: Record<string, string>): string {
   if (fn === 'CASE') {
-    const whenMatch = val.match(/CASE\s+(?:WHEN\s+(.+?)\s+THEN\s+(.+?)\s+)+?(?:ELSE\s+(.+?))?\s+END/i);
-    if (!whenMatch) return val;
     let rest = val.replace(/^CASE\s+/i, '');
     const whens: { cond: string; result: string }[] = [];
     let elseVal = '';
@@ -326,6 +324,28 @@ function evalStringFn(fn: string, val: string, args: string[]): string {
       break;
     }
     for (const w of whens) {
+      if (row) {
+        const condMatch = w.cond.match(/^(.+?)\s*(=|>|<|>=|<=|!=)\s*(.+)$/);
+        if (condMatch) {
+          const col = condMatch[1].trim().toLowerCase();
+          const op = condMatch[2];
+          let condVal = condMatch[3].trim();
+          if ((condVal.startsWith("'") && condVal.endsWith("'")) || (condVal.startsWith('"') && condVal.endsWith('"'))) condVal = condVal.slice(1, -1);
+          const rowVal = row[col] || '';
+          const rn = parseFloat(rowVal), cn = parseFloat(condVal);
+          if (!isNaN(rn) && !isNaN(cn)) {
+            if (op === '=') { if (rn === cn) return w.result; }
+            else if (op === '>') { if (rn > cn) return w.result; }
+            else if (op === '<') { if (rn < cn) return w.result; }
+            else if (op === '>=') { if (rn >= cn) return w.result; }
+            else if (op === '<=') { if (rn <= cn) return w.result; }
+            else if (op === '!=') { if (rn !== cn) return w.result; }
+          } else {
+            if (op === '=') { if (rowVal.toLowerCase() === condVal.toLowerCase()) return w.result; }
+            else if (op === '!=') { if (rowVal.toLowerCase() !== condVal.toLowerCase()) return w.result; }
+          }
+        }
+      }
       const eq = w.cond.match(/^(.+?)\s*=\s*(.+)$/);
       if (eq) { if (eq[1].trim().toLowerCase() === eq[2].trim().toLowerCase()) return w.result; }
       const n = Number(w.cond);
@@ -652,7 +672,7 @@ function parseMainSelect(trimmed: string, cteCtx?: Record<string, TableData>): P
       on: (a, b) => {
         const lv = leftAlias === parsed.tableAlias ? a[leftKey] : b[leftKey];
         const rv = rightAlias === joinAlias ? b[rightKey] : a[rightKey];
-        return lv === rv;
+        return String(lv).toLowerCase() === String(rv).toLowerCase();
       },
     });
   }
@@ -760,8 +780,8 @@ export function executeSQL(query: string, cteCtx?: Record<string, TableData>): Q
       const parsed = parseSQL('SELECT * FROM ' + tableName + ' WHERE ' + whereClause);
       if (!parsed || !parsed.where) return { error: 'Could not parse WHERE clause.' };
       const toDelete = TABLES[tableName].rows.filter(parsed.where);
-      const ids = new Set(toDelete.map(r => r.id));
-      TABLES[tableName] = { ...TABLES[tableName], rows: TABLES[tableName].rows.filter(r => !ids.has(r.id)) };
+      const delIdxs = new Set(toDelete.map(r => TABLES[tableName].rows.indexOf(r)));
+      TABLES[tableName] = { ...TABLES[tableName], rows: TABLES[tableName].rows.filter((_, i) => !delIdxs.has(i)) };
       return { command: 'DELETE', table: tableName, affectedRows: toDelete.length, message: `Deleted ${toDelete.length} row(s) from "${tableName}".` };
     } else {
       const count = TABLES[tableName].rows.length;
@@ -785,14 +805,16 @@ export function executeSQL(query: string, cteCtx?: Record<string, TableData>): Q
     const matchedRows = whereClause
       ? (() => {
           const parsed = parseSQL('SELECT * FROM ' + tableName + ' WHERE ' + whereClause);
-          return parsed?.where ? table.rows.filter(parsed.where) : table.rows;
+          if (!parsed || !parsed.where) return null;
+          return table.rows.filter(parsed.where);
         })()
       : table.rows;
-    const ids = new Set(matchedRows.map(r => r.id));
+    if (whereClause && !matchedRows) return { error: 'Could not parse WHERE clause.' };
+    const matchedIdxSet = new Set(matchedRows!.map(r => table.rows.indexOf(r)));
     TABLES[tableName] = {
       ...table,
-      rows: table.rows.map(r => {
-        if (!ids.has(r.id)) return r;
+      rows: table.rows.map((r, i) => {
+        if (!matchedIdxSet.has(i)) return r;
         const updated = { ...r };
         for (const { col, val } of setPairs) {
           if (col in updated) updated[col] = val;
@@ -800,6 +822,7 @@ export function executeSQL(query: string, cteCtx?: Record<string, TableData>): Q
         return updated;
       }),
     };
+    return { command: 'UPDATE', table: tableName, affectedRows: matchedRows!.length, message: `Updated ${matchedRows!.length} row(s) in "${tableName}".` };
     return { command: 'UPDATE', table: tableName, affectedRows: matchedRows.length, message: `Updated ${matchedRows.length} row(s) in "${tableName}".` };
   }
 
@@ -925,9 +948,16 @@ export function executeSQL(query: string, cteCtx?: Record<string, TableData>): Q
         }
         if (!matched && (join.type === 'LEFT' || join.type === 'RIGHT')) {
           const merged: Record<string, string> = {};
-          for (const [k, v] of Object.entries(r1)) {
-            merged[k] = v;
-            merged[`${parsed.tableAlias || parsed.table}.${k}`] = v;
+          if (join.type === 'RIGHT') {
+            for (const [k, v] of Object.entries(r2)) {
+              merged[k] = v;
+              merged[`${join.alias}.${k}`] = v;
+            }
+          } else {
+            for (const [k, v] of Object.entries(r1)) {
+              merged[k] = v;
+              merged[`${parsed.tableAlias || parsed.table}.${k}`] = v;
+            }
           }
           joined.push(merged);
         }
@@ -990,9 +1020,13 @@ export function executeSQL(query: string, cteCtx?: Record<string, TableData>): Q
   if (parsed.stringFuncs) {
     for (const sf of parsed.stringFuncs) {
       for (const row of rows) {
-        const argVal = getColumnValue(row, sf.colKey, parsed.columnKeys, parsed.columns);
-        const fnArgs: string[] = [];
-        row[sf.alias] = evalStringFn(sf.fn, argVal, fnArgs);
+        if (sf.fn === 'CASE') {
+          row[sf.alias] = evalStringFn(sf.fn, sf.colKey, [], row);
+        } else {
+          const argVal = getColumnValue(row, sf.colKey, parsed.columnKeys, parsed.columns);
+          const fnArgs: string[] = [];
+          row[sf.alias] = evalStringFn(sf.fn, argVal, fnArgs);
+        }
       }
     }
   }
@@ -1057,7 +1091,7 @@ export function executeSQL(query: string, cteCtx?: Record<string, TableData>): Q
     });
   }
 
-  if (parsed.limit) rows = rows.slice(0, parsed.limit);
+  if (parsed.limit !== undefined && parsed.limit >= 0) rows = rows.slice(0, parsed.limit);
 
   if (parsed.windowFuncs) {
     for (const wf of parsed.windowFuncs) {

@@ -374,11 +374,11 @@ export function evaluateFormula(formula: string, data: SpreadsheetData, visited:
       const lookupVal = getStr(evaluateSimple(parts[0], data)).toLowerCase();
       const range = parseRange(parts[1]);
       const colIdx = Math.floor(getNum(evaluateSimple(parts[2], data))) - 1;
+      const firstColLetter = range[0].replace(/\d+$/, '');
       const firstColIdx = colToIndex(firstColLetter.toUpperCase());
       const lastColLetter = range[range.length - 1].replace(/\d+$/, '').toUpperCase();
       const tableCols = colToIndex(lastColLetter) - firstColIdx + 1;
       const tableRows: { first: string; row: string[] }[] = [];
-      const firstColLetter = range[0].replace(/\d+$/, '');
       for (const ref of range) {
         const rowIdx = parseInt(ref.match(/\d+/)?.[0] || '1');
         if (!tableRows.find(r => r.first === String(rowIdx))) {
