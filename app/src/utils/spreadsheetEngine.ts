@@ -16,6 +16,7 @@ function colToIndex(col: string): number {
 }
 
 function indexToCol(n: number): string {
+  if (n < 0) return '';
   let s = '';
   n++;
   while (n > 0) { n--; s = String.fromCharCode(65 + (n % 26)) + s; n = Math.floor(n / 26); }
@@ -27,10 +28,12 @@ function parseRange(range: string): string[] {
   if (!m) return [];
   const c1 = colToIndex(m[1].toUpperCase()), r1 = parseInt(m[2]) - 1;
   const c2 = colToIndex(m[3].toUpperCase()), r2 = parseInt(m[4]) - 1;
-  const colCount = Math.abs(c2 - c1) + 1, rowCount = Math.abs(r2 - r1) + 1;
-  if (colCount * rowCount > 100000) return [];
   const cells: string[] = [];
-  for (let r = r1; r <= r2; r++) for (let c = c1; c <= c2; c++) cells.push(`${indexToCol(c)}${r + 1}`);
+  const rStart = Math.min(r1, r2), rEnd = Math.max(r1, r2);
+  const cStart = Math.min(c1, c2), cEnd = Math.max(c1, c2);
+  const colCount = cEnd - cStart + 1, rowCount = rEnd - rStart + 1;
+  if (colCount * rowCount > 100000) return [];
+  for (let r = rStart; r <= rEnd; r++) for (let c = cStart; c <= cEnd; c++) cells.push(`${indexToCol(c)}${r + 1}`);
   return cells;
 }
 
@@ -463,7 +466,7 @@ export function evaluateFormula(formula: string, data: SpreadsheetData, visited:
       const places = Math.floor(getNum(evaluateSimple(inner.slice(comma + 1).trim(), data))) || 0;
       return Math.round(num * Math.pow(10, places)) / Math.pow(10, places);
     }
-    if (expr === 'TODAY()') return new Date().toLocaleDateString();
+    if (expr === 'TODAY()') return new Date().toISOString().split('T')[0];
     if (expr === 'NOW()') return new Date().toLocaleString();
 
     const resolved = expr.replace(/[A-Z]+\d+/gi, ref => {

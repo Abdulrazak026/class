@@ -308,7 +308,7 @@ function scalarCompare(row: Record<string, string>, col: string, op: string, val
     const pattern = '^' + escaped.toLowerCase() + '$';
     return new RegExp(pattern).test(rv.toLowerCase());
   }
-  return true;
+  return false;
 }
 
 function evalStringFn(fn: string, val: string, args: string[], row?: Record<string, string>): string {
@@ -968,9 +968,8 @@ export function executeSQL(query: string, cteCtx?: Record<string, TableData>): Q
 
   if (parsed.where) rows = rows.filter(parsed.where);
 
-  const hasAgg = parsed.columns.some((_, i) =>
-    /(COUNT|SUM|AVG|MIN|MAX)\(/i.test(parsed.columnKeys[i]) ||
-    /(COUNT|SUM|AVG|MIN|MAX)\(/i.test(parsed.columns[i])
+  const hasAgg = parsed.columnKeys.some(ck =>
+    /(COUNT|SUM|AVG|MIN|MAX)\(/i.test(ck)
   );
 
   if (hasAgg) {

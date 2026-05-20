@@ -243,7 +243,7 @@ export function LiveSheet({ topicId: externalTopicId, topicTitle, content }: { t
       const nextCol = (colIdx + 1) % cols;
       const nextRow = nextCol === 0 ? rowIdx + 1 : rowIdx;
       if (nextRow > rows || (nextRow === rowIdx && nextCol === 0)) {
-        (e.target as HTMLElement)?.closest('.spreadsheet-container')?.focus();
+        (e.target as HTMLElement)?.closest('.spreadsheet-container')?.querySelector('table')?.focus();
         return;
       }
       e.preventDefault();
