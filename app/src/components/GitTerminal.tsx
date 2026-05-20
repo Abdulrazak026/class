@@ -121,15 +121,22 @@ export function GitTerminal() {
       if (state.remotes.length === 0) { appendOutput("fatal: No configured remote. Use 'git remote add origin <url>' first."); return; }
       if (state.log.length === 0) { appendOutput("Everything up-to-date (no commits to push)."); return; }
       const remoteName = trimmed === 'git push' ? 'origin' : trimmed.replace('git push ', '').trim().split(/\s+/)[0] || 'origin';
-      const remote = state.remotes[0];
-      const branchLog = state.log.filter(c => c.branch === state.branch);
-      const existingBranch = remote.branches.find(b => b.name === state.branch);
-      if (existingBranch) {
-        existingBranch.log = [...branchLog];
-      } else {
-        remote.branches.push({ name: state.branch, log: [...branchLog] });
-      }
-      appendOutput(`Pushing to ${remote.url}`, `To ${remote.url}`, `   ${shortHash()}..${shortHash()}  ${state.branch} -> ${state.branch}`);
+      setState(prev => {
+        const updatedRemotes = prev.remotes.map((r, i) => {
+          if (i === 0) {
+            const existingBranch = r.branches.find(b => b.name === prev.branch);
+            const branchLog = prev.log.filter(c => c.branch === prev.branch);
+            if (existingBranch) {
+              return { ...r, branches: r.branches.map(b => b.name === prev.branch ? { ...b, log: [...branchLog] } : b) };
+            } else {
+              return { ...r, branches: [...r.branches, { name: prev.branch, log: [...branchLog] }] };
+            }
+          }
+          return r;
+        });
+        return { ...prev, remotes: updatedRemotes };
+      });
+      appendOutput(`Pushing to ${state.remotes[0]?.url || ''}`, `To ${state.remotes[0]?.url || ''}`, `   ${shortHash()}..${shortHash()}  ${state.branch} -> ${state.branch}`);
     } else if (trimmed === 'git pull' || trimmed.startsWith('git pull ')) {
       if (!initDone) { appendOutput("fatal: not a git repository"); return; }
       if (state.remotes.length === 0) { appendOutput("fatal: No configured remote."); return; }

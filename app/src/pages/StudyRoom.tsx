@@ -583,7 +583,7 @@ export function StudyRoom({ completedTasks, completedTasksOwn, completedTasksOth
 
   const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
     if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') { e.preventDefault(); handleRunCode(); }
-  }, [code, activeTab, selectedChallenge]);
+  }, [handleRunCode]);
 
   return (
     <div className="p-4 sm:p-8 space-y-6 max-w-7xl mx-auto">

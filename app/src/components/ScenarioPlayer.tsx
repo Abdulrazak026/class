@@ -76,7 +76,7 @@ export function ScenarioPlayer() {
 
   const handleNext = () => {
     if (currentScenario < SCENARIOS.length - 1) {
-      setCurrentScenario(prev => prev + 1);
+      setCurrentScenario(currentScenario + 1);
       setSelectedOption(null);
       setRevealed(false);
     } else {

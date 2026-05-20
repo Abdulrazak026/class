@@ -147,7 +147,7 @@ export function DataModelingTool() {
         ) : (
           <div className="space-y-3 max-h-96 overflow-y-auto custom-scrollbar">
             {tables.map((table, tIdx) => (
-              <div key={tIdx} className="bg-deeper rounded-xl border border-border">
+              <div key={`${table.name}-${tIdx}`} className="bg-deeper rounded-xl border border-border">
                 <div className="flex items-center justify-between px-3 py-2 border-b border-border">
                   <div className="flex items-center gap-2">
                     <Table2 className="w-4 h-4 text-blue-500" />
@@ -161,7 +161,7 @@ export function DataModelingTool() {
                 </div>
                 {table.columns.length === 0 && <p className="text-slate-500 text-xs p-3 italic">No columns. Click + to add.</p>}
                 {table.columns.map((col, cIdx) => (
-                  <div key={cIdx} className="flex items-center gap-2 px-3 py-1.5 border-b border-border/50 last:border-0">
+                  <div key={`${col.name}-${cIdx}`} className="flex items-center gap-2 px-3 py-1.5 border-b border-border/50 last:border-0">
                     {col.primaryKey ? <Key className="w-3.5 h-3.5 text-amber-500 shrink-0" /> : <div className="w-3.5 h-3.5 shrink-0" />}
                     <input value={col.name} onChange={e => updateColumn(tIdx, cIdx, { name: e.target.value })}
                       className="bg-transparent text-slate-700 text-xs font-mono focus:outline-none border-b border-transparent focus:border-blue-500/50 w-28" />

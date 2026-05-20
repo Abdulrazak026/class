@@ -33,7 +33,7 @@ export function QuizModal({ topicTitle, quiz, onClose, onPass }: QuizModalProps)
 
   const handleNext = () => {
     if (currentQuestion < questions.length - 1) {
-      setCurrentQuestion(prev => prev + 1);
+      setCurrentQuestion(currentQuestion + 1);
       setRevealed(false);
     } else {
       setFinished(true);
