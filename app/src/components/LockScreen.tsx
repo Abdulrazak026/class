@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Lock, Globe, WifiOff, Loader2, CheckCircle2, XCircle, KeyRound } from 'lucide-react';
 import { sha256, decryptFile } from '../utils/crypto';
 import { checkAccessCode } from '../firebase/accessControl';
@@ -16,6 +16,9 @@ export function LockScreen({ onUnlock }: LockScreenProps) {
   const [status, setStatus] = useState<'checking' | 'online' | 'offline'>('checking');
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState<{ text: string; error: boolean } | null>(null);
+  const unlockTimerRef = useRef<ReturnType<typeof setTimeout>>();
+
+  useEffect(() => () => { if (unlockTimerRef.current) clearTimeout(unlockTimerRef.current); }, []);
 
   useEffect(() => {
     const check = async () => {
@@ -66,7 +69,8 @@ export function LockScreen({ onUnlock }: LockScreenProps) {
       let classworksData: ArrayBuffer | null = null;
       if (classworksRes.ok) classworksData = await classworksRes.arrayBuffer();
 
-      const decryptKey = result.contentKey || 'DACAMP-2026';
+      if (!result.contentKey) { setMessage({ text: 'DECRYPT_FAIL: No decryption key available. Please try again.', error: true }); setLoading(false); return; }
+      const decryptKey = result.contentKey;
       const decrypted = await decryptFile(encData, decryptKey);
       let decryptedClassworks = null;
       if (classworksData) {
@@ -89,7 +93,7 @@ export function LockScreen({ onUnlock }: LockScreenProps) {
       localStorage.setItem('assigned-user-id', uid.toString());
 
       setMessage({ text: 'Course unlocked! Welcome.', error: false });
-      setTimeout(() => onUnlock(), 800);
+      unlockTimerRef.current = setTimeout(() => onUnlock(), 800);
     } catch (e: any) {
       if (e?.name === 'OperationError' || e?.message?.includes('decrypt')) {
         setMessage({ text: 'DECRYPT_FAIL: Invalid access code or key mismatch.', error: true });

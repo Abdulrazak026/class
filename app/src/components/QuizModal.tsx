@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { X, CheckCircle2, XCircle, Award, ArrowRight } from 'lucide-react';
 import { QuizQuestion } from '../data';
@@ -18,11 +18,13 @@ export function QuizModal({ topicTitle, quiz, onClose, onPass }: QuizModalProps)
 
   const questions = quiz || [];
 
+  const onCloseRef = useRef(onClose);
+  onCloseRef.current = onClose;
   useEffect(() => {
-    const handler = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
+    const handler = (e: KeyboardEvent) => { if (e.key === 'Escape') onCloseRef.current(); };
     window.addEventListener('keydown', handler);
     return () => window.removeEventListener('keydown', handler);
-  }, [onClose]);
+  }, []);
 
   const handleSelect = (idx: number) => {
     if (revealed) return;

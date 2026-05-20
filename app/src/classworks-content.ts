@@ -521,7 +521,7 @@ export const topicClassworks: Record<string, ParsedClasswork[]> = {
     {
       task: `Write an INSERT statement to add a new employee named "David" in the Engineering department with salary 75000.`,
       language: 'sql',
-      code: `SELECT id, name, department_id, salary FROM employees WHERE id = 1;`,
+      code: `INSERT INTO employees (name, department_id, salary) VALUES ('David', 1, 75000);`,
       expectedOutput: ``,
       hint: `INSERT INTO ... VALUES ... adds a new row.`,
     },
@@ -530,7 +530,7 @@ export const topicClassworks: Record<string, ParsedClasswork[]> = {
     {
       task: `Write an UPDATE statement that gives all employees in Engineering a 10% raise.`,
       language: 'sql',
-      code: `SELECT name, salary, salary * 1.1 AS new_salary FROM employees WHERE department_id = 1;`,
+      code: `UPDATE employees SET salary = salary * 1.1 WHERE department_id = 1;`,
       expectedOutput: ``,
       hint: `Use UPDATE ... SET ... WHERE to modify specific rows.`,
     },
@@ -539,7 +539,7 @@ export const topicClassworks: Record<string, ParsedClasswork[]> = {
     {
       task: `Write a DELETE statement to remove all orders with an amount less than 100.`,
       language: 'sql',
-      code: `SELECT id, customer, amount FROM orders WHERE amount < 100;`,
+      code: `DELETE FROM orders WHERE amount < 100;`,
       expectedOutput: ``,
       hint: `DELETE FROM ... WHERE ... removes matching rows.`,
     },

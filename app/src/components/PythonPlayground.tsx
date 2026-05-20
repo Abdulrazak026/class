@@ -169,6 +169,7 @@ export function PythonPlayground({ topicId, topicTitle, content }: { topicId?: s
   const [output, setOutput] = useState<PythonOutput[]>([]);
   const [loading, setLoading] = useState(false);
   const initialized = useRef(false);
+  const timerRef = useRef<ReturnType<typeof setTimeout>>();
 
   useEffect(() => {
     if (initialized.current) return;
@@ -181,9 +182,9 @@ export function PythonPlayground({ topicId, topicTitle, content }: { topicId?: s
       setCode(content.slice(0, 200));
     }
     initialized.current = true;
+    return () => { if (timerRef.current) clearTimeout(timerRef.current); };
   }, [topicId, content]);
 
-  const timerRef = useRef<ReturnType<typeof setTimeout>>();
   const handleRun = useCallback(() => {
     if (timerRef.current) clearTimeout(timerRef.current);
     setLoading(true);

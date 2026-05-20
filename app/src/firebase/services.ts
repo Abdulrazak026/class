@@ -1,7 +1,7 @@
 import { db, hasFirebaseConfig } from './config';
 import {
   collection, doc, getDoc, setDoc, addDoc, updateDoc, deleteDoc, onSnapshot,
-  query, orderBy, limit, serverTimestamp, Timestamp, getDocs, where,
+  query, orderBy, limit, serverTimestamp, Timestamp, getDocs, where, runTransaction,
 } from 'firebase/firestore';
 
 // --- Device ID & User Registry ---
@@ -35,34 +35,30 @@ export async function registerDevice(): Promise<number> {
   const deviceId = getDeviceId();
 
   try {
-    const user1Snap = await getDoc(doc(db, 'userRegistry', 'user1'));
-    const user2Snap = await getDoc(doc(db, 'userRegistry', 'user2'));
+    const userId = await runTransaction(db, async (transaction) => {
+      const reg1 = await transaction.get(doc(db, 'userRegistry', 'user1'));
+      const reg2 = await transaction.get(doc(db, 'userRegistry', 'user2'));
 
-    if (user1Snap.exists() && user1Snap.data().deviceId === deviceId) {
-      localStorage.setItem(USER_ID_KEY, '1');
-      return 1;
-    }
-    if (user2Snap.exists() && user2Snap.data().deviceId === deviceId) {
-      localStorage.setItem(USER_ID_KEY, '2');
-      return 2;
-    }
+      if (reg1.exists() && reg1.data().deviceId === deviceId) return 1;
+      if (reg2.exists() && reg2.data().deviceId === deviceId) return 2;
 
-    if (!user1Snap.exists()) {
-      await setDoc(doc(db, 'userRegistry', 'user1'), { deviceId, registeredAt: serverTimestamp() });
-      localStorage.setItem(USER_ID_KEY, '1');
-      return 1;
-    }
-    if (!user2Snap.exists()) {
-      await setDoc(doc(db, 'userRegistry', 'user2'), { deviceId, registeredAt: serverTimestamp() });
-      localStorage.setItem(USER_ID_KEY, '2');
-      return 2;
-    }
+      if (!reg1.exists()) {
+        transaction.set(doc(db, 'userRegistry', 'user1'), { deviceId, registeredAt: serverTimestamp() });
+        return 1;
+      }
+      if (!reg2.exists()) {
+        transaction.set(doc(db, 'userRegistry', 'user2'), { deviceId, registeredAt: serverTimestamp() });
+        return 2;
+      }
 
-    localStorage.setItem(USER_ID_KEY, '1');
-    return 1;
+      return null; // both slots taken
+    });
+
+    if (!userId) return 0; // caller must handle full slots
+    localStorage.setItem(USER_ID_KEY, String(userId));
+    return userId;
   } catch {
-    localStorage.setItem(USER_ID_KEY, '1');
-    return 1;
+    return 0;
   }
 }
 
@@ -228,6 +224,7 @@ export function subscribeToTopicComments(
     limit(200)
   );
   const cleanups: (() => void)[] = [];
+  let localFallbackUsed = false;
   const unsub = onSnapshot(q, (snap) => {
     const comments: TopicComment[] = [];
     snap.forEach((d) => {
@@ -241,7 +238,10 @@ export function subscribeToTopicComments(
     console.warn('Firebase comment subscription failed, falling back to localStorage:', err);
     if (onError) onError(err);
     unsub();
-    cleanups.push(subscribeLocalTopicComments(topicId, onComments));
+    if (!localFallbackUsed) {
+      localFallbackUsed = true;
+      cleanups.push(subscribeLocalTopicComments(topicId, onComments));
+    }
   });
   cleanups.push(unsub);
   return () => cleanups.forEach(fn => fn());

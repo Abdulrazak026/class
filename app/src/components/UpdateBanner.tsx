@@ -12,7 +12,9 @@ export function UpdateBanner() {
   const [updateReady, setUpdateReady] = useState(false);
   const appliedRef = useRef<string | null>(null);
 
+  const mountedRef = useRef(true);
   useEffect(() => {
+    mountedRef.current = true;
     if (!updateUrl.trim()) return;
 
     const timeouts: ReturnType<typeof setTimeout>[] = [];
@@ -20,6 +22,7 @@ export function UpdateBanner() {
     const check = async () => {
       setChecking(true);
       const result = await checkForAppUpdates(updateUrl.trim());
+      if (!mountedRef.current) return;
       setChecking(false);
 
       if (result.error) return;
@@ -33,19 +36,21 @@ export function UpdateBanner() {
 
         appliedRef.current = result.version;
         const fetchResult = await fetchAndApplyUpdate(updateUrl.trim());
+        if (!mountedRef.current) return;
         if (fetchResult.error) {
           setToastError(`Update failed: ${fetchResult.error}`);
-          timeouts.push(setTimeout(() => setToastError(null), 5000));
+          timeouts.push(setTimeout(() => { if (mountedRef.current) setToastError(null); }, 5000));
           return;
         }
         setToast(`Updated to v${result.version}`);
-        timeouts.push(setTimeout(() => setToast(null), 3000));
+        timeouts.push(setTimeout(() => { if (mountedRef.current) setToast(null); }, 3000));
       }
     };
 
     check();
     const interval = setInterval(check, 60000);
     return () => {
+      mountedRef.current = false;
       clearInterval(interval);
       timeouts.forEach(clearTimeout);
     };

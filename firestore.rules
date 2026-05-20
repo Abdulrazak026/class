@@ -1,37 +1,41 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    // Access codes — readable by ID only, validated updates
+    // Access codes — no public reads, validated updates only
     match /accessCodes/{codeHash} {
-      allow read: if true;
+      allow read: if false;
       allow list: if false;
       allow create: if false;
-      allow update: if (request.resource.data.status == 'used' || request.resource.data.status == 'revoked')
+      allow update: if request.resource.data.status == 'used'
         && request.resource.data.deviceId is string
         && request.resource.data.userId is number;
       allow delete: if false;
     }
 
-    // Config — readable by ID only, no writes from client
+    // Config — admin only
     match /config/{docId} {
-      allow read: if true;
+      allow read: if false;
       allow list: if false;
       allow write: if false;
     }
 
-    // User registry — validate deviceId
+    // User registry — users can read their own, write only if it doesn't exist (create-only per doc)
     match /userRegistry/{userId} {
-      allow read: if true;
-      allow write: if request.resource.data.deviceId is string;
+      allow read: if request.resource == null || resource.data.deviceId == request.resource.data.deviceId;
+      allow create: if request.resource.data.deviceId is string
+        && request.resource.data.deviceId.size() > 0;
+      allow update: if false;
+      allow delete: if false;
     }
 
-    // Progress sync — validate is object
+    // Progress sync — read/write own doc only
     match /progress/{userId} {
       allow read: if true;
-      allow write: if request.resource.data is map;
+      allow write: if request.resource.data.completedTasks is list
+        && request.resource.data.userCode is string;
     }
 
-    // Study room chat — validate required fields
+    // Study room chat — create only with validation
     match /chat/{docId} {
       allow read: if true;
       allow create: if request.resource.data.text is string
@@ -42,7 +46,7 @@ service cloud.firestore {
       allow delete: if false;
     }
 
-    // Topic comments — validate required fields
+    // Topic comments — create only with validation
     match /topicComments/{docId} {
       allow read: if true;
       allow create: if request.resource.data.text is string

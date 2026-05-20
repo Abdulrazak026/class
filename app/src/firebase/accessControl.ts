@@ -78,40 +78,39 @@ export async function checkAccessCode(codeHash: string): Promise<UnlockResult> {
 async function claimSlot(codeRef: any, deviceId: string, codeHash: string): Promise<{ userId: number; contentKey?: string } | null> {
   if (!db) return null;
   try {
-    const userId = await runTransaction(db, async (transaction) => {
+    let userId: number | null = null;
+    let contentKey: string | undefined;
+
+    await runTransaction(db, async (transaction) => {
+      const codeSnap = await transaction.get(codeRef);
+      if (!codeSnap.exists() || codeSnap.data().status === 'used') {
+        userId = null;
+        return;
+      }
+
       const registry1 = await transaction.get(doc(db, 'userRegistry', 'user1'));
       const registry2 = await transaction.get(doc(db, 'userRegistry', 'user2'));
 
-      // If device already has a slot, return it
-      if (registry1.exists() && registry1.data().deviceId === deviceId) return 1;
-      if (registry2.exists() && registry2.data().deviceId === deviceId) return 2;
-
-      // Try slot 1
-      if (!registry1.exists()) {
+      if (registry1.exists() && registry1.data().deviceId === deviceId) { userId = 1; }
+      else if (registry2.exists() && registry2.data().deviceId === deviceId) { userId = 2; }
+      else if (!registry1.exists()) {
         transaction.set(doc(db, 'userRegistry', 'user1'), { deviceId, registeredAt: serverTimestamp() });
-        return 1;
-      }
-      // Try slot 2
-      if (!registry2.exists()) {
+        userId = 1;
+      } else if (!registry2.exists()) {
         transaction.set(doc(db, 'userRegistry', 'user2'), { deviceId, registeredAt: serverTimestamp() });
-        return 2;
+        userId = 2;
+      } else {
+        userId = null;
+        return;
       }
 
-      return null; // both slots taken
+      transaction.update(codeRef, { status: 'used', deviceId, userId, usedAt: serverTimestamp() });
+
+      const keySnap = await transaction.get(doc(db, CONFIG_COLLECTION, CONTENT_KEY_DOC));
+      contentKey = keySnap.exists() ? keySnap.data().key : undefined;
     });
 
     if (!userId) return null;
-
-    await updateDoc(codeRef, {
-      status: 'used',
-      deviceId,
-      userId,
-      usedAt: serverTimestamp(),
-    });
-
-    const keySnap = await getDoc(doc(db, CONFIG_COLLECTION, CONTENT_KEY_DOC));
-    const contentKey = keySnap.exists() ? keySnap.data().key : undefined;
-
     return { userId, contentKey };
   } catch (e) {
     console.error('Slot claim error:', e);

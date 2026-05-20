@@ -228,7 +228,9 @@ export function BIDashboard({ topicId, topicTitle }: { topicId?: string; topicTi
               const dataKey = chart.dimension === 'month' ? 'sales_by_month' as DataKey
                 : chart.dimension === 'region' ? 'sales_by_region' as DataKey
                 : 'sales_by_product' as DataKey;
-              const data = SAMPLE_DATA[dataKey] as Record<string, string | number>[];
+              const rawData = SAMPLE_DATA[dataKey];
+              if (!rawData || !Array.isArray(rawData)) return null;
+              const data = rawData as Record<string, string | number>[];
 
               return (
                 <div key={chart.id} className="bg-deeper rounded-xl p-4 border border-border">
@@ -246,7 +248,7 @@ export function BIDashboard({ topicId, topicTitle }: { topicId?: string; topicTi
                   <ChartRenderer chart={chart} data={data} />
                 </div>
               );
-            })}
+            }).filter(Boolean)}
           </div>
         ) : (
           <div className="text-center py-8 text-slate-500">

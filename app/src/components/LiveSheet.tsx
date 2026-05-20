@@ -243,7 +243,7 @@ export function LiveSheet({ topicId: externalTopicId, topicTitle, content }: { t
       const nextCol = (colIdx + 1) % cols;
       const nextRow = nextCol === 0 ? rowIdx + 1 : rowIdx;
       if (nextRow > rows || (nextRow === rowIdx && nextCol === 0)) {
-        (e.target as HTMLElement)?.closest('.spreadsheet-container')?.querySelector('table')?.focus();
+        e.preventDefault();
         return;
       }
       e.preventDefault();
@@ -301,7 +301,7 @@ export function LiveSheet({ topicId: externalTopicId, topicTitle, content }: { t
   const evaluateCalcField = useCallback((formula: string, row: number): string => {
     try {
       let expr = formula.replace(/^=/, '').trim();
-      expr = expr.replace(/\b([A-Z])\b/g, (_, col: string) => {
+      expr = expr.replace(/\b([A-Z]{1,3})\b(?!\()/g, (_, col: string) => {
         const ref = `${col.toUpperCase()}${row}`;
         const raw = getCellVal(ref) || '0';
         const num = parseFloat(raw);

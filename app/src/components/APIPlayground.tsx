@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { motion } from 'motion/react';
 import { Globe, Send, RotateCcw, CheckCircle2, Terminal, Copy, Loader } from 'lucide-react';
 
@@ -68,16 +68,20 @@ export function APIPlayground() {
   const [loading, setLoading] = useState(false);
   const [statusCode, setStatusCode] = useState<number | null>(null);
   const [latency, setLatency] = useState<number | null>(null);
+  const apiTimerRef = useRef<ReturnType<typeof setTimeout>>();
+
+  useEffect(() => () => { if (apiTimerRef.current) clearTimeout(apiTimerRef.current); }, []);
 
   const endpoint = ENDPOINTS[selectedEndpoint];
 
   const handleSend = () => {
+    if (apiTimerRef.current) clearTimeout(apiTimerRef.current);
     setLoading(true);
     setResponse(null);
     setStatusCode(null);
     setLatency(null);
     const start = performance.now();
-    setTimeout(() => {
+    apiTimerRef.current = setTimeout(() => {
       const elapsed = Math.round(performance.now() - start);
       setResponse(endpoint.response);
       setStatusCode(endpoint.method === 'GET' ? 200 : 201);

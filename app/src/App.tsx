@@ -113,11 +113,13 @@ export default function App() {
     lastMsgCountRef.current = onlineMessages.length;
   }, [onlineMessages.length]);
 
+  const activeTopicIdRef = useRef(activeTopicId);
+  activeTopicIdRef.current = activeTopicId;
   useEffect(() => {
     if (!activeTopicId) return;
     const unsub = subscribeToTopicComments(
       activeTopicId,
-      (comments) => setOnlineComments(prev => ({ ...prev, [activeTopicId]: comments })),
+      (comments) => setOnlineComments(prev => ({ ...prev, [activeTopicIdRef.current]: comments })),
       (err) => console.warn('Comment sub error:', err)
     );
     return () => unsub();

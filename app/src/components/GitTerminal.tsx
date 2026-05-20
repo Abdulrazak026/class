@@ -3,6 +3,7 @@ import { motion } from 'motion/react';
 import { Terminal, RotateCcw, CheckCircle2, GitBranch } from 'lucide-react';
 
 interface RemoteState {
+  name: string;
   url: string;
   branches: { name: string; log: { hash: string; message: string; branch: string }[] }[];
 }
@@ -109,38 +110,35 @@ export function GitTerminal() {
       const parts = trimmed.replace('git remote add ', '').trim().split(/\s+/);
       const name = parts[0] || 'origin';
       const url = parts[1] || 'https://github.com/user/repo.git';
-      if (state.remotes.find(r => r.url === url)) { appendOutput(`fatal: remote '${name}' already exists.`); return; }
-      setState(prev => ({ ...prev, remotes: [...prev.remotes, { url, branches: [] }] }));
+      if (state.remotes.find(r => r.name === name)) { appendOutput(`fatal: remote '${name}' already exists.`); return; }
+      setState(prev => ({ ...prev, remotes: [...prev.remotes, { name, url, branches: [] }] }));
       appendOutput(`Added remote '${name}' at ${url}`);
     } else if (trimmed === 'git remote -v' || trimmed === 'git remote') {
       if (!initDone) { appendOutput("fatal: not a git repository"); return; }
       if (state.remotes.length === 0) appendOutput('No remotes configured.');
-      else state.remotes.forEach(r => appendOutput(`${r.url.split('/').pop()?.replace('.git','') || 'origin'}\t${r.url} (fetch)`, `${r.url.split('/').pop()?.replace('.git','') || 'origin'}\t${r.url} (push)`));
+      else state.remotes.forEach(r => appendOutput(`${r.name}\t${r.url} (fetch)`, `${r.name}\t${r.url} (push)`));
     } else if (trimmed === 'git push' || trimmed.startsWith('git push ')) {
       if (!initDone) { appendOutput("fatal: not a git repository"); return; }
       if (state.remotes.length === 0) { appendOutput("fatal: No configured remote. Use 'git remote add origin <url>' first."); return; }
       if (state.log.length === 0) { appendOutput("Everything up-to-date (no commits to push)."); return; }
       const remoteName = trimmed === 'git push' ? 'origin' : trimmed.replace('git push ', '').trim().split(/\s+/)[0] || 'origin';
       setState(prev => {
-        const updatedRemotes = prev.remotes.map((r, i) => {
-          if (i === 0) {
-            const existingBranch = r.branches.find(b => b.name === prev.branch);
-            const branchLog = prev.log.filter(c => c.branch === prev.branch);
-            if (existingBranch) {
-              return { ...r, branches: r.branches.map(b => b.name === prev.branch ? { ...b, log: [...branchLog] } : b) };
-            } else {
-              return { ...r, branches: [...r.branches, { name: prev.branch, log: [...branchLog] }] };
-            }
-          }
-          return r;
-        });
-        return { ...prev, remotes: updatedRemotes };
+        const remote = prev.remotes.find(r => r.name === remoteName);
+        if (!remote) return prev;
+        const existingBranch = remote.branches.find(b => b.name === prev.branch);
+        const branchLog = prev.log.filter(c => c.branch === prev.branch);
+        const updatedRemote = existingBranch
+          ? { ...remote, branches: remote.branches.map(b => b.name === prev.branch ? { ...b, log: [...branchLog] } : b) }
+          : { ...remote, branches: [...remote.branches, { name: prev.branch, log: [...branchLog] }] };
+        return { ...prev, remotes: prev.remotes.map(r => r.name === remoteName ? updatedRemote : r) };
       });
-      appendOutput(`Pushing to ${state.remotes[0]?.url || ''}`, `To ${state.remotes[0]?.url || ''}`, `   ${shortHash()}..${shortHash()}  ${state.branch} -> ${state.branch}`);
+      const targetRemote = state.remotes.find(r => r.name === remoteName);
+      appendOutput(`Pushing to ${targetRemote?.url || remoteName}`, `To ${targetRemote?.url || remoteName}`, `   ${shortHash()}..${shortHash()}  ${state.branch} -> ${state.branch}`);
     } else if (trimmed === 'git pull' || trimmed.startsWith('git pull ')) {
       if (!initDone) { appendOutput("fatal: not a git repository"); return; }
       if (state.remotes.length === 0) { appendOutput("fatal: No configured remote."); return; }
-      const remote = state.remotes[0];
+      const pullRemoteName = trimmed === 'git pull' ? 'origin' : trimmed.replace('git pull ', '').trim().split(/\s+/)[0] || 'origin';
+      const remote = state.remotes.find(r => r.name === pullRemoteName);
       const remoteBranch = remote.branches.find(b => b.name === state.branch);
       if (!remoteBranch || remoteBranch.log.length === 0) { appendOutput("Already up to date."); return; }
       const newCommits = remoteBranch.log.filter(rc => !state.log.find(lc => lc.hash === rc.hash));
@@ -153,7 +151,7 @@ export function GitTerminal() {
         log: [{ hash: shortHash(), message: 'Initial commit (cloned)', branch: 'main' }],
         staged: [], branch: 'main', branches: ['main'],
         files: INITIAL_FILES.map(f => ({ ...f })),
-        remotes: [{ url, branches: [{ name: 'main', log: [{ hash: shortHash(), message: 'Initial commit (cloned)', branch: 'main' }] }] }],
+        remotes: [{ name: 'origin', url, branches: [{ name: 'main', log: [{ hash: shortHash(), message: 'Initial commit (cloned)', branch: 'main' }] }] }],
       });
       setInitDone(true);
       appendOutput(`Cloning into '${url.split('/').pop()?.replace('.git','') || 'repo'}'...`, 'remote: Counting objects: 3, done.', 'Receiving objects: 100% (3/3), done.', 'Resolving deltas: 100%, done.');
