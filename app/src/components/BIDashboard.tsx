@@ -169,11 +169,9 @@ export function BIDashboard({ topicId, topicTitle }: { topicId?: string; topicTi
   const kpiSummary = useMemo(() => {
     let totalSales = 0;
     let totalProfit = 0;
-    for (const key of Object.keys(SAMPLE_DATA) as DataKey[]) {
-      for (const row of SAMPLE_DATA[key]) {
-        totalSales += Number(row.sales || 0);
-        totalProfit += Number(row.profit || 0);
-      }
+    for (const row of SAMPLE_DATA.sales_by_region) {
+      totalSales += Number(row.sales || 0);
+      totalProfit += Number(row.profit || 0);
     }
     return { totalSales, totalProfit, avgOrderValue: Math.round(totalSales / 200) };
   }, []);

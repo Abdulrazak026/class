@@ -238,13 +238,12 @@ export function LiveSheet({ topicId: externalTopicId, topicTitle, content }: { t
     else if (e.key === 'Enter' && !editing && selectedCell) { setEditing(true); }
     else if (e.key === 'Tab') {
       e.preventDefault();
-      if (selectedCell) {
-        const colIdx = selectedCell.charCodeAt(0) - 65;
-        const rowIdx = parseInt(selectedCell.slice(1));
-        const nextCol = (colIdx + 1) % cols;
-        const nextRow = nextCol === 0 ? rowIdx + 1 : rowIdx;
-        if (nextRow <= rows) setSelectedCell(`${colLabels[nextCol]}${nextRow}`);
-      }
+      if (!selectedCell) return;
+      const colIdx = selectedCell.charCodeAt(0) - 65;
+      const rowIdx = parseInt(selectedCell.slice(1));
+      const nextCol = (colIdx + 1) % cols;
+      const nextRow = nextCol === 0 ? rowIdx + 1 : rowIdx;
+      if (nextRow <= rows) setSelectedCell(`${colLabels[nextCol]}${nextRow}`);
     }
   }, [editing, selectedCell, cols, rows, handleCellBlur]);
 

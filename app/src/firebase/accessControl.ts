@@ -1,5 +1,5 @@
 import { db, hasFirebaseConfig } from './config';
-import { doc, getDoc, updateDoc, setDoc, serverTimestamp } from 'firebase/firestore';
+import { doc, getDoc, updateDoc, setDoc, serverTimestamp, runTransaction } from 'firebase/firestore';
 import { getDeviceId } from './services';
 
 const CODES_COLLECTION = 'accessCodes';
@@ -53,29 +53,13 @@ export async function checkAccessCode(codeHash: string): Promise<UnlockResult> {
       return { success: false, message: 'This code is already in use. Contact the owner for a new code.' };
     }
 
-    // Code is available — claim it
-    // Determine userId (try 1 first, then 2)
-    const userId = await assignUserId(codeHash);
-    if (!userId) {
+    // Code is available — claim it atomically
+    const claimResult = await claimSlot(codeRef, deviceId, codeHash);
+    if (!claimResult) {
       return { success: false, message: 'All user slots are full. Contact the owner.' };
     }
 
-    await updateDoc(codeRef, {
-      status: 'used',
-      deviceId,
-      userId,
-      usedAt: serverTimestamp(),
-    });
-
-    // Register in userRegistry so the app can identify this device on reload
-    await setDoc(doc(db, 'userRegistry', `user${userId}`), {
-      deviceId,
-      registeredAt: serverTimestamp(),
-    });
-
-    // Get content key
-    const keySnap = await getDoc(doc(db, CONFIG_COLLECTION, CONTENT_KEY_DOC));
-    const contentKey = keySnap.exists() ? keySnap.data().key : undefined;
+    const contentKey = claimResult.contentKey;
 
     return {
       success: true,
@@ -91,23 +75,46 @@ export async function checkAccessCode(codeHash: string): Promise<UnlockResult> {
   }
 }
 
-async function assignUserId(codeHash: string): Promise<number | null> {
+async function claimSlot(codeRef: any, deviceId: string, codeHash: string): Promise<{ userId: number; contentKey?: string } | null> {
   if (!db) return null;
   try {
-    const registry1 = await getDoc(doc(db, 'userRegistry', 'user1'));
-    const registry2 = await getDoc(doc(db, 'userRegistry', 'user2'));
-    const deviceId = getDeviceId();
+    const userId = await runTransaction(db, async (transaction) => {
+      const registry1 = await transaction.get(doc(db, 'userRegistry', 'user1'));
+      const registry2 = await transaction.get(doc(db, 'userRegistry', 'user2'));
 
-    if (registry1.exists() && registry1.data().deviceId === deviceId) return 1;
-    if (registry2.exists() && registry2.data().deviceId === deviceId) return 2;
+      // If device already has a slot, return it
+      if (registry1.exists() && registry1.data().deviceId === deviceId) return 1;
+      if (registry2.exists() && registry2.data().deviceId === deviceId) return 2;
 
-    // Check what codes have claimed which userIds
-    // Simple: try 1 first, if taken try 2
-    if (!registry1.exists() || registry1.data().deviceId === deviceId) return 1;
-    if (!registry2.exists() || registry2.data().deviceId === deviceId) return 2;
+      // Try slot 1
+      if (!registry1.exists()) {
+        transaction.set(doc(db, 'userRegistry', 'user1'), { deviceId, registeredAt: serverTimestamp() });
+        return 1;
+      }
+      // Try slot 2
+      if (!registry2.exists()) {
+        transaction.set(doc(db, 'userRegistry', 'user2'), { deviceId, registeredAt: serverTimestamp() });
+        return 2;
+      }
 
-    return null; // both slots taken
-  } catch {
+      return null; // both slots taken
+    });
+
+    if (!userId) return null;
+
+    await updateDoc(codeRef, {
+      status: 'used',
+      deviceId,
+      userId,
+      usedAt: serverTimestamp(),
+    });
+
+    const keySnap = await getDoc(doc(db, CONFIG_COLLECTION, CONTENT_KEY_DOC));
+    const contentKey = keySnap.exists() ? keySnap.data().key : undefined;
+
+    return { userId, contentKey };
+  } catch (e) {
+    console.error('Slot claim error:', e);
     return null;
   }
 }

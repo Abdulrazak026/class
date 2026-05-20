@@ -149,8 +149,10 @@ export function subscribeToChat(
   const unsub = onSnapshot(q, (snap) => {
     const msgs: ChatMessage[] = [];
     snap.forEach((d) => {
-      const data = d.data() as ChatMessage;
-      msgs.push(data);
+      const data = d.data();
+      if (data && typeof data === 'object' && typeof data.text === 'string' && typeof data.user === 'string') {
+        msgs.push({ text: data.text.slice(0, 10000), user: data.user.slice(0, 100), time: typeof data.time === 'string' ? data.time.slice(0, 100) : '' });
+      }
     });
     onMessages(msgs);
   }, (err) => { if (onError) onError(err); });

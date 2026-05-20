@@ -439,7 +439,9 @@ export function StudyRoom({ completedTasks, completedTasksOwn, completedTasksOth
   const [difficultyFilter, setDifficultyFilter] = useState<DifficultyFilter>('all');
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
-  useEffect(() => { onOpen?.(); }, [onOpen]);
+  const onOpenRef = useRef(onOpen);
+  onOpenRef.current = onOpen;
+  useEffect(() => { onOpenRef.current?.(); }, []);
 
   useEffect(() => {
     chatEnd.current?.scrollIntoView({ behavior: 'smooth' });
@@ -543,7 +545,7 @@ export function StudyRoom({ completedTasks, completedTasksOwn, completedTasksOth
     } else if ('command' in sqlResult) {
       outputs = [sqlResult.message];
     } else {
-      outputs = sqlResult.rows.map(r => sqlResult.columns.map(c => r[c] ?? '').join('\t'));
+      outputs = sqlResult.rows.map(r => sqlResult.columns.map((c, ci) => r[c] ?? r[sqlResult.columnKeys?.[ci] ?? ''] ?? '').join('\t'));
       if (outputs.length === 0) outputs = ['No results'];
     }
     setCodeOutput(outputs);

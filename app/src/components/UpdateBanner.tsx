@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { Cloud, CloudOff, X } from 'lucide-react';
+import { Cloud, CloudOff, X, CheckCircle2 } from 'lucide-react';
 import { checkForAppUpdates, fetchAndApplyUpdate } from '../utils/offline';
 import { getUpdateUrl, getDecryptKey } from '../utils/dataLoader';
 

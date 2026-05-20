@@ -522,7 +522,7 @@ function parseMainSelect(trimmed: string, cteCtx?: Record<string, TableData>): P
       continue;
     }
 
-    const winMatch = raw.match(/^(\w+)\((.*?)\)\s*OVER\s*\((.*?)\)(?:\s+AS\s+(\w+))?$/i);
+    const winMatch = raw.match(/^(\w+)\((.*)\)\s*OVER\s*\((.*)\)(?:\s+AS\s+(\w+))?$/i);
     if (winMatch) {
       const fn = winMatch[1].toUpperCase();
       const arg = winMatch[2].trim();
@@ -584,7 +584,7 @@ function parseMainSelect(trimmed: string, cteCtx?: Record<string, TableData>): P
       columnKeys.push(raw.toLowerCase());
     } else {
       columns.push(raw.includes('.') ? raw.split('.').pop()!.toLowerCase() : raw.toLowerCase());
-      columnKeys.push(raw.trim().toLowerCase());
+      columnKeys.push(raw.includes('.') ? raw.split('.').pop()!.toLowerCase() : raw.trim().toLowerCase());
     }
   }
 
@@ -637,13 +637,13 @@ function parseMainSelect(trimmed: string, cteCtx?: Record<string, TableData>): P
 
   const whereSection = trimmed.substring(trimmed.toUpperCase().indexOf('FROM') + 4);
 
-  const existsMatch = whereSection.match(/WHERE\s+EXISTS\s*\((.+?)\)(?:\s+(GROUP|ORDER|LIMIT|HAVING)\s+|$)/is);
+  const existsMatch = whereSection.match(/WHERE\s+EXISTS\s*\((.+)\)(?:\s+(GROUP|ORDER|LIMIT|HAVING)\s+|$)/is);
   if (existsMatch) {
     parsed.existsSubquery = existsMatch[1].trim();
   }
 
   if (!parsed.existsSubquery) {
-    const subqCompareMatch = whereSection.match(/WHERE\s+(?:(\w+)\.)?(\w+)\s*(=|>|<|>=|<=|!=)\s*\(SELECT\s+(.+?)\)\s*\)/is);
+    const subqCompareMatch = whereSection.match(/WHERE\s+(?:(\w+)\.)?(\w+)\s*(=|>|<|>=|<=|!=)\s*\(SELECT\s+(.+)\)\s*\)/is);
     if (!subqCompareMatch) {
       const whereMatch = trimmed.match(/WHERE\s+(.+?)(?:\s+(GROUP|ORDER|LIMIT|HAVING)\s+|$)/is);
       if (whereMatch) {
@@ -1104,11 +1104,15 @@ function applyWindowFunc(rows: Record<string, string>[], wf: NonNullable<ParsedQ
       const bucketSize = Math.ceil(rows.length / n);
       row[wf.alias] = String(Math.min(Math.floor(i / bucketSize) + 1, n));
     } else if (wf.fn === 'LAG') {
-      const offset = parseInt(wf.arg) || 1;
-      row[wf.alias] = i >= offset ? rows[i - offset][wf.arg] || '0' : '0';
+      const parts = splitArgs(wf.arg);
+      const col = parts[0].trim().toLowerCase();
+      const offset = parts.length > 1 ? (parseInt(parts[1]) || 1) : 1;
+      row[wf.alias] = i >= offset ? (rows[i - offset][col] ?? '0') : '0';
     } else if (wf.fn === 'LEAD') {
-      const offset = parseInt(wf.arg) || 1;
-      row[wf.alias] = i + offset < rows.length ? rows[i + offset][wf.arg] || '0' : '0';
+      const parts = splitArgs(wf.arg);
+      const col = parts[0].trim().toLowerCase();
+      const offset = parts.length > 1 ? (parseInt(parts[1]) || 1) : 1;
+      row[wf.alias] = i + offset < rows.length ? (rows[i + offset][col] ?? '0') : '0';
     } else if (wf.fn === 'FIRST_VALUE') {
       row[wf.alias] = rows[0]?.[wf.arg] || '0';
     } else if (wf.fn === 'SUM' || wf.fn === 'AVG') {
@@ -1125,14 +1129,27 @@ function applyWindowFunc(rows: Record<string, string>[], wf: NonNullable<ParsedQ
   }
 }
 
+function splitArgs(s: string): string[] {
+  const parts: string[] = [];
+  let depth = 0, start = 0;
+  for (let i = 0; i < s.length; i++) {
+    if (s[i] === '(' || s[i] === '[') depth++;
+    if (s[i] === ')' || s[i] === ']') depth--;
+    if (s[i] === ',' && depth === 0) { parts.push(s.slice(start, i).trim()); start = i + 1; }
+  }
+  parts.push(s.slice(start).trim());
+  return parts;
+}
+
 function parseFrameBound(bound: string, totalRows: number, currentRow: number): number {
+  const b = bound.toLowerCase();
+  if (b === 'unbounded preceding') return 0;
+  if (b === 'unbounded following') return totalRows - 1;
+  if (b === 'current row') return currentRow;
   const parts = bound.split(' ');
   const num = parseInt(parts[0]) || 0;
   const dir = parts[1]?.toLowerCase() || '';
   if (dir === 'preceding') return Math.max(0, currentRow - num);
   if (dir === 'following') return Math.min(totalRows - 1, currentRow + num);
-  if (bound === 'unbounded preceding') return 0;
-  if (bound === 'unbounded following') return totalRows - 1;
-  if (bound === 'current row') return currentRow;
   return currentRow;
 }

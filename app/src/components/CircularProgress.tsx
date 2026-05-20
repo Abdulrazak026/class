@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { motion } from 'motion/react';
 
 export function CircularProgress({ value, size = 120, strokeWidth = 10, label }: { value: number; size?: number; strokeWidth?: number; label?: string }) {
@@ -6,10 +6,12 @@ export function CircularProgress({ value, size = 120, strokeWidth = 10, label }:
   const circumference = radius * 2 * Math.PI;
   const offset = circumference - (value / 100) * circumference;
   const [currentValue, setCurrentValue] = useState(0);
+  const startValueRef = useRef(0);
 
   useEffect(() => {
     const duration = 1000;
-    const startValue = currentValue;
+    const startValue = startValueRef.current;
+    startValueRef.current = value;
     const increment = value - startValue;
     let startTime: number | null = null;
     const animate = (timestamp: number) => {

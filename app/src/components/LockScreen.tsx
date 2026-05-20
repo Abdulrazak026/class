@@ -66,7 +66,7 @@ export function LockScreen({ onUnlock }: LockScreenProps) {
       let classworksData: ArrayBuffer | null = null;
       if (classworksRes.ok) classworksData = await classworksRes.arrayBuffer();
 
-      const decryptKey = result.contentKey || trimmed;
+      const decryptKey = result.contentKey || 'DACAMP-2026';
       const decrypted = await decryptFile(encData, decryptKey);
       let decryptedClassworks = null;
       if (classworksData) {

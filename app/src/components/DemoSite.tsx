@@ -185,7 +185,7 @@ function renderPageContent(html: string, currentPath: string) {
   return (
     <div className="space-y-2 text-sm text-gray-700">
       {blocks.filter(b => b.type !== 'nav' && b.type !== 'footer').map((b, i) => (
-        <div key={i} className={b.type === 'heading' ? `text-${b.level === 1 ? 'xl' : b.level === 2 ? 'lg' : 'base'} font-bold text-gray-900` : ''}>
+        <div key={i} className={b.type === 'heading' ? `${b.level === 1 ? 'text-xl' : b.level === 2 ? 'text-lg' : 'text-base'} font-bold text-gray-900` : ''}>
           {b.content}
         </div>
       ))}

@@ -125,13 +125,6 @@ class MockPlt {
       }
       return;
     }
-    if (this._histData) {
-      this._histData = null;
-      if (!this.outputs.some(o => o.startsWith(' Histogram:'))) {
-        this.outputs.push('[Chart generated]');
-      }
-      return;
-    }
     let chart = '';
     if (this._currentAxes) {
       const ax = this._currentAxes;
@@ -510,13 +503,13 @@ function evaluate(expr: string, vars: Record<string, any>): any {
       if (method === 'upper') return obj.toUpperCase();
       if (method === 'lower') return obj.toLowerCase();
       if (method === 'strip') return obj.trim();
-      if (method === 'replace') return obj.replace(new RegExp(args[0], 'g'), args[1]);
+      if (method === 'replace') return obj.split(args[0]).join(args[1]);
       if (method === 'split') return obj.split(args[0] || ' ');
       if (method === 'join') return (args[0] || []).join(obj);
       if (method === 'startswith') return obj.startsWith(args[0]);
       if (method === 'endswith') return obj.endsWith(args[0]);
       if (method === 'find') return obj.indexOf(args[0]);
-      if (method === 'count') return (obj.match(new RegExp(args[0], 'g')) || []).length;
+      if (method === 'count') return obj.split(args[0]).length - 1;
       if (method === 'capitalize') return obj.charAt(0).toUpperCase() + obj.slice(1).toLowerCase();
       if (method === 'title') return obj.replace(/\w\S*/g, w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase());
     }
@@ -543,7 +536,7 @@ function evaluate(expr: string, vars: Record<string, any>): any {
     }
     const parsedArgs = parseArgs(rawArgs, vars);
     const args = parsedArgs.positional;
-    if (fn === 'len') return String(args[0]?.length ?? 0);
+    if (fn === 'len') return args[0]?.length ?? 0;
     if (fn === 'str') return String(args[0] ?? '');
     if (fn === 'int') return parseInt(args[0]) || 0;
     if (fn === 'float') return parseFloat(args[0]) || 0;
@@ -665,38 +658,107 @@ export function executePython(code: string): PythonOutput[] {
     const trimmed = line.trim().replace(/(?:#.*)$/, '').trim();
     if (!trimmed || trimmed.startsWith('#')) return;
 
-    const importMatch = trimmed.match(/^(?:from\s+(\S+)\s+)?import\s+(\S+)(?:\s+as\s+(\S+))?/);
+    const importMatch = trimmed.match(/^(?:from\s+(\S+)\s+)?import\s+([\w,.\s]+)(?:\s+as\s+(\S+))?(?:\s*#.*)?$/);
     if (importMatch) {
       const fromModule = importMatch[1];
-      const moduleName = importMatch[2];
-      const alias = importMatch[3] || moduleName;
-      if (moduleName === 'matplotlib' || moduleName === 'matplotlib.pyplot' || moduleName === 'pyplot') {
-        variables[alias] = new MockPlt();
-        variables[alias].__type = 'plt';
-        return;
+      const moduleNames = importMatch[2].split(',').map(s => s.trim());
+      const alias = importMatch[3];
+      for (const moduleName of moduleNames) {
+        if (moduleName === 'matplotlib' || moduleName === 'matplotlib.pyplot' || moduleName === 'pyplot') {
+          variables[alias || moduleName] = new MockPlt();
+          variables[alias || moduleName].__type = 'plt';
+          continue;
+        }
+        if (moduleName === 'random') {
+          const rand = new MockRandom();
+          variables[alias || moduleName] = rand;
+          variables[alias || moduleName].__type = 'random';
+          continue;
+        }
+        if (moduleName === 'math') {
+          variables[alias || moduleName] = mockMath;
+          variables[alias || moduleName].__type = 'math';
+          continue;
+        }
+        if (moduleName === 'datetime') {
+          const dt = new MockDateTime();
+          variables[alias || moduleName] = dt;
+          variables[alias || moduleName].__type = 'datetime';
+          continue;
+        }
+        if (moduleName === 'statistics') {
+          variables[alias || moduleName] = mockStatistics;
+          variables[alias || moduleName].__type = 'statistics';
+          continue;
+        }
+        if (moduleName === 'collections') {
+          const coll = new MockCollections();
+          variables[alias || moduleName] = coll;
+          variables[alias || moduleName].__type = 'collections';
+          continue;
+        }
+        if (moduleName === 'pandas' || moduleName === 'pd') {
+          const pd = new MockPandas();
+          variables[alias || moduleName] = pd;
+          variables[alias || moduleName].__type = 'pd';
+          continue;
+        }
+        if (moduleName === 'numpy' || moduleName === 'np') {
+          variables[alias || moduleName] = new MockNumpy();
+          variables[alias || moduleName].__type = 'np';
+          continue;
+        }
+        if (moduleName === 're') {
+          variables[alias || moduleName] = new MockRe();
+          variables[alias || moduleName].__type = 're';
+          continue;
+        }
+        if (moduleName === 'csv') {
+          variables[alias || moduleName] = new MockCsv();
+          variables[alias || moduleName].__type = 'csv';
+          continue;
+        }
+        if (moduleName === 'os') {
+          variables[alias || moduleName] = {};
+          variables[alias || moduleName].__type = 'os';
+          continue;
+        }
+        if (moduleName === 'sys') {
+          variables[alias || moduleName] = {};
+          variables[alias || moduleName].__type = 'sys';
+          continue;
+        }
+        if (moduleName === 'json') {
+          variables[alias || moduleName] = new MockJson();
+          variables[alias || moduleName].__type = 'json';
+          continue;
+        }
       }
-      if (moduleName === 'random') {
+      // Handle aliased imports after the loop (comma-imports skip these)
+      if (moduleNames.length > 1) return;
+      const primaryModule = moduleNames[0];
+      if (primaryModule === 'random') {
         const rand = new MockRandom();
         rand.__type = 'module';
         variables[alias] = rand;
         return;
       }
-      if (fromModule === 'scipy' && moduleName === 'stats') {
+      if (fromModule === 'scipy' && primaryModule === 'stats') {
         const mod = createMockScipyStats();
         variables[alias] = mod;
         return;
       }
-      if (moduleName === 'requests') {
+      if (primaryModule === 'requests') {
         variables[alias] = new MockRequests();
         return;
       }
-      if (moduleName === 'bs4' && !fromModule) {
+      if (primaryModule === 'bs4' && !fromModule) {
         const mod = { __type: 'module', BeautifulSoup };
         variables[alias] = mod;
         return;
       }
       if (fromModule === 'bs4') {
-        variables[alias] = moduleName === 'BeautifulSoup' ? BeautifulSoup : { __type: 'module' };
+        variables[alias] = primaryModule === 'BeautifulSoup' ? BeautifulSoup : { __type: 'module' };
         return;
       }
       const moduleFactories: Record<string, () => any> = {
@@ -705,8 +767,8 @@ export function executePython(code: string): PythonOutput[] {
         seaborn: createMockSeaborn,
         statistics: createMockStatistics,
       };
-      if (moduleFactories[moduleName]) {
-        variables[alias] = moduleFactories[moduleName]();
+      if (moduleFactories[primaryModule]) {
+        variables[alias] = moduleFactories[primaryModule]();
         return;
       }
       return;

@@ -44,7 +44,7 @@ export function generateChart(series: PlotSeries[], title: string, xlabel: strin
         const label = valAtRow ? String(Math.round((minVal + (range * r) / (height - 1)) * 100) / 100).padStart(8) : '        ';
         lines.push(` ${label} |${row.join(' ')}`);
       }
-      lines.push(` ${'        '.padStart(8)} ${'─'.repeat(points.length * 2 - 1)}`);
+      lines.push(` ${'        '.padStart(8)} ${'─'.repeat(Math.max(0, points.length * 2 - 1))}`);
       const xLabels = points.map(p => String(p.x).padEnd(3)).join(' ');
       lines.push(` ${'        '.padStart(8)} ${xLabels}`);
     }

@@ -117,7 +117,19 @@ function getStr(val: string | number): string {
 }
 
 export function evaluateFormula(formula: string, data: SpreadsheetData, visited: Set<string> = new Set()): number | string {
-  const normalized = formula.toUpperCase().replace(/\s/g, '');
+  const normalized = (() => {
+    let result = '';
+    let inStr = false;
+    let quoteChar = '';
+    for (const ch of formula) {
+      if (!inStr && (ch === '"' || ch === "'")) { inStr = true; quoteChar = ch; result += ch; continue; }
+      if (inStr && ch === quoteChar) { inStr = false; result += ch; continue; }
+      if (inStr) { result += ch; continue; }
+      if (ch === ' ') continue;
+      result += ch.toUpperCase();
+    }
+    return result;
+  })();
   if (!normalized.startsWith('=')) return formula;
   const expr = normalized.slice(1);
 
@@ -436,7 +448,7 @@ export function evaluateFormula(formula: string, data: SpreadsheetData, visited:
       if (comma === -1) return 0;
       const range = parseRange(inner.slice(0, comma).trim());
       const k = Math.floor(getNum(evaluateSimple(inner.slice(comma + 1).trim(), data))) || 1;
-      const vals = range.map(ref => getNum(getCellValue(ref, data, new Set(visited)))).filter(v => v !== 0).sort((a, b) => isSmall ? a - b : b - a);
+      const vals = range.map(ref => getNum(getCellValue(ref, data, new Set(visited)))).filter(v => v !== 0 || getCellValue(ref, data, new Set(visited)) === 0).sort((a, b) => isSmall ? a - b : b - a);
       return vals[k - 1] || 0;
     }
     if (expr.startsWith('ROUND(')) {
@@ -454,6 +466,7 @@ export function evaluateFormula(formula: string, data: SpreadsheetData, visited:
       const v = getCellValue(ref.toUpperCase(), data, new Set(visited));
       return getStr(v);
     });
+    if (/[a-zA-Z_$][0-9a-zA-Z_$]*\s*\(/.test(resolved)) return '#ERROR!';
     return Function(`"use strict"; return (${resolved})`)();
   } catch { return '#ERROR'; }
 }
@@ -549,9 +562,7 @@ export function createDefaultData(): SpreadsheetData {
     'C1': { value: 'Category' },
     'D1': { value: 'Price' },
     'E1': { value: 'Qty' },
-    'F1': { value: 'Total' },
-    'G1': { value: 'Date' },
-    'H1': { value: 'Region' },
+    'F1': { value: 'Region' },
   };
 
   const products: [string, string, string, string, string, string][] = [
@@ -594,8 +605,8 @@ export function createDefaultData(): SpreadsheetData {
     data[`C${row}`] = { value: cat };
     data[`D${row}`] = { value: price };
     data[`E${row}`] = { value: qty };
-    data[`G${row}`] = { value: region };
+    data[`F${row}`] = { value: region };
   });
 
-  return { cells: data, cols: 8, rows: 35 };
+  return { cells: data, cols: 6, rows: 35 };
 }
