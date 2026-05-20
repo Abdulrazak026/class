@@ -787,6 +787,95 @@ print(df)`,
       hint: `Use .apply(lambda x: ...) on a column.`,
     },
   ],
+  "w_oop-d1": [
+    {
+      task: `Define a class called Product with attributes: name (string), price (float), and category (string). Add a method called apply_discount(percent) that reduces the price by that percentage and returns the new price. Create two Product objects and call apply_discount on each.`,
+      language: "python",
+      code: `class Product:
+    def __init__(self, name, price, category):
+        self.name = name
+        self.price = price
+        self.category = category
+
+    def apply_discount(self, percent):
+        self.price = self.price * (1 - percent / 100)
+        return self.price
+
+p1 = Product('Laptop', 1000, 'Electronics')
+p2 = Product('Shirt', 50, 'Clothing')
+print(p1.apply_discount(10))  # 900.0
+print(p2.apply_discount(20))  # 40.0`,
+      expectedOutput: ``,
+      hint: `Use self.price = self.price * (1 - percent/100) inside the method. Don't forget to return the new price.`,
+    },
+  ],
+  "w_oop-d2": [
+    {
+      task: `Create a class Employee with name and salary. Then create a child class Manager that inherits Employee and adds a bonus attribute. Override a method get_total_pay() that returns salary + bonus for Manager, and just salary for Employee.`,
+      language: "python",
+      code: `class Employee:
+    def __init__(self, name, salary):
+        self.name = name
+        self.salary = salary
+
+    def get_total_pay(self):
+        return self.salary
+
+class Manager(Employee):
+    def __init__(self, name, salary, bonus):
+        super().__init__(name, salary)
+        self.bonus = bonus
+
+    def get_total_pay(self):
+        return self.salary + self.bonus
+
+e = Employee('Alice', 70000)
+m = Manager('Bob', 90000, 15000)
+print(e.get_total_pay())  # 70000
+print(m.get_total_pay())  # 105000`,
+      expectedOutput: ``,
+      hint: `Use super().__init__(name, salary) in Manager. Override get_total_pay to return salary + bonus.`,
+    },
+  ],
+  "w_oop-d3": [
+    {
+      task: `Build a simple DataCleaner class with: an __init__ that accepts a Pandas DataFrame, a method remove_nulls() that drops rows with any null values, and a method summary() that prints the shape and column names. Use method chaining (return self).`,
+      language: "python",
+      code: `import pandas as pd
+
+class DataCleaner:
+    def __init__(self, df):
+        self.df = df
+
+    def remove_nulls(self):
+        self.df = self.df.dropna()
+        return self
+
+    def summary(self):
+        print('Shape:', self.df.shape)
+        print('Columns:', list(self.df.columns))
+        return self
+
+df = pd.DataFrame({'name': ['Alice', None, 'Bob'], 'age': [25, 30, None]})
+cleaner = DataCleaner(df)
+cleaner.remove_nulls().summary()`,
+      expectedOutput: ``,
+      hint: `Return self from each method to enable chaining. Use df.dropna() to remove nulls.`,
+    },
+  ],
+  "w21-d1-extra": [
+    {
+      task: `Calculate the weighted mean for a student with these grades: 85 in Math (4 credits), 90 in English (3 credits), 78 in History (2 credits). Use Python to compute it. Formula: weighted_mean = sum(grade * credits) / sum(credits).`,
+      language: "python",
+      code: `import numpy as np
+grades  = np.array([85, 90, 78])
+credits = np.array([4,  3,  2])
+weighted_mean = np.sum(grades * credits) / np.sum(credits)
+print(f'Weighted GPA: {weighted_mean:.2f}')`,
+      expectedOutput: ``,
+      hint: `Multiply each grade by its credit weight, sum them, then divide by total credits. Use np.sum(grades * credits) / np.sum(credits).`,
+    },
+  ],
   "w16-d1": [
     {
       task: `Create a DataFrame and print summary statistics (count, mean, std, min, max) for all numeric columns.`,

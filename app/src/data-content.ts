@@ -5471,6 +5471,202 @@ export const curriculum: Module[] = [
     ],
   },
   {
+    id: "weekOOP",
+    title: "Week 17.5: Object-Oriented Python (Month 4)",
+    durationText: "WEEK 17.5",
+    focus: "OOP, Classes, Inheritance",
+    output: "Completed Daily Assignments",
+    topics: [
+      {
+        id: "w_oop-d1",
+        title: "Day 1: Classes & Objects",
+        description:
+          "Define classes, create objects, and understand attributes and methods",
+        type: "learn",
+        duration: "45-60 mins",
+        content:
+          '## What is Object-Oriented Programming?\n\nOOP is a way of organizing code around **objects** — bundles of data (attributes) and behavior (methods) that belong together. Instead of writing separate variables and functions, you group them into a single reusable blueprint called a **class**.\n\nYou already use OOP every day without realizing it: a Pandas DataFrame is a class. When you write `df.head()`, you\'re calling a method on a DataFrame object. When you check `df.shape`, you\'re reading an attribute. Understanding OOP helps you read library documentation, write reusable code, and pass technical interviews.\n\n## Defining a Class\n\n```python\nclass Customer:\n    """Represents a customer in an e-commerce system."""\n\n    def __init__(self, customer_id, name, email):\n        # __init__ runs automatically when you create a new object\n        self.customer_id = customer_id  # attribute\n        self.name = name                # attribute\n        self.email = email              # attribute\n        self.orders = []                # starts empty\n\n    def add_order(self, amount):\n        """Record a new order for this customer."""\n        self.orders.append(amount)\n\n    def total_spent(self):\n        """Return the customer\'s total spending."""\n        return sum(self.orders)\n\n    def is_high_value(self, threshold=1000):\n        return self.total_spent() > threshold\n\n    def __repr__(self):\n        """What prints when you type the object name."""\n        return f\'Customer({self.customer_id}, {self.name})\'\n```\n\n## Creating and Using Objects\n\n```python\n# Create objects (instances) from the class\nc1 = Customer(101, \'Alice\', \'alice@email.com\')\nc2 = Customer(102, \'Bob\',   \'bob@email.com\')\n\n# Use methods\nc1.add_order(250)\nc1.add_order(800)\nc2.add_order(150)\n\n# Read attributes\nprint(c1.name)           # Alice\nprint(c1.orders)         # [250, 800]\nprint(c1.total_spent())  # 1050\nprint(c1.is_high_value()) # True\nprint(c2.is_high_value()) # False\nprint(c1)                # Customer(101, Alice)\n```\n\n## Key Terms\n\n| Term | Meaning | Example |\n|---|---|---|\n| **Class** | Blueprint / template | `class Customer:` |\n| **Object / Instance** | A specific thing created from the blueprint | `c1 = Customer(...)` |\n| **Attribute** | Data stored on the object | `self.name` |\n| **Method** | Function that belongs to the class | `def total_spent(self):` |\n| **`self`** | Reference to the current object | Always first parameter |\n| **`__init__`** | Constructor — runs when object is created | Sets up attributes |\n\n:::checkpoint\nWhat does __init__ do?\nA) Deletes an object\nB) Runs automatically when a new object is created, setting up its attributes\nC) Returns the object to a function\nD) It is optional and rarely used\nCorrect: B\n\n:::checkpoint\nWhat is the difference between a class and an object?\nA) They are the same thing\nB) A class is the blueprint; an object is a specific instance created from it\nC) A class contains data; an object contains methods\nD) An object is always empty\nCorrect: B',
+        quiz: [
+          {
+            question: "What is a class in Python?",
+            options: [
+              "A built-in function",
+              "A blueprint that defines attributes and methods for objects",
+              "A type of loop",
+              "A file that stores data",
+            ],
+            correctAnswerIndex: 1,
+          },
+          {
+            question: "What does self refer to inside a method?",
+            options: [
+              "The class itself",
+              "The current object instance",
+              "The parent class",
+              "The return value",
+            ],
+            correctAnswerIndex: 1,
+          },
+          {
+            question: "What does __init__ do?",
+            options: [
+              "Deletes the object",
+              "Runs automatically when a new object is created",
+              "Prints the object",
+              "Imports a module",
+            ],
+            correctAnswerIndex: 1,
+          },
+          {
+            question:
+              "How do you create an object from a class called Customer?",
+            options: [
+              "Customer.new()",
+              "c = Customer(101, 'Alice', 'alice@email.com')",
+              "create Customer()",
+              "Customer.init()",
+            ],
+            correctAnswerIndex: 1,
+          },
+          {
+            question: "A Pandas DataFrame is an example of:",
+            options: [
+              "A plain Python list",
+              "An object (instance of a class)",
+              "A SQL table",
+              "A function",
+            ],
+            correctAnswerIndex: 1,
+          },
+        ],
+      },
+      {
+        id: "w_oop-d2",
+        title: "Day 2: Inheritance, Encapsulation & Special Methods",
+        description:
+          "Extend classes with inheritance and understand OOP principles",
+        type: "learn",
+        duration: "45-60 mins",
+        content:
+          "## Inheritance — Reusing and Extending Classes\n\nInheritance lets a new class (child) take all the attributes and methods of an existing class (parent) and add or change behavior. This follows the DRY principle — you write shared code once.\n\n```python\nclass Customer:\n    def __init__(self, customer_id, name, email):\n        self.customer_id = customer_id\n        self.name = name\n        self.email = email\n        self.orders = []\n\n    def add_order(self, amount):\n        self.orders.append(amount)\n\n    def total_spent(self):\n        return sum(self.orders)\n\n\n# PremiumCustomer INHERITS from Customer\nclass PremiumCustomer(Customer):\n    def __init__(self, customer_id, name, email, discount_rate):\n        super().__init__(customer_id, name, email)  # call parent __init__\n        self.discount_rate = discount_rate\n\n    def discounted_total(self):\n        return self.total_spent() * (1 - self.discount_rate)\n\n    # Override parent method\n    def add_order(self, amount):\n        discounted = amount * (1 - self.discount_rate)\n        self.orders.append(discounted)\n        print(f'Discount applied: ${amount:.2f} -> ${discounted:.2f}')\n\n\np = PremiumCustomer(201, 'Carol', 'carol@email.com', 0.10)\np.add_order(500)   # Discount applied: $500.00 -> $450.00\np.add_order(200)   # Discount applied: $200.00 -> $180.00\nprint(p.total_spent())       # 630.0\nprint(p.discounted_total())  # 630.0 (already discounted)\nprint(p.name)                # Carol (inherited from Customer)\n```\n\n## Encapsulation — Protecting Data\n\nEncapsulation hides the internal details of a class. In Python, use a single underscore (`_attr`) as a convention for 'private' attributes.\n\n```python\nclass BankAccount:\n    def __init__(self, balance):\n        self._balance = balance  # underscore = private by convention\n\n    def deposit(self, amount):\n        if amount > 0:\n            self._balance += amount\n\n    def withdraw(self, amount):\n        if amount > self._balance:\n            print('Insufficient funds')\n        else:\n            self._balance -= amount\n\n    def get_balance(self):\n        return self._balance  # controlled access\n\nacc = BankAccount(1000)\nacc.deposit(500)\nacc.withdraw(200)\nprint(acc.get_balance())  # 1300\n```\n\n## Special (Dunder) Methods\n\n```python\nclass Product:\n    def __init__(self, name, price):\n        self.name = name\n        self.price = price\n\n    def __repr__(self):\n        return f'Product({self.name}, ${self.price})'\n\n    def __str__(self):\n        return f'{self.name}: ${self.price}'\n\n    def __lt__(self, other):   # enables < comparison\n        return self.price < other.price\n\np1 = Product('Widget', 10)\np2 = Product('Gadget', 25)\nprint(p1)            # Widget: $10\nprint(p1 < p2)       # True\nproducts = [p2, p1]\nprint(sorted(products))  # [Product(Widget, $10), Product(Gadget, $25)]\n```\n\n:::checkpoint\nWhat does super().__init__() do in a child class?\nA) Deletes the parent class\nB) Calls the parent class constructor to set up inherited attributes\nC) Creates a new object\nD) Skips the parent class entirely\nCorrect: B",
+        quiz: [
+          {
+            question: "What is inheritance in OOP?",
+            options: [
+              "Copying code between files",
+              "A child class reusing and extending a parent class",
+              "A way to delete methods",
+              "A type of loop",
+            ],
+            correctAnswerIndex: 1,
+          },
+          {
+            question: "What does super().__init__() do?",
+            options: [
+              "Creates a new instance",
+              "Calls the parent class constructor",
+              "Deletes inherited attributes",
+              "Prints the parent class",
+            ],
+            correctAnswerIndex: 1,
+          },
+          {
+            question: "What does encapsulation mean?",
+            options: [
+              "Making all attributes public",
+              "Hiding internal data and controlling access through methods",
+              "Copying a class",
+              "Combining two classes",
+            ],
+            correctAnswerIndex: 1,
+          },
+          {
+            question: "What does __repr__ do?",
+            options: [
+              "Deletes the object",
+              "Defines how the object looks when printed or inspected",
+              "Creates a copy of the object",
+              "Runs when the object is created",
+            ],
+            correctAnswerIndex: 1,
+          },
+          {
+            question: "What is method overriding?",
+            options: [
+              "Deleting a method from the parent class",
+              "The child class redefining a method from the parent class",
+              "Calling two methods at once",
+              "Adding a method to the parent class",
+            ],
+            correctAnswerIndex: 1,
+          },
+        ],
+      },
+      {
+        id: "w_oop-d3",
+        title: "Day 3: OOP in Data Science — Real Patterns",
+        description: "Apply OOP to build reusable data analysis pipelines",
+        type: "practice",
+        duration: "45-60 mins",
+        content:
+          "## Why OOP Matters for Data Analysts\n\nYou use OOP every time you work with Pandas, Matplotlib, or Scikit-learn. Every `pd.DataFrame`, every `plt.Figure`, every `sklearn` model is an object. Understanding OOP helps you:\n- Read library documentation faster\n- Write reusable analysis pipelines\n- Build custom data tools\n- Answer Python interview questions confidently\n\n## OOP Pattern: Data Pipeline Class\n\nInstead of writing the same data cleaning steps in every script, package them in a class:\n\n```python\nimport pandas as pd\nimport numpy as np\n\nclass DataPipeline:\n    \"\"\"A reusable pipeline for loading, cleaning, and summarizing data.\"\"\"\n\n    def __init__(self, filepath):\n        self.filepath = filepath\n        self.df = None\n        self.is_clean = False\n\n    def load(self):\n        self.df = pd.read_csv(self.filepath)\n        print(f'Loaded {len(self.df)} rows, {len(self.df.columns)} columns')\n        return self  # enables method chaining\n\n    def clean(self, required_cols):\n        missing = [c for c in required_cols if c not in self.df.columns]\n        if missing:\n            raise ValueError(f'Missing columns: {missing}')\n        self.df = self.df.dropna(subset=required_cols)\n        self.df = self.df.drop_duplicates()\n        self.is_clean = True\n        print(f'After cleaning: {len(self.df)} rows remain')\n        return self\n\n    def summary(self):\n        if not self.is_clean:\n            print('Warning: data not cleaned yet')\n        return self.df.describe()\n\n    def top_n(self, column, n=5):\n        return self.df.nlargest(n, column)\n\n\n# Usage with method chaining\npipeline = DataPipeline('sales.csv')\nresult = (pipeline\n          .load()\n          .clean(required_cols=['customer_id', 'amount'])\n          .top_n('amount'))\nprint(result)\n```\n\n## OOP Pattern: Scikit-learn Estimators\n\nEvery ML model in Scikit-learn follows the same OOP interface:\n\n```python\nfrom sklearn.linear_model import LinearRegression\n\n# Create an object (instance of LinearRegression class)\nmodel = LinearRegression()\n\n# Call methods on the object\nmodel.fit(X_train, y_train)   # trains the model\npredictions = model.predict(X_test)  # makes predictions\n\n# Read attributes set by fit()\nprint(model.coef_)     # coefficients\nprint(model.intercept_) # intercept\n```\n\nAll Scikit-learn models are objects with `.fit()` and `.predict()` methods. Understanding OOP lets you use ANY model with the same pattern.\n\n## Polymorphism — Same Interface, Different Behavior\n\n```python\nclass CSVLoader:\n    def load(self, path):\n        return pd.read_csv(path)\n\nclass ExcelLoader:\n    def load(self, path):\n        return pd.read_excel(path)\n\ndef process_data(loader, path):\n    df = loader.load(path)  # same call, different behavior\n    return df.describe()\n\n# Works with any loader\nprocess_data(CSVLoader(), 'sales.csv')\nprocess_data(ExcelLoader(), 'sales.xlsx')\n```\n\n:::checkpoint\nWhy is understanding OOP useful when working with Pandas?\nA) Pandas does not use OOP\nB) DataFrames are objects; knowing OOP helps you read docs, understand methods, and build reusable tools\nC) OOP makes Pandas run faster\nD) OOP is only needed for web development\nCorrect: B",
+        quiz: [
+          {
+            question: "In Scikit-learn, what does model.fit(X, y) do?",
+            options: [
+              "Creates a new model class",
+              "Trains the model by calling a method on the model object",
+              "Deletes the previous model",
+              "Predicts output values",
+            ],
+            correctAnswerIndex: 1,
+          },
+          {
+            question: "What is polymorphism in OOP?",
+            options: [
+              "Having two classes with different names",
+              "Different objects responding to the same method call in different ways",
+              "Copying a class to a new variable",
+              "Deleting inherited methods",
+            ],
+            correctAnswerIndex: 1,
+          },
+          {
+            question: "What is method chaining?",
+            options: [
+              "Calling multiple functions in nested parentheses",
+              "Calling multiple methods in sequence on the same object by returning self",
+              "Linking two classes together",
+              "Repeating the same method call in a loop",
+            ],
+            correctAnswerIndex: 1,
+          },
+          {
+            question: "What are the 4 main principles of OOP?",
+            options: [
+              "Lists, Dicts, Loops, Functions",
+              "Encapsulation, Inheritance, Polymorphism, Abstraction",
+              "Variables, Classes, Objects, Files",
+              "Import, Define, Return, Print",
+            ],
+            correctAnswerIndex: 1,
+          },
+          {
+            question:
+              "How does building a DataPipeline class improve your workflow?",
+            options: [
+              "It runs faster than plain functions",
+              "It packages reusable cleaning/analysis steps so you don't rewrite them for every project",
+              "It is required by Pandas",
+              "It makes files smaller",
+            ],
+            correctAnswerIndex: 1,
+          },
+        ],
+      },
+    ],
+  },
+  {
     id: "week16",
     title: "Week 18: EDA (Month 4)",
     durationText: "WEEK 18",
@@ -7315,6 +7511,28 @@ export const curriculum: Module[] = [
           {
             question: "Which measure is most affected by outliers?",
             options: ["Median", "Mean", "Mode", "IQR"],
+            correctAnswerIndex: 1,
+          },
+          {
+            question:
+              "What is the weighted mean and when would you use it instead of the regular mean?",
+            options: [
+              "The weighted mean is always the same as the regular mean",
+              "The weighted mean assigns different importance to each value — use it when some values should count more (e.g. course grades with different credit hours, or a portfolio return where positions have different sizes)",
+              "The weighted mean removes outliers automatically",
+              "The weighted mean is only used in machine learning",
+            ],
+            correctAnswerIndex: 1,
+          },
+          {
+            question:
+              "A student scores 80 on a 3-credit course and 90 on a 1-credit course. What is their weighted GPA?",
+            options: [
+              "85 (simple average)",
+              "82.5 (weighted: (80*3 + 90*1) / 4)",
+              "90 (highest score)",
+              "80 (lowest score)",
+            ],
             correctAnswerIndex: 1,
           },
           {
