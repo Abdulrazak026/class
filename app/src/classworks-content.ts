@@ -593,6 +593,84 @@ print(square(5))`,
       hint: `Define functions with def and use return.`,
     },
   ],
+  "w_np-d1": [
+    {
+      task: `Create a NumPy array from the list [10, 20, 30, 40, 50], then print its shape, dtype, and the last element.`,
+      language: "python",
+      code: `import numpy as np
+arr = np.array([10, 20, 30, 40, 50])
+print(arr.shape)
+print(arr.dtype)
+print(arr[-1])`,
+      expectedOutput: ``,
+      hint: `Use .shape for dimensions, .dtype for data type, and [-1] for last element.`,
+    },
+  ],
+  "w_np-d2": [
+    {
+      task: `Create a NumPy array of prices [100, 200, 150, 80] and calculate: (1) total after 10% tax, (2) profit margin if cost is [60, 120, 90, 50]. Print both results.`,
+      language: "python",
+      code: `import numpy as np
+prices = np.array([100, 200, 150, 80])
+costs  = np.array([60, 120, 90, 50])
+with_tax = prices * 1.1
+margin   = (prices - costs) / prices
+print('With tax:', with_tax)
+print('Margin:', margin.round(2))`,
+      expectedOutput: ``,
+      hint: `Use vectorized arithmetic: prices * 1.1 and (prices - costs) / prices.`,
+    },
+  ],
+  "w_np-d3": [
+    {
+      task: `Given scores = [78, 92, 65, 88, 55, 97, 73, 84, 61, 90], calculate: mean, std, and z-score for each value. Then print all values where the z-score is above 1.`,
+      language: "python",
+      code: `import numpy as np
+scores = np.array([78, 92, 65, 88, 55, 97, 73, 84, 61, 90])
+mean = np.mean(scores)
+std  = np.std(scores)
+z    = (scores - mean) / std
+print('Mean:', round(mean, 2))
+print('Std:', round(std, 2))
+print('Z-scores:', z.round(2))
+print('Above z=1:', scores[z > 1])`,
+      expectedOutput: ``,
+      hint: `z = (scores - mean) / std. Then use scores[z > 1] to filter.`,
+    },
+  ],
+  "w_np-d4": [
+    {
+      task: `Create an array of 10 random integers between 1 and 100. Use np.where to label each as 'High' (>= 70), 'Mid' (>= 40), or 'Low'. Print the labels.`,
+      language: "python",
+      code: `import numpy as np
+np.random.seed(42)
+data = np.random.randint(1, 101, 10)
+labels = np.where(data >= 70, 'High', np.where(data >= 40, 'Mid', 'Low'))
+print('Values:', data)
+print('Labels:', labels)`,
+      expectedOutput: ``,
+      hint: `Nest np.where calls: np.where(data >= 70, 'High', np.where(data >= 40, 'Mid', 'Low')).`,
+    },
+  ],
+  "w_np-d5": [
+    {
+      task: `Create a NumPy array of 20 random sales values (use np.random.seed(0) first). Calculate z-scores, identify outliers (|z| > 1.5), build a frequency distribution with 4 bins, and count how many days were above average.`,
+      language: "python",
+      code: `import numpy as np
+np.random.seed(0)
+sales = np.random.randint(500, 5000, 20)
+z = (sales - sales.mean()) / sales.std()
+outliers = sales[np.abs(z) > 1.5]
+freq, edges = np.histogram(sales, bins=4)
+above_avg = np.sum(sales > sales.mean())
+print('Sales:', sales)
+print('Outliers:', outliers)
+print('Freq dist:', freq)
+print('Days above avg:', above_avg)`,
+      expectedOutput: ``,
+      hint: `z = (sales - sales.mean()) / sales.std(). Use np.abs(z) > 1.5 to find outliers. np.sum(condition) counts True values.`,
+    },
+  ],
   "w14-d1": [
     {
       task: `Create a dictionary with keys "name" and "age", and values ["Alice", "Bob"] and [25, 30]. Then convert it to a pandas DataFrame and print it.`,

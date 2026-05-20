@@ -4552,6 +4552,320 @@ export const curriculum: Module[] = [
     ],
   },
   {
+    id: "weekNP",
+    title: "Week 15.5: NumPy Fundamentals (Month 4)",
+    durationText: "WEEK 15.5",
+    focus: "NumPy, Arrays, Vectorized Computing",
+    output: "Completed Daily Assignments",
+    topics: [
+      {
+        id: "w_np-d1",
+        title: "Day 1: What is NumPy? Arrays vs Lists",
+        description:
+          "Understand why NumPy exists and how arrays beat Python lists for data work",
+        type: "learn",
+        duration: "45-60 mins",
+        content:
+          "## Why NumPy?\n\nPython lists are flexible but slow for math. If you want to multiply every value in a 1-million-row list by 2, a Python loop takes seconds. NumPy does it in milliseconds using **vectorized operations** — the same math applied to every element at once, powered by compiled C code under the hood.\n\nPandas is built on NumPy. Every column in a DataFrame is a NumPy array. Understanding NumPy makes you faster at both data analysis and debugging.\n\n## Creating Arrays\n\n```python\nimport numpy as np\n\n# From a Python list\narr = np.array([10, 20, 30, 40, 50])\nprint(arr)          # [10 20 30 40 50]\nprint(arr.dtype)    # int64\nprint(arr.shape)    # (5,) — 5 elements, 1 dimension\n\n# 2D array (matrix)\nmatrix = np.array([[1, 2, 3], [4, 5, 6]])\nprint(matrix.shape)  # (2, 3) — 2 rows, 3 columns\n```\n\n## Convenient Creation Functions\n\n```python\nnp.zeros(5)           # [0. 0. 0. 0. 0.]\nnp.ones(4)            # [1. 1. 1. 1.]\nnp.arange(0, 10, 2)   # [0 2 4 6 8]  like range() but returns array\nnp.linspace(0, 1, 5)  # [0.   0.25 0.5  0.75 1.]  evenly spaced\nnp.random.seed(42)\nnp.random.randint(1, 100, size=10)  # 10 random integers\n```\n\n## List vs Array — Side by Side\n\n```python\n# Python list  — elementwise math requires a loop\nmy_list = [1, 2, 3, 4, 5]\ndoubled_list = [x * 2 for x in my_list]  # [2, 4, 6, 8, 10]\n\n# NumPy array — elementwise math in one expression\nmy_arr = np.array([1, 2, 3, 4, 5])\ndoubled_arr = my_arr * 2  # [2 4 6 8 10] — no loop needed!\n\n# And it is dramatically faster on large data\nimport time\nbig_list = list(range(1_000_000))\nbig_arr  = np.array(big_list)\n\nstart = time.time()\n_ = [x * 2 for x in big_list]\nprint('List:', round(time.time()-start, 3), 's')\n\nstart = time.time()\n_ = big_arr * 2\nprint('Array:', round(time.time()-start, 3), 's')\n# Array is ~10-100x faster\n```\n\n:::checkpoint\nWhy is a NumPy array faster than a Python list for math operations?\nA) NumPy uses more memory\nB) NumPy uses vectorized operations in compiled C code instead of Python loops\nC) NumPy lists are smaller\nD) Python lists are always slower regardless\nCorrect: B\n\n:::checkpoint\nWhat does np.arange(2, 10, 2) produce?\nA) [2, 4, 6, 8, 10]\nB) [2, 4, 6, 8]\nC) [0, 2, 4, 6, 8]\nD) Error\nCorrect: B",
+        quiz: [
+          {
+            question: "Why is NumPy faster than Python lists for math?",
+            options: [
+              "NumPy uses more memory",
+              "Vectorized operations in compiled C code — no Python loop needed",
+              "NumPy compresses data",
+              "Python lists are always the same speed",
+            ],
+            correctAnswerIndex: 1,
+          },
+          {
+            question: "What does np.zeros(3) produce?",
+            options: ["[1, 1, 1]", "[0, 0, 0]", "[0, 1, 2]", "Error"],
+            correctAnswerIndex: 1,
+          },
+          {
+            question: "What does arr.shape tell you?",
+            options: [
+              "The data type of the array",
+              "The dimensions and size of the array",
+              "The sum of all values",
+              "The memory used",
+            ],
+            correctAnswerIndex: 1,
+          },
+          {
+            question: "What does np.arange(0, 6, 2) produce?",
+            options: [
+              "[0, 2, 4, 6]",
+              "[0, 2, 4]",
+              "[2, 4, 6]",
+              "[0, 1, 2, 3, 4, 5]",
+            ],
+            correctAnswerIndex: 1,
+          },
+          {
+            question: "Pandas DataFrames are built on top of:",
+            options: [
+              "Python lists",
+              "NumPy arrays",
+              "Dictionaries",
+              "SQL tables",
+            ],
+            correctAnswerIndex: 1,
+          },
+        ],
+      },
+      {
+        id: "w_np-d2",
+        title: "Day 2: Array Operations & Broadcasting",
+        description:
+          "Apply math to entire arrays at once and understand broadcasting rules",
+        type: "practice",
+        duration: "45-60 mins",
+        content:
+          "## Vectorized Arithmetic\n\nWith NumPy, any arithmetic operation on an array applies to every element — no loop required.\n\n```python\nimport numpy as np\n\nprices  = np.array([100, 200, 150, 80, 300])\ntax     = 0.1\n\ntotal   = prices * (1 + tax)   # [110. 220. 165.  88. 330.]\ndiscount = prices * 0.8        # [80. 160. 120.  64. 240.]\n\n# Operations between two arrays (element-by-element)\nrevenue = np.array([5000, 8000, 3000])\ncost    = np.array([2000, 5000, 1500])\nprofit  = revenue - cost  # [3000 3000 1500]\nmargin  = profit / revenue  # [0.6  0.375 0.5]\n```\n\n## Broadcasting — Arrays of Different Sizes\n\nBroadcasting lets NumPy perform operations on arrays with different shapes by 'stretching' the smaller one.\n\n```python\nmatrix = np.array([[1, 2, 3],\n                   [4, 5, 6],\n                   [7, 8, 9]])\n\n# Add 10 to every element (scalar broadcast)\nmatrix + 10\n# array([[11, 12, 13],\n#        [14, 15, 16],\n#        [17, 18, 19]])\n\n# Add a row vector [1, 0, -1] to every row\nmatrix + np.array([1, 0, -1])\n# array([[ 2,  2,  2],\n#        [ 5,  5,  5],\n#        [ 8,  8,  8]])\n```\n\n## Useful Universal Functions (ufuncs)\n\n```python\narr = np.array([1, 4, 9, 16, 25])\n\nnp.sqrt(arr)   # [1. 2. 3. 4. 5.]  square root of each\nnp.log(arr)    # natural log of each\nnp.abs(arr)    # absolute value\nnp.round(arr, 2)  # round each to 2 decimal places\n```\n\n## Aggregations\n\n```python\ndata = np.array([10, 20, 30, 40, 50])\n\nnp.sum(data)    # 150\nnp.min(data)    # 10\nnp.max(data)    # 50\nnp.cumsum(data) # [10 30 60 100 150] — running total\n```\n\n:::checkpoint\nWhat does np.sqrt(np.array([4, 9, 16])) return?\nA) [2. 3. 4.]\nB) [2, 3, 4]\nC) Error\nD) [16, 81, 256]\nCorrect: A",
+        quiz: [
+          {
+            question: "What does prices * 1.1 do when prices is a NumPy array?",
+            options: [
+              "Multiplies only the first element",
+              "Multiplies every element by 1.1 at once",
+              "Creates an error",
+              "Appends 1.1 to the list",
+            ],
+            correctAnswerIndex: 1,
+          },
+          {
+            question: "What is broadcasting in NumPy?",
+            options: [
+              "Sending arrays over a network",
+              "Applying an operation across arrays of different sizes by stretching the smaller one",
+              "A type of loop",
+              "Copying an array",
+            ],
+            correctAnswerIndex: 1,
+          },
+          {
+            question: "What does np.cumsum([1, 2, 3, 4]) return?",
+            options: ["[1, 2, 3, 4]", "[1, 3, 6, 10]", "10", "[0, 1, 3, 6]"],
+            correctAnswerIndex: 1,
+          },
+          {
+            question:
+              "Which NumPy function returns the square root of each element?",
+            options: ["np.power()", "np.sqrt()", "np.root()", "np.sqr()"],
+            correctAnswerIndex: 1,
+          },
+          {
+            question: "What does np.sum(arr) return?",
+            options: [
+              "A running total for each element",
+              "The sum of all elements in the array",
+              "The maximum value",
+              "The number of elements",
+            ],
+            correctAnswerIndex: 1,
+          },
+        ],
+      },
+      {
+        id: "w_np-d3",
+        title: "Day 3: NumPy for Statistics (Z-Scores & More)",
+        description:
+          "Use NumPy for statistical analysis including z-scores and percentiles",
+        type: "learn",
+        duration: "45-60 mins",
+        content:
+          "## NumPy Statistical Functions\n\nNumPy has a full set of statistical functions that work on arrays — faster and more memory-efficient than Python's statistics module.\n\n```python\nimport numpy as np\n\ndata = np.array([12, 15, 14, 10, 18, 22, 13, 16, 19, 25])\n\nprint(np.mean(data))    # 16.4  — average\nprint(np.median(data))  # 15.5  — middle value\nprint(np.std(data))     # 4.2   — standard deviation\nprint(np.var(data))     # 17.84 — variance\nprint(np.min(data))     # 10\nprint(np.max(data))     # 25\nprint(np.percentile(data, 25))   # Q1 = 13.25\nprint(np.percentile(data, 75))   # Q3 = 19.25\nprint(np.percentile(data, [25, 50, 75]))  # all at once\n```\n\n## Z-Scores — How Far From the Mean?\n\nA **z-score** measures how many standard deviations a value is from the mean.\n\n**Formula:** z = (x - mean) / std\n\n- z = 0: exactly at the mean\n- z = 1: one std above the mean\n- z = -2: two stds below the mean\n- |z| > 3: likely an outlier\n\n```python\nimport numpy as np\n\ndata = np.array([50, 55, 52, 60, 48, 100, 53, 57])\n\nmean = np.mean(data)\nstd  = np.std(data)\n\nz_scores = (data - mean) / std\nprint(z_scores.round(2))\n# [ -0.6  -0.19 -0.45  0.36 -0.9   3.37 -0.3   0.07]\n# The value 100 has z=3.37 — a clear outlier!\n\n# Identify outliers (|z| > 2)\noutliers = data[np.abs(z_scores) > 2]\nprint('Outliers:', outliers)  # [100]\n```\n\n**When to use z-scores:**\n- Detecting outliers (|z| > 2 or 3)\n- Comparing values from different scales (e.g. height in cm vs weight in kg)\n- Standardizing features before ML models\n- Understanding where a data point sits relative to the distribution\n\n## Frequency Distributions\n\nA frequency distribution shows how often each value (or range of values) appears.\n\n```python\nimport numpy as np\n\nages = np.array([22, 25, 28, 22, 30, 35, 25, 28, 40, 22, 28, 35])\n\n# Count exact values\nuniques, counts = np.unique(ages, return_counts=True)\nfor val, cnt in zip(uniques, counts):\n    print(f'Age {val}: {cnt} times')\n\n# Bin into ranges (histogram-style)\nbins = [20, 25, 30, 35, 40, 45]\nfreq, edges = np.histogram(ages, bins=bins)\nfor i in range(len(freq)):\n    print(f'{edges[i]}-{edges[i+1]}: {freq[i]} people')\n\n# Relative frequency (proportions)\nrelative = freq / freq.sum()\nprint(relative.round(2))  # [0.33 0.25 0.17 0.17 0.08]\n\n# Cumulative frequency\ncumulative = np.cumsum(freq)\nprint(cumulative)  # [4 7 9 11 12]\n```\n\n:::checkpoint\nIf a value has a z-score of -2.5, what does that mean?\nA) The value is 2.5 times the mean\nB) The value is 2.5 standard deviations BELOW the mean\nC) The value is an error in the data\nD) The value equals zero\nCorrect: B\n\n:::checkpoint\nWhat does np.percentile(data, 75) return?\nA) The 75th largest value\nB) The value below which 75% of the data falls (Q3)\nC) 75% of the mean\nD) The value at position 75 in the array\nCorrect: B",
+        quiz: [
+          {
+            question: "What is a z-score?",
+            options: [
+              "The rank of a value in the dataset",
+              "How many standard deviations a value is from the mean",
+              "The percentage of values below a point",
+              "The probability of a value occurring",
+            ],
+            correctAnswerIndex: 1,
+          },
+          {
+            question: "If |z| > 3, the data point is likely:",
+            options: [
+              "The mean",
+              "An outlier",
+              "A median value",
+              "A mode value",
+            ],
+            correctAnswerIndex: 1,
+          },
+          {
+            question: "What does np.percentile(data, 50) return?",
+            options: [
+              "The mean",
+              "The median (50th percentile)",
+              "The maximum value",
+              "50% of the sum",
+            ],
+            correctAnswerIndex: 1,
+          },
+          {
+            question: "What is relative frequency?",
+            options: [
+              "The count of each value",
+              "The proportion of each value relative to total (count / total)",
+              "The difference between max and min",
+              "The running total",
+            ],
+            correctAnswerIndex: 1,
+          },
+          {
+            question: "Why standardize data using z-scores before ML models?",
+            options: [
+              "It makes the data look cleaner",
+              "It puts features on the same scale so no single feature dominates",
+              "It removes all outliers automatically",
+              "It is required by Python",
+            ],
+            correctAnswerIndex: 1,
+          },
+        ],
+      },
+      {
+        id: "w_np-d4",
+        title: "Day 4: Indexing, Boolean Masks & np.where",
+        description:
+          "Select and filter array data with powerful boolean indexing",
+        type: "practice",
+        duration: "45-60 mins",
+        content:
+          "## Array Indexing & Slicing\n\nJust like Python lists, but also works on 2D arrays.\n\n```python\nimport numpy as np\n\narr = np.array([10, 20, 30, 40, 50])\n\narr[0]     # 10  — first element\narr[-1]    # 50  — last element\narr[1:4]   # [20, 30, 40]  — slice\narr[:3]    # [10, 20, 30]  — first 3\narr[::2]   # [10, 30, 50]  — every other element\n\n# 2D indexing\nmatrix = np.array([[1, 2, 3], [4, 5, 6], [7, 8, 9]])\nmatrix[0, :]   # [1 2 3]  — first row\nmatrix[:, 1]   # [2 5 8]  — second column\nmatrix[1, 2]   # 6        — row 1, col 2\n```\n\n## Boolean Masks — The Most Powerful Indexing\n\nBroadcast a condition across an array to get a True/False mask, then use it to select elements.\n\n```python\nscores = np.array([78, 92, 65, 88, 55, 97, 73])\n\nmask = scores > 80           # [F  T  F  T  F  T  F]\nhigh_scores = scores[mask]   # [92 88 97]\n\n# In one line:\nscores[scores > 80]          # [92 88 97]\n\n# Multiple conditions\nscores[(scores >= 70) & (scores < 90)]  # [78, 88, 73]\n\n# Count how many passed\nprint(np.sum(scores > 80))   # 3\nprint(np.mean(scores > 80))  # 0.43 — 43% of scores are above 80\n```\n\n## np.where — Conditional Replacement\n\n`np.where(condition, value_if_true, value_if_false)` is the NumPy equivalent of CASE WHEN in SQL or IF in Excel.\n\n```python\nscores = np.array([78, 92, 65, 88, 55, 97, 73])\n\n# Label each score as Pass or Fail\nlabels = np.where(scores >= 70, 'Pass', 'Fail')\n# ['Pass', 'Pass', 'Fail', 'Pass', 'Fail', 'Pass', 'Pass']\n\n# Multi-level with nested np.where\ngrades = np.where(scores >= 90, 'A',\n         np.where(scores >= 80, 'B',\n         np.where(scores >= 70, 'C', 'F')))\nprint(grades)  # ['C', 'A', 'F', 'B', 'F', 'A', 'C']\n\n# Conditional fill: replace negatives with 0\ndata = np.array([5, -3, 8, -1, 12])\ncleaned = np.where(data < 0, 0, data)  # [5 0 8 0 12]\n```\n\n:::checkpoint\nWhat does scores[scores > 80] do?\nA) Returns the indices where scores > 80\nB) Returns the values from scores where the condition is True\nC) Returns a boolean array\nD) Modifies the original array\nCorrect: B\n\n:::checkpoint\nWhat does np.where(arr > 0, arr, 0) do?\nA) Deletes negative values\nB) Returns arr values where positive, 0 where negative\nC) Counts positive values\nD) Sorts the array\nCorrect: B",
+        quiz: [
+          {
+            question: "How do you select all elements > 5 from arr?",
+            options: [
+              "arr.filter(5)",
+              "arr[arr > 5]",
+              "arr.where(> 5)",
+              "np.filter(arr, 5)",
+            ],
+            correctAnswerIndex: 1,
+          },
+          {
+            question: "What does np.where(x > 0, 1, -1) return?",
+            options: [
+              "Count of positive values",
+              "1 where x > 0, -1 elsewhere",
+              "The indices of positive values",
+              "Error",
+            ],
+            correctAnswerIndex: 1,
+          },
+          {
+            question:
+              "How do you select row 0 from a 2D NumPy array called matrix?",
+            options: [
+              "matrix[0]",
+              "matrix[:, 0]",
+              "matrix.row(0)",
+              "matrix.head(1)",
+            ],
+            correctAnswerIndex: 0,
+          },
+          {
+            question: "What does np.sum(scores > 70) calculate?",
+            options: [
+              "The sum of all scores above 70",
+              "The count of scores above 70 (True = 1)",
+              "The percentage above 70",
+              "Error",
+            ],
+            correctAnswerIndex: 1,
+          },
+          {
+            question: "How is np.where similar to SQL's CASE WHEN?",
+            options: [
+              "Both filter rows from a table",
+              "Both return different values based on a condition",
+              "Both are used for sorting",
+              "They are not similar at all",
+            ],
+            correctAnswerIndex: 1,
+          },
+        ],
+      },
+      {
+        id: "w_np-d5",
+        title: "Day 5: Mini-Project: NumPy Data Analysis",
+        description: "Apply NumPy skills to analyze a sales dataset end-to-end",
+        type: "project",
+        duration: "1-2 hrs",
+        content:
+          "Use NumPy to analyze a sales dataset from scratch.\n\n**Scenario:** You have daily sales figures for 30 days. Analyze performance.\n\n**Requirements:**\n1. Create a NumPy array of 30 random sales values (use np.random.randint(500, 5000, 30))\n2. Calculate: mean, median, std, min, max, Q1, Q3\n3. Calculate z-scores for every day\n4. Identify which days were outliers (|z| > 1.5)\n5. Create a frequency distribution with np.histogram using 5 bins\n6. Use np.where to label each day as 'Above Average' or 'Below Average'\n7. Count how many days were above average\n\n**Hints:**\n- z = (arr - arr.mean()) / arr.std()\n- outlier_days = np.where(np.abs(z_scores) > 1.5)[0]  — returns indices\n- freq, edges = np.histogram(sales, bins=5)\n- labels = np.where(sales > sales.mean(), 'Above', 'Below')\n- np.sum(sales > sales.mean()) counts True values\n\n:::checkpoint\nTo find the indices of outliers (|z| > 2), you would use:\nA) z_scores > 2\nB) np.where(np.abs(z_scores) > 2)\nC) z_scores.filter(2)\nD) np.abs(z_scores) == 2\nCorrect: B",
+        quiz: [
+          {
+            question: "What does np.random.randint(100, 500, 30) produce?",
+            options: [
+              "One random integer between 100 and 500",
+              "30 random integers between 100 and 500",
+              "A range from 100 to 500",
+              "Error",
+            ],
+            correctAnswerIndex: 1,
+          },
+          {
+            question: "How do you calculate z-scores for an entire array?",
+            options: [
+              "Loop through each element manually",
+              "(arr - arr.mean()) / arr.std() — fully vectorized",
+              "np.zscore(arr)",
+              "arr / arr.sum()",
+            ],
+            correctAnswerIndex: 1,
+          },
+          {
+            question: "np.where(np.abs(z_scores) > 2) returns:",
+            options: [
+              "The z-score values above 2",
+              "A tuple of arrays containing indices where condition is True",
+              "True/False for each element",
+              "The count of outliers",
+            ],
+            correctAnswerIndex: 1,
+          },
+          {
+            question:
+              "Why use np.histogram instead of just np.unique for frequency distributions?",
+            options: [
+              "np.unique is deprecated",
+              "np.histogram groups continuous data into bins (ranges), not just exact values",
+              "np.histogram is faster",
+              "They do the same thing",
+            ],
+            correctAnswerIndex: 1,
+          },
+          {
+            question: "What does np.mean(sales > sales.mean()) tell you?",
+            options: [
+              "The average of above-average sales",
+              "The proportion of days that were above average",
+              "The count of above-average days",
+              "Nothing useful",
+            ],
+            correctAnswerIndex: 1,
+          },
+        ],
+        requirements: [
+          "Create sales array with np.random",
+          "Calculate all 7 descriptive statistics",
+          "Calculate z-scores",
+          "Identify outlier days",
+          "Build frequency distribution",
+          "Label days Above/Below Average",
+        ],
+      },
+    ],
+  },
+  {
     id: "week14",
     title: "Week 16: Intro to Pandas (Month 4)",
     durationText: "WEEK 16",
