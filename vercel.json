@@ -1,8 +1,8 @@
 {
   "version": 2,
   "public": true,
-  "buildCommand": "npm run build",
-  "outputDirectory": "dist",
+  "buildCommand": "cd app && npm run build",
+  "outputDirectory": "app/dist",
   "rewrites": [
     { "source": "/(.*)", "destination": "/index.html" }
   ]

@@ -543,29 +543,59 @@ function splitByCommas(s: string): string[] {
 }
 
 export function createDefaultData(): SpreadsheetData {
-  return {
-    cells: {
-      'B1': { value: 'Item' },
-      'C1': { value: 'Price' },
-      'D1': { value: 'Qty' },
-      'B2': { value: 'Apples' },
-      'C2': { value: '10' },
-      'D2': { value: '3' },
-      'B3': { value: 'Bananas' },
-      'C3': { value: '20' },
-      'D3': { value: '2' },
-      'B4': { value: 'Cherries' },
-      'C4': { value: '15' },
-      'D4': { value: '5' },
-      'B5': { value: 'Dates' },
-      'C5': { value: '25' },
-      'D5': { value: '1' },
-      'B6': { value: 'Elderberries' },
-      'C6': { value: '12' },
-      'D6': { value: '4' },
-      'E1': { value: 'Total' },
-    },
-    cols: 6,
-    rows: 8,
+  const data: Record<string, { value: string }> = {
+    'A1': { value: 'ID' },
+    'B1': { value: 'Product' },
+    'C1': { value: 'Category' },
+    'D1': { value: 'Price' },
+    'E1': { value: 'Qty' },
+    'F1': { value: 'Total' },
+    'G1': { value: 'Date' },
+    'H1': { value: 'Region' },
   };
+
+  const products: [string, string, string, string, string, string][] = [
+    ['TXN-001', 'Widget Pro', 'Electronics', '149.99', '2', 'East'],
+    ['TXN-002', 'Gadget X', 'Accessories', '29.99', '5', 'East'],
+    ['TXN-003', 'Power Cable', 'Accessories', '69.99', '1', 'West'],
+    ['TXN-004', 'Desk Lamp', 'Office', '124.99', '3', 'West'],
+    ['TXN-005', 'Ergonomic Chair', 'Office', '499.99', '1', 'Central'],
+    ['TXN-006', 'Monitor 27"', 'Electronics', '349.99', '2', 'East'],
+    ['TXN-007', 'Laptop Stand', 'Accessories', '79.99', '4', 'South'],
+    ['TXN-008', 'USB Hub', 'Electronics', '22.99', '10', 'East'],
+    ['TXN-009', 'Mechanical Keyboard', 'Electronics', '149.99', '1', 'West'],
+    ['TXN-010', 'Mouse Pad XL', 'Accessories', '19.99', '8', 'Central'],
+    ['TXN-011', 'Widget Pro', 'Electronics', '149.99', '3', 'South'],
+    ['TXN-012', 'Desk Lamp', 'Office', '124.99', '2', 'Central'],
+    ['TXN-013', 'Gadget X', 'Accessories', '29.99', '6', 'West'],
+    ['TXN-014', 'Monitor 27"', 'Electronics', '349.99', '1', 'South'],
+    ['TXN-015', 'Power Cable', 'Accessories', '69.99', '3', 'East'],
+    ['TXN-016', 'Laptop Stand', 'Accessories', '79.99', '2', 'East'],
+    ['TXN-017', 'Ergonomic Chair', 'Office', '499.99', '2', 'West'],
+    ['TXN-018', 'USB Hub', 'Electronics', '22.99', '5', 'West'],
+    ['TXN-019', 'Mechanical Keyboard', 'Electronics', '149.99', '3', 'Central'],
+    ['TXN-020', 'Mouse Pad XL', 'Accessories', '19.99', '12', 'East'],
+    ['TXN-021', 'Widget Pro', 'Electronics', '149.99', '1', 'East'],
+    ['TXN-022', 'Desk Lamp', 'Office', '124.99', '4', 'South'],
+    ['TXN-023', 'Gadget X', 'Accessories', '29.99', '3', 'Central'],
+    ['TXN-024', 'Monitor 27"', 'Electronics', '349.99', '2', 'West'],
+    ['TXN-025', 'Power Cable', 'Accessories', '69.99', '4', 'South'],
+    ['TXN-026', 'Laptop Stand', 'Accessories', '79.99', '1', 'Central'],
+    ['TXN-027', 'Ergonomic Chair', 'Office', '499.99', '1', 'East'],
+    ['TXN-028', 'USB Hub', 'Electronics', '22.99', '8', 'East'],
+    ['TXN-029', 'Mechanical Keyboard', 'Electronics', '149.99', '2', 'South'],
+    ['TXN-030', 'Mouse Pad XL', 'Accessories', '19.99', '5', 'West'],
+  ];
+
+  products.forEach(([id, product, cat, price, qty, region], i) => {
+    const row = i + 2;
+    data[`A${row}`] = { value: id };
+    data[`B${row}`] = { value: product };
+    data[`C${row}`] = { value: cat };
+    data[`D${row}`] = { value: price };
+    data[`E${row}`] = { value: qty };
+    data[`G${row}`] = { value: region };
+  });
+
+  return { cells: data, cols: 8, rows: 35 };
 }
