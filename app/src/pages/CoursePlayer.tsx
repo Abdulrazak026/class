@@ -508,7 +508,7 @@ export function CoursePlayer({ curriculum, completedTasks, toggleTask, activeTop
                       }
                       if (seg.type === 'classwork' && seg.classwork) {
                         try {
-                          return <ClassworkCard key={`cw-${i}`} classwork={seg.classwork} />;
+                          return <ClassworkCard key={`cw-${i}`} classwork={seg.classwork} onComplete={() => toggleTask(activeTopic.id)} />;
                         } catch (e) {
                           console.error('[CoursePlayer] Error rendering ClassworkCard:', e);
                           return <div key={`err-${i}`} className="my-6 p-4 border-2 border-red-400 bg-red-50 rounded-xl"><p className="text-red-700 font-bold">Classwork render error</p><pre className="text-red-600 text-sm mt-2">{String(e)}</pre></div>;

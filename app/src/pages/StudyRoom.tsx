@@ -5,7 +5,7 @@ import { Module } from '../data';
 import { ChatMessage } from '../firebase/services';
 import { hasFirebaseConfig } from '../firebase/config';
 import { executePython } from '../utils/pythonExecutor';
-import { executeSQL, DmlResult } from '../utils/sqlExecutor';
+import { executeSQL } from '../utils/sqlExecutor';
 import { SpreadsheetRunner } from '../components/SpreadsheetRunner';
 import { evaluateFormula, createDefaultData } from '../utils/spreadsheetEngine';
 
@@ -527,31 +527,41 @@ export function StudyRoom({ completedTasks, completedTasksOwn, completedTasksOth
 
   const handleRunPython = () => {
     if (!selectedChallenge) return;
-    const outputs = runPython(code);
-    setCodeOutput(outputs);
-    const full = outputs.join('\n');
-    const passed = selectedChallenge.verify(full);
-    setChallengeResult(passed ? 'pass' : 'fail');
-    if (passed) markSolved(selectedChallenge.id);
+    try {
+      const outputs = runPython(code);
+      setCodeOutput(outputs);
+      const full = outputs.join('\n');
+      const passed = selectedChallenge.verify(full);
+      setChallengeResult(passed ? 'pass' : 'fail');
+      if (passed) markSolved(selectedChallenge.id);
+    } catch (e) {
+      setCodeOutput([e instanceof Error ? e.message : String(e)]);
+      setChallengeResult('fail');
+    }
   };
 
   const handleRunSQL = () => {
     if (!selectedChallenge) return;
-    const query = code.trim();
-    const sqlResult = executeSQL(query);
-    let outputs: string[];
-    if ('error' in sqlResult) {
-      outputs = [sqlResult.error];
-    } else if ('command' in sqlResult) {
-      outputs = [sqlResult.message];
-    } else {
-      outputs = sqlResult.rows.map(r => sqlResult.columns.map((c, ci) => r[c] ?? r[sqlResult.columnKeys?.[ci] ?? ''] ?? '').join('\t'));
-      if (outputs.length === 0) outputs = ['No results'];
+    try {
+      const query = code.trim();
+      const sqlResult = executeSQL(query);
+      let outputs: string[];
+      if ('error' in sqlResult) {
+        outputs = [sqlResult.error];
+      } else if ('command' in sqlResult) {
+        outputs = [sqlResult.message];
+      } else {
+        outputs = sqlResult.rows.map(r => sqlResult.columns.map((c, ci) => r[c] ?? r[sqlResult.columnKeys?.[ci] ?? ''] ?? '').join('\t'));
+        if (outputs.length === 0) outputs = ['No results'];
+      }
+      setCodeOutput(outputs);
+      const passed = selectedChallenge.verify(outputs.join('\n'));
+      setChallengeResult(passed ? 'pass' : 'fail');
+      if (passed) markSolved(selectedChallenge.id);
+    } catch (e) {
+      setCodeOutput([e instanceof Error ? e.message : String(e)]);
+      setChallengeResult('fail');
     }
-    setCodeOutput(outputs);
-    const passed = selectedChallenge.verify(outputs.join('\n'));
-    setChallengeResult(passed ? 'pass' : 'fail');
-    if (passed) markSolved(selectedChallenge.id);
   };
 
   const handleRunExcel = () => {

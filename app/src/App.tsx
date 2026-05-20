@@ -1,12 +1,12 @@
 import React, { useState, useMemo, useEffect, useCallback, useRef, Suspense, lazy } from 'react';
-import { Menu, Loader2 } from 'lucide-react';
+import { Menu } from 'lucide-react';
 import { Sidebar, Tab } from './components/Sidebar';
 import { useLocalStorage } from './hooks/useLocalStorage';
 import { getCurriculum, setDecryptedData } from './utils/dataLoader';
 import { decryptFile } from './utils/crypto';
 import {
   addTopicComment, subscribeToTopicComments, ChatMessage, TopicComment,
-  sendChatMessage, subscribeToChat, registerDevice, getMyUserId,
+  sendChatMessage, subscribeToChat, registerDevice,
   syncUserProgress, subscribeToProgress,
 } from './firebase/services';
 import { UserCodePrompt } from './components/UserCodePrompt';
@@ -71,7 +71,7 @@ export default function App() {
   }, []);
 
   useEffect(() => {
-    registerDevice().then(setUserId);
+    registerDevice().then(setUserId).catch(() => setUserId(1));
   }, []);
 
   useEffect(() => {

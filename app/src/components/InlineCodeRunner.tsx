@@ -88,10 +88,13 @@ export function InlineCodeRunner({ language, code, task, initialCode, expectedOu
       }
       return;
     }
-    const actual = output.map(o => o.text).join('\n').trim().replace(/\r\n/g, '\n').replace(/\s+$/, '');
-    const expected = expectedOutput.trim().replace(/\r\n/g, '\n').replace(/\s+$/, '');
+    const actual = output.map(o => o.text).join('\n').trim();
+    const expected = expectedOutput.trim();
     setVerified(actual === expected ? 'pass' : 'fail');
-    if (actual === expected && onComplete) onComplete();
+    if (actual === expected) {
+      setCompleted(true);
+      if (onComplete) onComplete();
+    }
   };
 
   const outputText = output?.map(o => o.text).join('\n') ?? '';
@@ -200,7 +203,7 @@ export function InlineCodeRunner({ language, code, task, initialCode, expectedOu
               <pre className="text-sm font-mono text-gray-900 whitespace-pre-wrap leading-relaxed">{outputText}</pre>
             </div>
           )}
-          {showVerify && expectedOutput && (
+          {showVerify && (
             <div className="px-4 py-2.5 bg-gray-100 flex items-center gap-3">
               <button onClick={handleVerify}
                 className="text-xs font-bold px-4 py-1.5 rounded-md transition-colors bg-indigo-600 text-white hover:bg-indigo-700 border-0 cursor-pointer">
