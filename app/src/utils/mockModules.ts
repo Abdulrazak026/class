@@ -293,9 +293,13 @@ export class MockDataFrame {
   }
 
   shift(periods = 1) {
+    const absPeriods = Math.abs(periods);
+    const nulls = Array(absPeriods).fill(null);
     const newData: Record<string, any[]> = {};
     for (const [k, v] of Object.entries(this._data)) {
-      newData[k] = [...Array(periods).fill(null), ...v.slice(0, -periods)];
+      newData[k] = periods > 0
+        ? [...nulls, ...v.slice(0, -periods)]
+        : [...v.slice(absPeriods), ...nulls];
     }
     return new MockDataFrame(newData);
   }
@@ -315,19 +319,35 @@ export class MockDataFrame {
     const nums = Object.entries(this._data).filter(([, v]) => v.some(x => !isNaN(Number(x))));
     const result: Record<string, any[]> = {};
     const names = nums.map(([k]) => k);
+    const rowCount = Math.max(0, ...Object.values(this._data).map(v => v.length));
     for (const [k1] of nums) {
       result[k1] = [];
       for (const [k2] of nums) {
         if (k1 === k2) { result[k1].push(1); continue; }
-        const v1 = this._data[k1]?.filter((v: any) => !isNaN(Number(v))).map(Number) || [];
-        const v2 = this._data[k2]?.filter((v: any) => !isNaN(Number(v))).map(Number) || [];
-        const n = Math.min(v1.length, v2.length);
-        if (n < 2) { result[k1].push(0); continue; }
-        const m1 = v1.slice(0, n).reduce((s: number, v: number) => s + v, 0) / n;
-        const m2 = v2.slice(0, n).reduce((s: number, v: number) => s + v, 0) / n;
-        const num = v1.slice(0, n).reduce((s: number, v: number, i: number) => s + (v - m1) * (v2[i] - m2), 0);
-        const d1 = Math.sqrt(v1.slice(0, n).reduce((s: number, v: number) => s + (v - m1) ** 2, 0)) || 1;
-        const d2 = Math.sqrt(v2.slice(0, n).reduce((s: number, v: number) => s + (v - m2) ** 2, 0)) || 1;
+        const raw1 = this._data[k1] || [];
+        const raw2 = this._data[k2] || [];
+        const rowMask: boolean[] = [];
+        for (let r = 0; r < rowCount; r++) {
+          const n1 = !isNaN(Number(raw1[r]));
+          const n2 = !isNaN(Number(raw2[r]));
+          rowMask.push(n1 && n2);
+        }
+        const v1: number[] = [];
+        const v2: number[] = [];
+        for (let r = 0; r < rowCount; r++) {
+          if (rowMask[r]) {
+            v1.push(Number(raw1[r]));
+            v2.push(Number(raw2[r]));
+          }
+        }
+        const n = v1.length;
+        if (n < 2) { result[k1].push(NaN); continue; }
+        const m1 = v1.reduce((s: number, v: number) => s + v, 0) / n;
+        const m2 = v2.reduce((s: number, v: number) => s + v, 0) / n;
+        const num = v1.reduce((s: number, v: number, i: number) => s + (v - m1) * (v2[i] - m2), 0);
+        const d1 = Math.sqrt(v1.reduce((s: number, v: number) => s + (v - m1) ** 2, 0));
+        const d2 = Math.sqrt(v2.reduce((s: number, v: number) => s + (v - m2) ** 2, 0));
+        if (!d1 || !d2) { result[k1].push(NaN); continue; }
         result[k1].push(+(num / (d1 * d2)).toFixed(4));
       }
     }
@@ -540,15 +560,24 @@ export class MockSeries {
   }
 
   corr(other: MockSeries) {
-    const a = this.data.map(Number).filter(x => !isNaN(x));
-    const b = other.data.map(Number).filter(x => !isNaN(x));
-    if (a.length < 2) return 0;
-    const meanA = a.reduce((s, v) => s + v, 0) / a.length;
-    const meanB = b.reduce((s, v) => s + v, 0) / b.length;
-    const num = a.reduce((s, v, i) => s + (v - meanA) * (b[i] - meanB), 0);
-    const denA = Math.sqrt(a.reduce((s, v) => s + (v - meanA) ** 2, 0));
-    const denB = Math.sqrt(b.reduce((s, v) => s + (v - meanB) ** 2, 0));
-    return denA && denB ? num / (denA * denB) : 0;
+    const n = Math.min(this.data.length, other.data.length);
+    const pairs: [number, number][] = [];
+    for (let i = 0; i < n; i++) {
+      const a = Number(this.data[i]);
+      const b = Number(other.data[i]);
+      if (!isNaN(a) && !isNaN(b)) pairs.push([a, b]);
+    }
+    if (pairs.length < 2) return NaN;
+    const meanA = pairs.reduce((s, [a]) => s + a, 0) / pairs.length;
+    const meanB = pairs.reduce((s, [, b]) => s + b, 0) / pairs.length;
+    let num = 0, denA = 0, denB = 0;
+    for (const [a, b] of pairs) {
+      num += (a - meanA) * (b - meanB);
+      denA += (a - meanA) ** 2;
+      denB += (b - meanB) ** 2;
+    }
+    if (!denA || !denB) return NaN;
+    return num / Math.sqrt(denA * denB);
   }
 
   toString() { return `Series: [${this.data.join(', ')}]`; }

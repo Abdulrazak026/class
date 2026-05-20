@@ -15,6 +15,8 @@ export function UpdateBanner() {
   useEffect(() => {
     if (!updateUrl.trim()) return;
 
+    const timeouts: ReturnType<typeof setTimeout>[] = [];
+
     const check = async () => {
       setChecking(true);
       const result = await checkForAppUpdates(updateUrl.trim());
@@ -33,17 +35,20 @@ export function UpdateBanner() {
         const fetchResult = await fetchAndApplyUpdate(updateUrl.trim());
         if (fetchResult.error) {
           setToastError(`Update failed: ${fetchResult.error}`);
-          setTimeout(() => setToastError(null), 5000);
+          timeouts.push(setTimeout(() => setToastError(null), 5000));
           return;
         }
         setToast(`Updated to v${result.version}`);
-        setTimeout(() => setToast(null), 3000);
+        timeouts.push(setTimeout(() => setToast(null), 3000));
       }
     };
 
     check();
     const interval = setInterval(check, 60000);
-    return () => clearInterval(interval);
+    return () => {
+      clearInterval(interval);
+      timeouts.forEach(clearTimeout);
+    };
   }, [updateUrl]);
 
   return (

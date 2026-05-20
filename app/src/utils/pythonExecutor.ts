@@ -444,9 +444,13 @@ function evaluate(expr: string, vars: Record<string, any>): any {
     return evaluate(ternaryMatch[3].trim(), vars);
   }
 
-  if ((s.startsWith('"') && s.endsWith('"')) || (s.startsWith("'") && s.endsWith("'"))) {
-    let inner = s.slice(1, -1);
-    if (s.startsWith('f"') || s.startsWith("f'")) {
+  const esMatch = s.match(/^([fbr]*)(["'])((?:(?!\2|\\).|\\.)*)\2$/s);
+  if (esMatch) {
+    const prefix = esMatch[1];
+    const quote = esMatch[2];
+    let inner = esMatch[3];
+    inner = inner.replace(/\\(.)/g, (_, c) => c === 'n' ? '\n' : c === 't' ? '\t' : c === 'r' ? '\r' : c === '0' ? '\0' : c);
+    if (prefix.includes('f')) {
       inner = inner.replace(/\{(.+?)\}/g, (_, expr2) => String(evaluate(expr2.trim(), vars) ?? ''));
     }
     return inner;
@@ -749,12 +753,16 @@ export function executePython(code: string): PythonOutput[] {
     const trimmed = line.trim().replace(/(?:#.*)$/, '').trim();
     if (!trimmed || trimmed.startsWith('#')) return;
 
-    const importMatch = trimmed.match(/^(?:from\s+(\S+)\s+)?import\s+([\w,.\s]+)(?:\s+as\s+(\S+))?(?:\s*#.*)?$/);
+    const importMatch = trimmed.match(/^(?:from\s+(\S+)\s+)?import\s+(.+?)(?:\s*#.*)?$/);
     if (importMatch) {
       const fromModule = importMatch[1];
-      const moduleNames = importMatch[2].split(',').map(s => s.trim());
-      const alias = importMatch[3];
-      for (const moduleName of moduleNames) {
+      const rawModules = importMatch[2].split(',').map(s => s.trim());
+      const moduleEntries: { name: string; alias: string | null }[] = [];
+      for (const raw of rawModules) {
+        const am = raw.match(/^([\w.]+)(?:\s+as\s+(\w+))?$/);
+        if (am) moduleEntries.push({ name: am[1], alias: am[2] || null });
+      }
+      for (const { name: moduleName, alias } of moduleEntries) {
         if (moduleName === 'matplotlib' || moduleName === 'matplotlib.pyplot' || moduleName === 'pyplot') {
           variables[alias || moduleName] = new MockPlt();
           variables[alias || moduleName].__type = 'plt';
@@ -825,9 +833,9 @@ export function executePython(code: string): PythonOutput[] {
           continue;
         }
       }
-      // Handle aliased imports after the loop (comma-imports skip these)
-      if (moduleNames.length > 1) return;
-      const primaryModule = moduleNames[0];
+      // Handle single aliased imports that didn't match in the loop
+      if (moduleEntries.length > 1) return;
+      const primaryModule = moduleEntries[0]?.name;
       if (primaryModule === 'random') {
         const rand = new MockRandom();
         rand.__type = 'module';
@@ -956,7 +964,7 @@ export function executePython(code: string): PythonOutput[] {
     let braces = 0, parens = 0, brackets = 0, inStr = false, q = '';
     for (let j = 0; j < s.length; j++) {
       const c = s[j];
-      if (inStr) { if (c === q && (j === 0 || s[j-1] !== '\\')) inStr = false; continue; }
+      if (inStr) { if (c === q && (j === 0 || s[j-1] !== '\\' || s[j-2] === '\\')) inStr = false; continue; }
       if (c === '"' || c === "'") { inStr = true; q = c; continue; }
       if (c === '{') braces++; if (c === '}') braces--;
       if (c === '(') parens++; if (c === ')') parens--;

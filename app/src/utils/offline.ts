@@ -22,7 +22,7 @@ export function registerSW(onUpdate?: (info: UpdateInfo) => void): void {
         }
       });
     });
-  });
+  }).catch(() => {});
 }
 
 export async function checkForAppUpdates(updateUrl: string): Promise<{ hasUpdate: boolean; version: string; error?: string }> {

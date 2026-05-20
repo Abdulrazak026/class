@@ -18,6 +18,7 @@ export async function deriveKey(password: string, salt: Uint8Array): Promise<Cry
 
 export async function decryptFile(data: ArrayBuffer, password: string): Promise<string> {
   const bytes = new Uint8Array(data);
+  if (bytes.length < 28) throw new Error('Encrypted data too short');
   const salt = bytes.slice(0, 16);
   const iv = bytes.slice(16, 28);
   const ciphertext = bytes.slice(28);

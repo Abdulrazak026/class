@@ -124,7 +124,7 @@ export function ScenarioPlayer() {
               {scenario.question}
             </p>
             <div className="space-y-2">
-              {scenario.options.map(opt => {
+              {scenario.options.map((opt, optIdx) => {
                 const isSelected = selectedOption === opt.id;
                 const isCorrect = revealed && opt.correct;
                 const isWrong = revealed && isSelected && !opt.correct;
@@ -141,7 +141,7 @@ export function ScenarioPlayer() {
                         revealed && isCorrect ? 'border-emerald-500 bg-emerald-500 text-white' :
                         revealed && isWrong ? 'border-red-500 bg-red-500 text-white' :
                         isSelected ? 'border-purple-500 bg-purple-500 text-white' : 'border-slate-300 text-slate-500'
-                      }`}>{String.fromCharCode(65 + scenario.options.indexOf(opt))}</div>
+                       }`}>{String.fromCharCode(65 + optIdx)}</div>
                       <div className="flex-1">
                         <p className="font-medium text-sm">{opt.text}</p>
                         {revealed && (

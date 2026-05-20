@@ -106,7 +106,7 @@ export function Dashboard({ curriculum, completedTasks, resumeTopicId, onOpenCou
   const pace = calcPace(done, total);
 
   const currentWeekIdx = curriculum.findIndex(m => m.topics.some(t => !completedTasks.includes(t.id)));
-  const weekIdx = currentWeekIdx > -1 ? currentWeekIdx : curriculum.length - 1;
+  const weekIdx = currentWeekIdx > -1 ? currentWeekIdx : Math.max(0, curriculum.length - 1);
   const currentWeek = curriculum[weekIdx];
   const weekDone = currentWeek ? currentWeek.topics.filter(t => completedTasks.includes(t.id)).length : 0;
   const weekTotal = currentWeek ? currentWeek.topics.length : 0;

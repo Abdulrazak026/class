@@ -16,6 +16,7 @@ export function generateChart(series: PlotSeries[], title: string, xlabel: strin
   lines.push('');
 
   for (const s of series) {
+    if (!s.x || !s.y || s.x.length === 0 || s.y.length === 0) continue;
     if (s.type === 'bar') {
       const labelMax = Math.max(...s.x.map(v => String(v).length), 1);
       const maxVal = Math.max(...s.y.map(Number), 0);
@@ -30,6 +31,7 @@ export function generateChart(series: PlotSeries[], title: string, xlabel: strin
     } else if (s.type === 'line') {
       const maxVal = Math.max(...s.y.map(Number), 0);
       const minVal = Math.min(...s.y.map(Number), 0);
+      if (s.y.length === 0) continue;
       const range = maxVal - minVal || 1;
       const height = 8;
       const points = s.y.map((v, i) => ({
