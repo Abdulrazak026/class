@@ -458,7 +458,7 @@ export function StudyRoom({ completedTasks, completedTasksOwn, completedTasksOth
   };
 
   const allTopics = curriculum.flatMap(m => m.topics);
-  const progressPct = Math.round((completedTasks.length / allTopics.length) * 100);
+  const progressPct = allTopics.length > 0 ? Math.round((completedTasks.length / allTopics.length) * 100) : 0;
 
   const solvedCount = solvedChallenges.filter(id => id.startsWith(activeTab)).length;
   const totalCount = (CHALLENGES[activeTab] || []).length;
@@ -657,7 +657,7 @@ export function StudyRoom({ completedTasks, completedTasksOwn, completedTasksOth
               <div className="p-3 rounded-lg bg-accent/5 border border-accent/20 mb-3">
                 <div className="flex items-center justify-between mb-2">
                   <span className="text-sm font-bold text-slate-800">Combined</span>
-                  <span className="text-sm font-mono text-accent font-bold">{progressPct}%</span>
+                  <span className="text-sm font-mono text-accent font-bold">{allTopics.length > 0 ? progressPct : 0}%</span>
                 </div>
                 <div className="w-full bg-slate-100 rounded-full h-2 overflow-hidden">
                   <div className="h-full bg-gradient-to-r from-accent to-accent-light rounded-full transition-all duration-700" style={{ width: `${progressPct}%` }} />
@@ -668,10 +668,10 @@ export function StudyRoom({ completedTasks, completedTasksOwn, completedTasksOth
               <div className="p-3 rounded-lg bg-blue-50/50 border border-blue-200 mb-2">
                 <div className="flex items-center justify-between mb-2">
                   <span className="text-sm font-bold text-slate-800">You</span>
-                  <span className="text-sm font-mono text-blue-600 font-bold">{Math.round((completedTasksOwn.length / allTopics.length) * 100)}%</span>
+                  <span className="text-sm font-mono text-blue-600 font-bold">{allTopics.length > 0 ? Math.round((completedTasksOwn.length / allTopics.length) * 100) : 0}%</span>
                 </div>
                 <div className="w-full bg-slate-100 rounded-full h-1.5 overflow-hidden">
-                  <div className="h-full bg-blue-500 rounded-full transition-all duration-700" style={{ width: `${Math.round((completedTasksOwn.length / allTopics.length) * 100)}%` }} />
+                  <div className="h-full bg-blue-500 rounded-full transition-all duration-700" style={{ width: `${allTopics.length > 0 ? Math.round((completedTasksOwn.length / allTopics.length) * 100) : 0}%` }} />
                 </div>
                 <p className="text-xs text-slate-400 mt-1">{completedTasksOwn.length}/{allTopics.length} topics</p>
               </div>
@@ -680,10 +680,10 @@ export function StudyRoom({ completedTasks, completedTasksOwn, completedTasksOth
                 <div className="p-3 rounded-lg bg-emerald-50/50 border border-emerald-200">
                   <div className="flex items-center justify-between mb-2">
                     <span className="text-sm font-bold text-slate-800">{otherUserCode}</span>
-                    <span className="text-sm font-mono text-emerald-600 font-bold">{Math.round((completedTasksOther.length / allTopics.length) * 100)}%</span>
+                    <span className="text-sm font-mono text-emerald-600 font-bold">{allTopics.length > 0 ? Math.round((completedTasksOther.length / allTopics.length) * 100) : 0}%</span>
                   </div>
                   <div className="w-full bg-slate-100 rounded-full h-1.5 overflow-hidden">
-                    <div className="h-full bg-emerald-500 rounded-full transition-all duration-700" style={{ width: `${Math.round((completedTasksOther.length / allTopics.length) * 100)}%` }} />
+                    <div className="h-full bg-emerald-500 rounded-full transition-all duration-700" style={{ width: `${allTopics.length > 0 ? Math.round((completedTasksOther.length / allTopics.length) * 100) : 0}%` }} />
                   </div>
                   <p className="text-xs text-slate-400 mt-1">{completedTasksOther.length}/{allTopics.length} topics</p>
                 </div>
@@ -712,7 +712,7 @@ export function StudyRoom({ completedTasks, completedTasksOwn, completedTasksOth
               {onlineMessages.map((msg, i) => {
                 const isOwn = msg.user === userCode;
                 return (
-                <div key={i} className="flex gap-3">
+                <div key={`${msg.user}-${msg.time}-${i}`} className="flex gap-3">
                   <div className={`shrink-0 w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold text-white ${isOwn ? 'bg-accent' : 'bg-emerald-500'}`}>
                     {msg.user.charAt(0).toUpperCase()}
                   </div>

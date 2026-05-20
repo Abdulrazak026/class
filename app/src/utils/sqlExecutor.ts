@@ -686,7 +686,7 @@ function parseMainSelect(trimmed: string, cteCtx?: Record<string, TableData>): P
   }
 
   if (!parsed.existsSubquery) {
-    const subqCompareMatch = whereSection.match(/WHERE\s+(?:(\w+)\.)?(\w+)\s*(=|>|<|>=|<=|!=)\s*\(SELECT\s+(.+)\)\s*\)/is);
+    const subqCompareMatch = whereSection.match(/WHERE\s+(?:(\w+)\.)?(\w+)\s*(=|>|<|>=|<=|!=)\s*\(SELECT\s+(.+)\)(?:\s+(GROUP|ORDER|LIMIT|HAVING)\s+|$)/is);
     if (!subqCompareMatch) {
       const whereMatch = trimmed.match(/WHERE\s+(.+?)(?:\s+(GROUP|ORDER|LIMIT|HAVING)\s+|$)/is);
       if (whereMatch) {
@@ -823,7 +823,6 @@ export function executeSQL(query: string, cteCtx?: Record<string, TableData>): Q
       }),
     };
     return { command: 'UPDATE', table: tableName, affectedRows: matchedRows!.length, message: `Updated ${matchedRows!.length} row(s) in "${tableName}".` };
-    return { command: 'UPDATE', table: tableName, affectedRows: matchedRows.length, message: `Updated ${matchedRows.length} row(s) in "${tableName}".` };
   }
 
   if (/^INSERT\s+INTO\s/i.test(upperTrimmed)) {
@@ -838,16 +837,16 @@ export function executeSQL(query: string, cteCtx?: Record<string, TableData>): Q
       return { error: 'Column count does not match value count.' };
     }
     const actualCols = cols.length > 0 ? cols : table.columns;
-    if (actualCols.length > vals.length) {
-      return { error: 'Not enough values provided.' };
+    if (actualCols.length !== vals.length) {
+      return { error: 'Column count does not match value count.' };
     }
     const newRow: Record<string, string> = {};
-    if (table.columns.includes('id')) {
-      const nextId = String(Math.max(0, ...table.rows.map(r => parseInt(r.id) || 0)) + 1);
-      newRow.id = nextId;
-    }
     for (let i = 0; i < actualCols.length; i++) {
       newRow[actualCols[i]] = vals[i] || '';
+    }
+    if (table.columns.includes('id') && !newRow.id) {
+      const ids = table.rows.map(r => parseInt(r.id)).filter(id => !isNaN(id));
+      newRow.id = String(Math.max(0, ...ids) + 1);
     }
     TABLES[tableName] = { ...table, rows: [...table.rows, newRow] };
     return { command: 'INSERT', table: tableName, affectedRows: 1, message: `Inserted 1 row into "${tableName}".` };
@@ -866,7 +865,7 @@ export function executeSQL(query: string, cteCtx?: Record<string, TableData>): Q
         columns: firstResult.columns,
         columnKeys: firstResult.columnKeys,
         rows: all ? combined : combined.filter((row, idx, self) =>
-          idx === self.findIndex(r => JSON.stringify(r) === JSON.stringify(row))
+          idx === self.findIndex(r => Object.keys(r).every(k => r[k] === row[k]) && Object.keys(row).every(k => row[k] === r[k]))
         ),
       };
     }
@@ -929,9 +928,11 @@ export function executeSQL(query: string, cteCtx?: Record<string, TableData>): Q
       const joinTable = cteCtx?.[join.table] || TABLES[join.table];
       if (!joinTable) return { error: `Join table "${join.table}" not found.` };
       const joined: Record<string, string>[] = [];
+      const rightMatched = new Set<number>();
       for (const r1 of rows) {
         let matched = false;
-        for (const r2 of joinTable.rows) {
+        for (let r2i = 0; r2i < joinTable.rows.length; r2i++) {
+          const r2 = joinTable.rows[r2i];
           if (join.on(r1, r2)) {
             const merged: Record<string, string> = {};
             for (const [k, v] of Object.entries(r1)) {
@@ -944,20 +945,34 @@ export function executeSQL(query: string, cteCtx?: Record<string, TableData>): Q
             }
             joined.push(merged);
             matched = true;
+            rightMatched.add(r2i);
           }
         }
-        if (!matched && (join.type === 'LEFT' || join.type === 'RIGHT')) {
+        if (!matched && join.type === 'LEFT') {
           const merged: Record<string, string> = {};
-          if (join.type === 'RIGHT') {
-            for (const [k, v] of Object.entries(r2)) {
-              merged[k] = v;
-              merged[`${join.alias}.${k}`] = v;
-            }
-          } else {
-            for (const [k, v] of Object.entries(r1)) {
-              merged[k] = v;
-              merged[`${parsed.tableAlias || parsed.table}.${k}`] = v;
-            }
+          for (const [k, v] of Object.entries(r1)) {
+            merged[k] = v;
+            merged[`${parsed.tableAlias || parsed.table}.${k}`] = v;
+          }
+          for (const col of joinTable.columns) {
+            merged[col] = '';
+            merged[`${join.alias}.${col}`] = '';
+          }
+          joined.push(merged);
+        }
+      }
+      if (join.type === 'RIGHT') {
+        for (let r2i = 0; r2i < joinTable.rows.length; r2i++) {
+          if (rightMatched.has(r2i)) continue;
+          const r2 = joinTable.rows[r2i];
+          const merged: Record<string, string> = {};
+          for (const [k, v] of Object.entries(r2)) {
+            merged[k] = v;
+            merged[`${join.alias}.${k}`] = v;
+          }
+          for (const [k] of Object.entries(rows.length > 0 ? rows[0] : {})) {
+            merged[k] = '';
+            merged[`${parsed.tableAlias || parsed.table}.${k}`] = '';
           }
           joined.push(merged);
         }
@@ -1083,7 +1098,9 @@ export function executeSQL(query: string, cteCtx?: Record<string, TableData>): Q
     rows.sort((a, b) => {
       const av = parseFloat(a[parsed.orderBy!.col]);
       const bv = parseFloat(b[parsed.orderBy!.col]);
-      if (!isNaN(av) && !isNaN(bv)) return parsed.orderBy!.desc ? bv - av : av - bv;
+      const aIsNum = !isNaN(av), bIsNum = !isNaN(bv);
+      if (aIsNum && bIsNum) return parsed.orderBy!.desc ? bv - av : av - bv;
+      if (aIsNum !== bIsNum) return aIsNum ? -1 : 1;
       return parsed.orderBy!.desc
         ? String(b[parsed.orderBy!.col]).localeCompare(String(a[parsed.orderBy!.col]))
         : String(a[parsed.orderBy!.col]).localeCompare(String(b[parsed.orderBy!.col]));

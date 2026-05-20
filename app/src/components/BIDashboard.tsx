@@ -75,16 +75,21 @@ function ChartRenderer({ chart, data }: { chart: ChartDef; data: Record<string, 
     return (
       <div className="relative h-40">
         <svg className="w-full h-full" viewBox={`0 0 ${svgW} 160`}>
-          {points.map((p, i) => (
+          {points.map((p, i) => {
+            const scale = maxVal > 0 ? maxVal : 1;
+            const y1 = i > 0 ? 160 - (points[i-1].val / scale) * 130 - 15 : 0;
+            const y2 = 160 - (p.val / scale) * 130 - 15;
+            return (
             <g key={i}>
               {i > 0 && (
-                <line x1={(i-1)*60+30} y1={160-(points[i-1].val/maxVal)*130-15} x2={i*60+30} y2={160-(p.val/maxVal)*130-15} stroke="#7c3aed" strokeWidth="2" fill="none" />
+                <line x1={(i-1)*60+30} y1={y1} x2={i*60+30} y2={y2} stroke="#7c3aed" strokeWidth="2" fill="none" />
               )}
-              <circle cx={i*60+30} cy={160-(p.val/maxVal)*130-15} r="4" fill="#7c3aed" />
+              <circle cx={i*60+30} cy={y2} r="4" fill="#7c3aed" />
               <text x={i*60+30} y="155" textAnchor="middle" className="text-[10px] fill-gray-500">{p.label}</text>
-              <text x={i*60+30} y={160-(p.val/maxVal)*130-20} textAnchor="middle" className="text-[9px] fill-gray-500 font-bold">{p.val.toLocaleString()}</text>
+              <text x={i*60+30} y={160-(p.val/scale)*130-20} textAnchor="middle" className="text-[9px] fill-gray-500 font-bold">{p.val.toLocaleString()}</text>
             </g>
-          ))}
+            );
+          })}
         </svg>
       </div>
     );

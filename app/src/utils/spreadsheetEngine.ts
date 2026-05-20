@@ -107,8 +107,8 @@ function evaluateSimple(v: string, data: SpreadsheetData): string | number {
   const cellMatch = v.match(/^([A-Z]+\d+)$/i);
   if (cellMatch) return getCellValue(cellMatch[1].toUpperCase(), data, new Set());
   if ((v.startsWith('"') && v.endsWith('"')) || (v.startsWith("'") && v.endsWith("'"))) return v.slice(1, -1);
-  if (v === 'TRUE') return 'TRUE';
-  if (v === 'FALSE') return 'FALSE';
+  if (v === 'TRUE') return true;
+  if (v === 'FALSE') return false;
   const n = parseFloat(v);
   return isNaN(n) ? v : n;
 }
@@ -162,7 +162,7 @@ export function evaluateFormula(formula: string, data: SpreadsheetData, visited:
       const range = expr.slice(7, -1);
       const cells = range.includes(':') ? parseRange(range) : splitArgs(range);
       return cells.filter(ref => {
-        const v = getCellRawValue(ref, data);
+        const v = getCellValue(ref, data, new Set(visited));
         return v !== '';
       }).length;
     }
@@ -207,7 +207,7 @@ export function evaluateFormula(formula: string, data: SpreadsheetData, visited:
       if (parts.length < 2) return '#ERROR';
       const text = getStr(evaluateSimple(parts[0], data));
       const n = Math.floor(getNum(evaluateSimple(parts[1], data)));
-      return text.slice(0, n);
+      return n > 0 ? text.slice(0, n) : '';
     }
     if (expr.startsWith('RIGHT(')) {
       const args = extractArgs(formula, 'RIGHT');
@@ -215,16 +215,16 @@ export function evaluateFormula(formula: string, data: SpreadsheetData, visited:
       if (parts.length < 2) return '#ERROR';
       const text = getStr(evaluateSimple(parts[0], data));
       const n = Math.floor(getNum(evaluateSimple(parts[1], data)));
-      return text.slice(-n) || text;
+      return n > 0 ? text.slice(-n) : '';
     }
     if (expr.startsWith('MID(')) {
       const args = extractArgs(formula, 'MID');
       const parts = splitArgs(args);
       if (parts.length < 3) return '#ERROR';
       const text = getStr(evaluateSimple(parts[0], data));
-      const start = Math.floor(getNum(evaluateSimple(parts[1], data))) - 1;
+      const start = Math.max(0, Math.floor(getNum(evaluateSimple(parts[1], data))) - 1);
       const n = Math.floor(getNum(evaluateSimple(parts[2], data)));
-      return text.slice(start, start + n);
+      return n > 0 ? text.slice(start, start + n) : '';
     }
     if (expr.startsWith('CONCATENATE(') || expr.startsWith('CONCAT(')) {
       const args = extractArgs(formula, expr.startsWith('CONCATENATE') ? 'CONCATENATE' : 'CONCAT');
@@ -273,6 +273,7 @@ export function evaluateFormula(formula: string, data: SpreadsheetData, visited:
       const text = getStr(evaluateSimple(parts[0], data));
       const oldText = getStr(evaluateSimple(parts[1], data));
       const newText = getStr(evaluateSimple(parts[2], data));
+      if (!oldText) return text;
       if (parts.length > 3) {
         const instance = Math.floor(getNum(evaluateSimple(parts[3], data)));
         let count = 0;
@@ -312,8 +313,8 @@ export function evaluateFormula(formula: string, data: SpreadsheetData, visited:
       let count = 0;
       for (let row = 0; row < maxLen; row++) {
         const match = rangePairs.every(p => {
-          const ref = p.range[row] || p.range[p.range.length - 1];
-          return criteriaMatch(p.criteria, ref, data);
+          if (!p.range[row]) return false;
+          return criteriaMatch(p.criteria, p.range[row], data);
         });
         if (match) count++;
       }
@@ -332,10 +333,10 @@ export function evaluateFormula(formula: string, data: SpreadsheetData, visited:
       let total = 0;
       for (let row = 0; row < maxLen; row++) {
         const match = rangePairs.every(p => {
-          const ref = p.range[row] || p.range[p.range.length - 1];
-          return criteriaMatch(p.criteria, ref, data);
+          if (!p.range[row]) return false;
+          return criteriaMatch(p.criteria, p.range[row], data);
         });
-        if (match) total += getNum(getCellValue(sumRange[row] || sumRange[sumRange.length - 1], data, new Set(visited)));
+        if (match && sumRange[row]) total += getNum(getCellValue(sumRange[row], data, new Set(visited)));
       }
       return total;
     }
@@ -352,10 +353,10 @@ export function evaluateFormula(formula: string, data: SpreadsheetData, visited:
       const vals: number[] = [];
       for (let row = 0; row < maxLen; row++) {
         const match = rangePairs.every(p => {
-          const ref = p.range[row] || p.range[p.range.length - 1];
-          return criteriaMatch(p.criteria, ref, data);
+          if (!p.range[row]) return false;
+          return criteriaMatch(p.criteria, p.range[row], data);
         });
-        if (match) vals.push(getNum(getCellValue(avgRange[row] || avgRange[avgRange.length - 1], data, new Set(visited))));
+        if (match && avgRange[row]) vals.push(getNum(getCellValue(avgRange[row], data, new Set(visited))));
       }
       return vals.length ? vals.reduce((a, b) => a + b, 0) / vals.length : 0;
     }
@@ -376,6 +377,7 @@ export function evaluateFormula(formula: string, data: SpreadsheetData, visited:
       if (parts.length < 3) return '#N/A';
       const lookupVal = getStr(evaluateSimple(parts[0], data)).toLowerCase();
       const range = parseRange(parts[1]);
+      if (range.length === 0) return '#VALUE!';
       const colIdx = Math.floor(getNum(evaluateSimple(parts[2], data))) - 1;
       const firstColLetter = range[0].replace(/\d+$/, '');
       const firstColIdx = colToIndex(firstColLetter.toUpperCase());
@@ -394,7 +396,7 @@ export function evaluateFormula(formula: string, data: SpreadsheetData, visited:
         }
       }
       const found = tableRows.find(r => r.row[0].toLowerCase() === lookupVal);
-      const vlookupResult = found && found.row[colIdx] ? found.row[colIdx] : '#N/A';
+      const vlookupResult = found ? found.row[colIdx] : '#N/A';
       if (restExpr && vlookupResult !== '#N/A') {
         return evaluateFormula('=' + String(vlookupResult) + restExpr, data, visited);
       }
@@ -450,20 +452,20 @@ export function evaluateFormula(formula: string, data: SpreadsheetData, visited:
 
     if (expr.startsWith('SMALL(') || expr.startsWith('LARGE(')) {
       const isSmall = expr.startsWith('SMALL');
-      const inner = expr.slice(isSmall ? 6 : 6, -1);
-      const comma = inner.lastIndexOf(',');
-      if (comma === -1) return 0;
-      const range = parseRange(inner.slice(0, comma).trim());
-      const k = Math.floor(getNum(evaluateSimple(inner.slice(comma + 1).trim(), data))) || 1;
+      const args = splitArgs(extractArgs(formula, isSmall ? 'SMALL' : 'LARGE'));
+      if (args.length < 2) return 0;
+      const range = parseRange(args[0]);
+      const k = Math.floor(getNum(evaluateSimple(args[1], data)));
+      if (k < 1) return '#NUM!';
       const vals = range.map(ref => getNum(getCellValue(ref, data, new Set(visited)))).sort((a, b) => isSmall ? a - b : b - a);
-      return vals[k - 1] || 0;
+      if (k > vals.length) return '#NUM!';
+      return vals[k - 1];
     }
     if (expr.startsWith('ROUND(')) {
-      const inner = expr.slice(6, -1);
-      const comma = inner.lastIndexOf(',');
-      if (comma === -1) return 0;
-      const num = getNum(evaluateSimple(inner.slice(0, comma).trim(), data));
-      const places = Math.floor(getNum(evaluateSimple(inner.slice(comma + 1).trim(), data))) || 0;
+      const args = splitArgs(extractArgs(formula, 'ROUND'));
+      if (args.length < 2) return 0;
+      const num = getNum(evaluateSimple(args[0], data));
+      const places = Math.floor(getNum(evaluateSimple(args[1], data))) || 0;
       return Math.round(num * Math.pow(10, places)) / Math.pow(10, places);
     }
     if (expr === 'TODAY()') return new Date().toISOString().split('T')[0];
@@ -471,12 +473,13 @@ export function evaluateFormula(formula: string, data: SpreadsheetData, visited:
 
     const resolved = expr.replace(/[A-Z]+\d+/gi, ref => {
       const v = getCellValue(ref.toUpperCase(), data, new Set(visited));
-      return getStr(v);
+      const n = typeof v === 'number' ? v : parseFloat(v as string);
+      return isNaN(n) ? '0' : String(n);
     });
     if (/[a-zA-Z_$][0-9a-zA-Z_$]*\s*\(/.test(resolved)) return '#ERROR!';
     const safeResolved = resolved.replace(/[^0-9+\-*/.()eE\s]/g, '');
-    if (!safeResolved || safeResolved !== resolved) return '#ERROR!';
-    return Function(`"use strict" ; return (${safeResolved})`)();
+    if (!safeResolved) return '#ERROR!';
+    try { return Function(`"use strict"; return (${safeResolved})`)(); } catch { return '#ERROR!'; }
   } catch { return '#ERROR'; }
 }
 
@@ -484,42 +487,52 @@ function criteriaMatch(criteria: string, ref: string, data: SpreadsheetData): bo
   const val = getStr(getCellValue(ref.toUpperCase(), data, new Set()));
   criteria = criteria.trim();
 
-  const opMatch = criteria.match(/^(\d+)([=><]=?)(\d+)$/);
-  if (opMatch) {
-    const cellVal = parseFloat(val);
-    const op = opMatch[2];
-    const critVal = parseFloat(opMatch[3]);
-    if (isNaN(cellVal)) return false;
-    if (op === '>') return cellVal > critVal;
-    if (op === '<') return cellVal < critVal;
-    if (op === '>=') return cellVal >= critVal;
-    if (op === '<=') return cellVal <= critVal;
-    if (op === '=') return cellVal === critVal;
-    if (op === '!=') return cellVal !== critVal;
-    return false;
-  }
+  const unquote = (s: string): string => {
+    if ((s.startsWith('"') && s.endsWith('"')) || (s.startsWith("'") && s.endsWith("'"))) return s.slice(1, -1);
+    return s;
+  };
 
-  const comparisonMatch = criteria.match(/^([><]=?|!=)\s*(.+)$/);
-  if (comparisonMatch) {
-    const op = comparisonMatch[1];
-    const critVal = comparisonMatch[2].trim();
-    const cellNum = parseFloat(val), critNum = parseFloat(critVal);
-    if (!isNaN(cellNum) && !isNaN(critNum)) {
-      if (op === '>') return cellNum > critNum;
-      if (op === '<') return cellNum < critNum;
-      if (op === '>=') return cellNum >= critNum;
-      if (op === '<=') return cellNum <= critNum;
-      if (op === '!=') return cellNum !== critNum;
+  const tryCompare = (raw: string): boolean | null => {
+    const opMatch = raw.match(/^([\d.]+)([=><]=?)([\d.]+)$/);
+    if (opMatch) {
+      const cellVal = parseFloat(val);
+      const op = opMatch[2];
+      const critVal = parseFloat(opMatch[3]);
+      if (isNaN(cellVal)) return false;
+      if (op === '>') return cellVal > critVal;
+      if (op === '<') return cellVal < critVal;
+      if (op === '>=') return cellVal >= critVal;
+      if (op === '<=') return cellVal <= critVal;
+      if (op === '=') return cellVal === critVal;
+      if (op === '!=') return cellVal !== critVal;
+      return false;
     }
-    return false;
+    const comparisonMatch = raw.match(/^([><]=?|[!=]=)\s*(.+)$/);
+    if (comparisonMatch) {
+      const op = comparisonMatch[1];
+      const critVal = comparisonMatch[2].trim();
+      const cellNum = parseFloat(val), critNum = parseFloat(critVal);
+      if (!isNaN(cellNum) && !isNaN(critNum)) {
+        if (op === '>') return cellNum > critNum;
+        if (op === '<') return cellNum < critNum;
+        if (op === '>=') return cellNum >= critNum;
+        if (op === '<=') return cellNum <= critNum;
+        if (op === '!=') return cellNum !== critNum;
+      }
+      return false;
+    }
+    return null;
+  };
+
+  const unquoted = unquote(criteria);
+  if (unquoted !== criteria) {
+    const result = tryCompare(unquoted);
+    if (result !== null) return result;
+    return val.toLowerCase() === unquoted.toLowerCase();
   }
 
-  if ((criteria.startsWith('"') && criteria.endsWith('"'))) {
-    return val.toLowerCase() === criteria.slice(1, -1).toLowerCase();
-  }
-  if (criteria.startsWith("'") && criteria.endsWith("'")) {
-    return val.toLowerCase() === criteria.slice(1, -1).toLowerCase();
-  }
+  const result = tryCompare(criteria);
+  if (result !== null) return result;
 
   return val.toLowerCase() === criteria.toLowerCase();
 }

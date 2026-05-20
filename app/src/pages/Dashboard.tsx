@@ -97,7 +97,7 @@ function calcPace(done: number, total: number): { label: string; color: string }
 
 export function Dashboard({ curriculum, completedTasks, resumeTopicId, onOpenCourse }: DashboardProps) {
   const allTopics = curriculum.flatMap(m => m.topics);
-  const resumeTopic = allTopics.find(t => t.id === resumeTopicId) || allTopics[0];
+  const resumeTopic = allTopics.length > 0 ? (allTopics.find(t => t.id === resumeTopicId) || allTopics[0]) : null;
   const total = allTopics.length;
   const done = completedTasks.length;
   const pct = total === 0 ? 0 : Math.round((done / total) * 100);
@@ -110,6 +110,16 @@ export function Dashboard({ curriculum, completedTasks, resumeTopicId, onOpenCou
   const currentWeek = curriculum[weekIdx];
   const weekDone = currentWeek ? currentWeek.topics.filter(t => completedTasks.includes(t.id)).length : 0;
   const weekTotal = currentWeek ? currentWeek.topics.length : 0;
+
+  if (curriculum.length === 0) {
+    return (
+      <div className="p-4 sm:p-8 max-w-6xl mx-auto animate-in fade-in duration-500">
+        <div className="h-full flex items-center justify-center text-gray-400 font-medium py-20">
+          Loading curriculum...
+        </div>
+      </div>
+    );
+  }
 
   const stages = [
     { label: 'Foundation', weeks: [0, 1, 2, 3, 4, 5, 6, 7], icon: Layers, color: 'from-blue-400 to-blue-600', desc: 'Excel, Git, SQL basics' },
@@ -320,7 +330,7 @@ export function Dashboard({ curriculum, completedTasks, resumeTopicId, onOpenCou
           {curriculum.map((mod, mIdx) => {
             const weekDone = mod.topics.filter(t => completedTasks.includes(t.id)).length;
             const weekTotal = mod.topics.length;
-            const weekPct = Math.round((weekDone / weekTotal) * 100);
+            const weekPct = weekTotal > 0 ? Math.round((weekDone / weekTotal) * 100) : 0;
             const isActive = mod.topics.some(t => t.id === resumeTopicId);
             const isComplete = weekDone === weekTotal;
             const nextTopic = mod.topics.find(t => !completedTasks.includes(t.id));

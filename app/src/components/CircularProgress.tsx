@@ -13,7 +13,7 @@ export function CircularProgress({ value, size = 120, strokeWidth = 10, label }:
     const duration = 1000;
     const startValue = startValueRef.current;
     startValueRef.current = safeValue;
-    const increment = value - startValue;
+    const increment = safeValue - startValue;
     let startTime: number | null = null;
     let rafId: number;
     const animate = (timestamp: number) => {

@@ -490,13 +490,14 @@ function evaluate(expr: string, vars: Record<string, any>): any {
       const condition = compMatch[4] ? compMatch[4].trim() : null;
       const result: any[] = [];
       if (Array.isArray(iterable) || typeof iterable === 'string') {
+        const oldVal = vars[varName];
         for (const item of iterable) {
           vars[varName] = item;
           if (!condition || evaluate(condition, vars)) {
             result.push(evaluate(expr, vars));
           }
         }
-        delete vars[varName];
+        if (oldVal === undefined) delete vars[varName]; else vars[varName] = oldVal;
       }
       return result;
     }
@@ -530,29 +531,35 @@ function evaluate(expr: string, vars: Record<string, any>): any {
     return `Error: attribute ${attr} not found`;
   }
 
-  const bracketAccess = s.match(/^(.+?)\[(.+)\]$/);
-  if (bracketAccess) {
-    const obj = evaluate(bracketAccess[1], vars);
-    const key = evaluate(bracketAccess[2], vars);
-    if (obj && typeof obj === 'object') {
-      if (obj.__type === 'dataframe') {
-        if (Array.isArray(key)) return key.map(k => obj._col(String(k)));
-        return obj._col(String(key));
+  const bracketChain = s.match(/^(.+?)((?:\[.+?\])+)$/);
+  if (bracketChain) {
+    let obj = evaluate(bracketChain[1], vars);
+    const brackets = bracketChain[2].match(/\[.+?\]/g) || [];
+    for (const bk of brackets) {
+      const key = evaluate(bk.slice(1, -1), vars);
+      if (obj == null) return undefined;
+      if (typeof obj === 'object') {
+        if (obj.__type === 'dataframe') {
+          if (Array.isArray(key)) { obj = key.map(k => obj._col(String(k))); continue; }
+          obj = obj._col(String(key)); continue;
+        }
+        if (obj.__type === 'series') { obj = obj.values[Number(key)]; continue; }
+        if (obj.__type === 'groupby') { obj = obj._selectCol(String(key)); continue; }
+        if (obj.__type === 'dict') { obj = obj[String(key)]; continue; }
       }
-      if (obj.__type === 'series') return obj.values[Number(key)];
-      if (obj.__type === 'groupby') return obj._selectCol(String(key));
-      if (obj.__type === 'dict') return obj[String(key)];
+      if (Array.isArray(obj)) {
+        const idx = Number(key);
+        if (!isNaN(idx)) { obj = idx >= 0 ? obj[idx] : obj[obj.length + idx]; continue; }
+        obj = obj[key]; continue;
+      }
+      if (typeof obj === 'string') {
+        const idx = Number(key);
+        if (!isNaN(idx)) { obj = idx >= 0 ? obj[idx] : obj[obj.length + idx]; continue; }
+      }
+      obj = undefined;
+      break;
     }
-    if (Array.isArray(obj)) {
-      const idx = Number(key);
-      if (!isNaN(idx)) return idx >= 0 ? obj[idx] : obj[obj.length + idx];
-      return obj[key];
-    }
-    if (typeof obj === 'string') {
-      const idx = Number(key);
-      if (!isNaN(idx)) return idx >= 0 ? obj[idx] : obj[obj.length + idx];
-    }
-    return undefined;
+    return obj;
   }
 
   const methMatch = s.match(/^(.+)\.([a-zA-Z_]\w*)\((.*)\)$/);
@@ -621,12 +628,17 @@ function evaluate(expr: string, vars: Record<string, any>): any {
     if (fn === 'list') return args[0] ? Array.from(args[0]) : [];
     if (fn === 'range') {
       if (args.length <= 1) {
-        const n = Math.max(0, args[0] || 0);
-        return Array.from({ length: n }, (_, i) => i);
+        const n = Math.floor(args[0] || 0);
+        return n > 0 ? Array.from({ length: n }, (_, i) => i) : [];
       }
-      const start = Math.max(0, args[0] || 0);
-      const end = Math.max(0, args[1] || 0);
-      return Array.from({ length: Math.max(0, end - start) }, (_, i) => i + start);
+      const start = Math.floor(args[0] || 0);
+      const end = Math.floor(args[1] || 0);
+      const step = args.length >= 3 ? Math.floor(args[2]) || 1 : 1;
+      if (step === 0) return [];
+      const result: number[] = [];
+      if (step > 0) { for (let i = start; i < end; i += step) result.push(i); }
+      else { for (let i = start; i > end; i += step) result.push(i); }
+      return result;
     }
     if (fn === 'sum') {
       const nums = args.length === 1 && Array.isArray(args[0]) ? args[0] : args;
@@ -642,7 +654,21 @@ function evaluate(expr: string, vars: Record<string, any>): any {
     }
     if (fn === 'abs') return Math.abs(args[0] || 0);
     if (fn === 'round') return args.length === 2 ? Math.round(args[0] * Math.pow(10, args[1])) / Math.pow(10, args[1]) : Math.round(args[0]);
-    if (fn === 'type') return typeof args[0];
+    if (fn === 'type') {
+      const t = typeof args[0];
+      if (t === 'string') return '<class \'str\'>';
+      if (t === 'number') return Number.isInteger(args[0]) ? '<class \'int\'>' : '<class \'float\'>';
+      if (t === 'boolean') return '<class \'bool\'>';
+      if (args[0] === null) return '<class \'NoneType\'>';
+      if (t === 'object') {
+        if (Array.isArray(args[0])) return '<class \'list\'>';
+        if (args[0] && args[0].__type === 'dict') return '<class \'dict\'>';
+        if (args[0] && args[0].__type === 'dataframe') return '<class \'pandas.core.frame.DataFrame\'>';
+        if (args[0] && args[0].__type === 'series') return '<class \'pandas.core.series.Series\'>';
+        return '<class \'object\'>';
+      }
+      return '<class \'object\'>';
+    }
     if (fn === 'sorted') return args[0] ? [...args[0]].sort() : [];
     if (fn === 'enumerate') return args[0] ? [...args[0]].map((v: any, i: number) => [i, v]) : [];
     if (fn === 'map') {
@@ -684,7 +710,7 @@ function evaluate(expr: string, vars: Record<string, any>): any {
     }
     if (op === '-') return Number(lv ?? 0) - Number(rv ?? 0);
     if (op === '*') return Number(lv ?? 0) * Number(rv ?? 0);
-    if (op === '/') return Number(rv) !== 0 ? Number(lv ?? 0) / Number(rv) : 'Error: division by zero';
+    if (op === '/') return Number(rv) !== 0 ? Number(lv ?? 0) / Number(rv) : NaN;
     if (op === '%') return Number(lv ?? 0) % Number(rv ?? 0);
     if (op === '==') return String(lv) === String(rv);
     if (op === '!=') return String(lv) !== String(rv);
@@ -748,6 +774,86 @@ export function executePython(code: string): PythonOutput[] {
   const variables: Record<string, any> = {};
   let i = 0;
   let lastValue: any = undefined;
+
+  const execBlock = (blockLines: string[]) => {
+    let bi = 0;
+    while (bi < blockLines.length) {
+      const line = blockLines[bi];
+      const trimmed = line.trim();
+      if (!trimmed || trimmed.startsWith('#')) { bi++; continue; }
+      const ifMatch = trimmed.match(/^if\s+(.+):$/);
+      if (ifMatch) {
+        let executed = false;
+        let cond = evaluate(ifMatch[1], variables);
+        const body: string[] = [];
+        bi++;
+        while (bi < blockLines.length && (blockLines[bi].startsWith('  ') || blockLines[bi].startsWith('\t') || blockLines[bi] === '')) {
+          if (blockLines[bi].trim()) body.push(blockLines[bi]);
+          bi++;
+        }
+        if (cond) { execBlock(body); executed = true; }
+        while (bi < blockLines.length) {
+          const nextTrimmed = blockLines[bi].trim();
+          if (nextTrimmed.startsWith('elif ')) {
+            const elseBody: string[] = [];
+            bi++;
+            while (bi < blockLines.length && (blockLines[bi].startsWith('  ') || blockLines[bi].startsWith('\t') || blockLines[bi] === '')) {
+              if (blockLines[bi].trim()) elseBody.push(blockLines[bi]);
+              bi++;
+            }
+            if (!executed && evaluate(nextTrimmed.match(/^elif\s+(.+):$/)?.[1] || '', variables)) {
+              execBlock(elseBody);
+              executed = true;
+            }
+          } else if (nextTrimmed === 'else:') {
+            const elseBody: string[] = [];
+            bi++;
+            while (bi < blockLines.length && (blockLines[bi].startsWith('  ') || blockLines[bi].startsWith('\t') || blockLines[bi] === '')) {
+              if (blockLines[bi].trim()) elseBody.push(blockLines[bi]);
+              bi++;
+            }
+            if (!executed) execBlock(elseBody);
+            break;
+          } else break;
+        }
+        continue;
+      }
+      const forMatch = trimmed.match(/^for\s+([a-zA-Z_]\w*)\s+in\s+(.+):$/);
+      if (forMatch) {
+        const iterable = evaluate(forMatch[2], variables);
+        const body: string[] = [];
+        bi++;
+        while (bi < blockLines.length && (blockLines[bi].startsWith('  ') || blockLines[bi].startsWith('\t') || blockLines[bi] === '')) {
+          if (blockLines[bi].trim()) body.push(blockLines[bi]);
+          bi++;
+        }
+        if (Array.isArray(iterable) || typeof iterable === 'string') {
+          for (const item of iterable) {
+            variables[forMatch[1]] = item;
+            execBlock(body);
+          }
+        }
+        continue;
+      }
+      const whileMatch = trimmed.match(/^while\s+(.+):$/);
+      if (whileMatch) {
+        const body: string[] = [];
+        bi++;
+        while (bi < blockLines.length && (blockLines[bi].startsWith('  ') || blockLines[bi].startsWith('\t') || blockLines[bi] === '')) {
+          if (blockLines[bi].trim()) body.push(blockLines[bi]);
+          bi++;
+        }
+        let guard = 0;
+        while (evaluate(whileMatch[1], variables) && guard < 1000) {
+          execBlock(body);
+          guard++;
+        }
+        continue;
+      }
+      execLine(line);
+      bi++;
+    }
+  };
 
   const execLine = (line: string) => {
     const trimmed = line.trim().replace(/(?:#.*)$/, '').trim();
@@ -836,28 +942,29 @@ export function executePython(code: string): PythonOutput[] {
       // Handle single aliased imports that didn't match in the loop
       if (moduleEntries.length > 1) return;
       const primaryModule = moduleEntries[0]?.name;
+      const targetAlias = moduleEntries[0]?.alias || primaryModule;
       if (primaryModule === 'random') {
         const rand = new MockRandom();
         rand.__type = 'module';
-        variables[alias] = rand;
+        variables[targetAlias] = rand;
         return;
       }
       if (fromModule === 'scipy' && primaryModule === 'stats') {
         const mod = createMockScipyStats();
-        variables[alias] = mod;
+        variables[targetAlias] = mod;
         return;
       }
       if (primaryModule === 'requests') {
-        variables[alias] = new MockRequests();
+        variables[targetAlias] = new MockRequests();
         return;
       }
       if (primaryModule === 'bs4' && !fromModule) {
         const mod = { __type: 'module', BeautifulSoup };
-        variables[alias] = mod;
+        variables[targetAlias] = mod;
         return;
       }
       if (fromModule === 'bs4') {
-        variables[alias] = primaryModule === 'BeautifulSoup' ? BeautifulSoup : { __type: 'module' };
+        variables[targetAlias] = primaryModule === 'BeautifulSoup' ? BeautifulSoup : { __type: 'module' };
         return;
       }
       const moduleFactories: Record<string, () => any> = {
@@ -867,7 +974,7 @@ export function executePython(code: string): PythonOutput[] {
         statistics: createMockStatistics,
       };
       if (moduleFactories[primaryModule]) {
-        variables[alias] = moduleFactories[primaryModule]();
+        variables[targetAlias] = moduleFactories[primaryModule]();
         return;
       }
       return;
@@ -947,12 +1054,6 @@ export function executePython(code: string): PythonOutput[] {
       return;
     }
 
-    const ifMatch = trimmed.match(/^if\s+(.+):$/);
-    if (ifMatch) { return 'if'; }
-
-    const forMatch = trimmed.match(/^for\s+([a-zA-Z_]\w*)\s+in\s+(.+):$/);
-    if (forMatch) { return 'for'; }
-
     const val = evaluate(trimmed, variables);
     if (val !== undefined) {
       results.push({ type: 'stdout', text: String(val) });
@@ -964,7 +1065,11 @@ export function executePython(code: string): PythonOutput[] {
     let braces = 0, parens = 0, brackets = 0, inStr = false, q = '';
     for (let j = 0; j < s.length; j++) {
       const c = s[j];
-      if (inStr) { if (c === q && (j === 0 || s[j-1] !== '\\' || s[j-2] === '\\')) inStr = false; continue; }
+      if (inStr) {
+        if (c === '\\') { j++; continue; }
+        if (c === q) inStr = false;
+        continue;
+      }
       if (c === '"' || c === "'") { inStr = true; q = c; continue; }
       if (c === '{') braces++; if (c === '}') braces--;
       if (c === '(') parens++; if (c === ')') parens--;
@@ -980,15 +1085,38 @@ export function executePython(code: string): PythonOutput[] {
 
     const ifMatch = trimmed.match(/^if\s+(.+):$/);
     if (ifMatch) {
-      const condition = evaluate(ifMatch[1], variables);
+      let executed = false;
+      let cond = evaluate(ifMatch[1], variables);
       const block: string[] = [];
       i++;
       while (i < lines.length && (lines[i].startsWith('  ') || lines[i].startsWith('\t') || lines[i] === '')) {
         if (lines[i].trim()) block.push(lines[i].trim());
         i++;
       }
-      if (condition) {
-        for (const bLine of block) execLine(bLine);
+      if (cond) { for (const bLine of block) execLine(bLine); executed = true; }
+      while (i < lines.length) {
+        const nextTrimmed = lines[i].trim();
+        if (nextTrimmed.startsWith('elif ')) {
+          const elseBlock: string[] = [];
+          i++;
+          while (i < lines.length && (lines[i].startsWith('  ') || lines[i].startsWith('\t') || lines[i] === '')) {
+            if (lines[i].trim()) elseBlock.push(lines[i].trim());
+            i++;
+          }
+          if (!executed && evaluate(nextTrimmed.match(/^elif\s+(.+):$/)?.[1] || '', variables)) {
+            for (const bLine of elseBlock) execLine(bLine);
+            executed = true;
+          }
+        } else if (nextTrimmed === 'else:') {
+          const elseBlock: string[] = [];
+          i++;
+          while (i < lines.length && (lines[i].startsWith('  ') || lines[i].startsWith('\t') || lines[i] === '')) {
+            if (lines[i].trim()) elseBlock.push(lines[i].trim());
+            i++;
+          }
+          if (!executed) { for (const bLine of elseBlock) execLine(bLine); }
+          break;
+        } else break;
       }
       continue;
     }
@@ -1007,6 +1135,22 @@ export function executePython(code: string): PythonOutput[] {
           variables[forMatch[1]] = item;
           for (const bLine of block) execLine(bLine);
         }
+      }
+      continue;
+    }
+
+    const whileMatch = trimmed.match(/^while\s+(.+):$/);
+    if (whileMatch) {
+      const block: string[] = [];
+      i++;
+      while (i < lines.length && (lines[i].startsWith('  ') || lines[i].startsWith('\t') || lines[i] === '')) {
+        if (lines[i].trim()) block.push(lines[i].trim());
+        i++;
+      }
+      let guard = 0;
+      while (evaluate(whileMatch[1], variables) && guard < 1000) {
+        for (const bLine of block) execLine(bLine);
+        guard++;
       }
       continue;
     }

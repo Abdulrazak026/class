@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect, useCallback, Suspense, lazy } from 'react';
+import React, { useState, useMemo, useEffect, useCallback, useRef, Suspense, lazy } from 'react';
 import { Menu, Loader2 } from 'lucide-react';
 import { Sidebar, Tab } from './components/Sidebar';
 import { useLocalStorage } from './hooks/useLocalStorage';
@@ -38,6 +38,7 @@ export default function App() {
   const [onlineMessages, setOnlineMessages] = useState<ChatMessage[]>([]);
   const [onlineComments, setOnlineComments] = useState<Record<string, TopicComment[]>>({});
   const [userId, setUserId] = useState<number | null>(null);
+  const [dataVersion, setDataVersion] = useState(0);
 
   useEffect(() => {
     document.documentElement.classList.toggle('dark', darkMode);
@@ -63,6 +64,7 @@ export default function App() {
           setDecryptedData(JSON.parse(decrypted), decryptedClassworks ? JSON.parse(decryptedClassworks) : null);
           localStorage.setItem('access-token', JSON.stringify({ dev: true, grantedAt: Date.now() }));
           setAccessGranted(true);
+          setDataVersion(v => v + 1);
         } catch (e) { console.error('Dev auto-unlock failed:', e); }
       })();
     }
@@ -73,7 +75,7 @@ export default function App() {
   }, []);
 
   useEffect(() => {
-    if (!userId) return;
+    if (!userId || userId === 0) return;
     const otherId = userId === 1 ? 2 : 1;
     const unsub = subscribeToProgress(
       otherId,
@@ -94,11 +96,13 @@ export default function App() {
     return Array.from(set);
   }, [completedTasks, otherTasks]);
 
+  const activeTabRef = useRef(activeTab);
+  activeTabRef.current = activeTab;
   useEffect(() => {
     const unsub = subscribeToChat(
       (msgs) => {
         setOnlineMessages(msgs);
-        if (msgs.length > lastMsgCountRef.current && activeTab !== 'studyroom') {
+        if (msgs.length > lastMsgCountRef.current && activeTabRef.current !== 'studyroom') {
           setUnreadCount(prev => prev + (msgs.length - lastMsgCountRef.current));
         }
         lastMsgCountRef.current = msgs.length;
@@ -106,7 +110,7 @@ export default function App() {
       (err) => console.warn('Chat sub error:', err)
     );
     return () => unsub();
-  }, [activeTab]);
+  }, []);
 
   const resetUnread = useCallback(() => {
     setUnreadCount(0);
@@ -114,7 +118,7 @@ export default function App() {
   }, [onlineMessages.length]);
 
   const activeTopicIdRef = useRef(activeTopicId);
-  activeTopicIdRef.current = activeTopicId;
+  useEffect(() => { activeTopicIdRef.current = activeTopicId; }, [activeTopicId]);
   useEffect(() => {
     if (!activeTopicId) return;
     const unsub = subscribeToTopicComments(
@@ -163,7 +167,7 @@ export default function App() {
     addTopicComment(comment);
   }, [userCode]);
 
-  const curriculumData = useMemo(() => getCurriculum(), []);
+  const curriculumData = useMemo(() => getCurriculum(), [dataVersion]);
   const resumeTopicId = useMemo(() => {
     for (const m of curriculumData) {
       for (const t of m.topics) {

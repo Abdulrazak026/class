@@ -112,7 +112,7 @@ function SidebarTopicList({ curriculum, completedTasks, activeTopicId, onSelect 
 }) {
   return curriculum.map((mod, mIdx) => {
     const completedInMod = mod.topics.filter(t => completedTasks.includes(t.id)).length;
-    const modProgress = Math.round((completedInMod / mod.topics.length) * 100);
+    const modProgress = mod.topics.length > 0 ? Math.round((completedInMod / mod.topics.length) * 100) : 0;
     return (
     <div key={mod.id} className="mb-3">
       <div className="flex items-center justify-between px-3 py-2">
@@ -289,7 +289,7 @@ export function CoursePlayer({ curriculum, completedTasks, toggleTask, activeTop
   }
 
   const isCompleted = activeTopic ? completedTasks.includes(activeTopic.id) : false;
-  const hasNextTopic = moduleIndex !== -1 && (topicIndex < curriculum[moduleIndex].topics.length - 1 || moduleIndex < curriculum.length - 1);
+  const hasNextTopic = moduleIndex !== -1 && curriculum[moduleIndex] && (topicIndex < curriculum[moduleIndex].topics.length - 1 || moduleIndex < curriculum.length - 1);
 
   const addComment = () => {
     if (!activeTopic || !commentInput.trim()) return;
@@ -319,13 +319,13 @@ export function CoursePlayer({ curriculum, completedTasks, toggleTask, activeTop
   const handleNextTopic = () => {
     if (moduleIndex === -1) return;
     if (topicIndex < curriculum[moduleIndex].topics.length - 1) setActiveTopicId(curriculum[moduleIndex].topics[topicIndex + 1].id);
-    else if (moduleIndex < curriculum.length - 1) setActiveTopicId(curriculum[moduleIndex + 1].topics[0].id);
+    else if (moduleIndex < curriculum.length - 1 && curriculum[moduleIndex + 1].topics.length > 0) setActiveTopicId(curriculum[moduleIndex + 1].topics[0].id);
   };
 
   const handlePrevTopic = () => {
     if (moduleIndex === -1) return;
     if (topicIndex > 0) setActiveTopicId(curriculum[moduleIndex].topics[topicIndex - 1].id);
-    else if (moduleIndex > 0) setActiveTopicId(curriculum[moduleIndex - 1].topics[curriculum[moduleIndex - 1].topics.length - 1].id);
+    else if (moduleIndex > 0 && curriculum[moduleIndex - 1].topics.length > 0) setActiveTopicId(curriculum[moduleIndex - 1].topics[curriculum[moduleIndex - 1].topics.length - 1].id);
   };
 
   const wordMatch = useCallback((text: string, word: string): boolean => {
@@ -339,13 +339,13 @@ export function CoursePlayer({ curriculum, completedTasks, toggleTask, activeTop
     const skip = ['w_pwr1-d3', 'w14-d2', 'w15-d3'];
     if (skip.includes(topic.id)) return false;
     const t = topic.title.toLowerCase(), d = topic.description.toLowerCase();
-    return kw.some(k => k.includes(' ') ? t.includes(k) || d.includes(k) : wordMatch(t, k) || wordMatch(d, k)) || t.includes('chart') || topic.content?.toLowerCase().includes('spreadsheet below') === true;
+    return kw.some(k => k.includes(' ') ? t.includes(k) || d.includes(k) : wordMatch(t, k) || wordMatch(d, k)) || t.includes('chart') || (topic.content && topic.content.toLowerCase().includes('spreadsheet below')) === true;
   }, [wordMatch]);
 
   const shouldShowSql = useCallback((topic: Topic): boolean => {
     if (/^w(5|6|7|8|9|10|11|12)/.test(topic.id)) return true;
     const t = topic.title.toLowerCase(), d = topic.description.toLowerCase();
-    return wordMatch(t, 'sql') || wordMatch(d, 'sql') || topic.content?.includes('```sql') || false || topic.content?.toLowerCase().includes('sql playground') === true;
+    return wordMatch(t, 'sql') || wordMatch(d, 'sql') || (topic.content && topic.content.includes('```sql')) || (topic.content && topic.content.toLowerCase().includes('sql playground')) === true;
   }, [wordMatch]);
 
   const shouldShowGit = useCallback((topic: Topic): boolean => {
@@ -357,7 +357,7 @@ export function CoursePlayer({ curriculum, completedTasks, toggleTask, activeTop
   const shouldShowPython = useCallback((topic: Topic): boolean => {
     if (/^w(13|14|15|16|17)/.test(topic.id)) return true;
     const t = topic.title.toLowerCase(), d = topic.description.toLowerCase();
-    return wordMatch(t, 'python') || wordMatch(d, 'python') || topic.content?.includes('```python') || false || topic.content?.toLowerCase().includes('python playground') === true;
+    return wordMatch(t, 'python') || wordMatch(d, 'python') || (topic.content && topic.content.includes('```python')) || (topic.content && topic.content.toLowerCase().includes('python playground')) === true;
   }, [wordMatch]);
 
   const shouldShowBI = useCallback((topic: Topic): boolean => {
@@ -365,7 +365,7 @@ export function CoursePlayer({ curriculum, completedTasks, toggleTask, activeTop
     if (skip.includes(topic.id)) return false;
     const kw = ['dashboard', 'power bi', 'tableau', 'dax', 'calculated field', 'interactive filter', 'visual best practice', 'slicer', 'star schema', 'data modeling in bi', 'connecting data', 'chart', 'visual'];
     const t = topic.title.toLowerCase(), d = topic.description.toLowerCase();
-    return kw.some(k => k.includes(' ') ? t.includes(k) || d.includes(k) : wordMatch(t, k) || wordMatch(d, k)) || topic.content?.toLowerCase().includes('dashboard builder') === true;
+    return kw.some(k => k.includes(' ') ? t.includes(k) || d.includes(k) : wordMatch(t, k) || wordMatch(d, k)) || (topic.content && topic.content.toLowerCase().includes('dashboard builder')) === true;
   }, [wordMatch]);
 
   const shouldShowScenario = useCallback((topic: Topic): boolean => {
@@ -389,7 +389,7 @@ export function CoursePlayer({ curriculum, completedTasks, toggleTask, activeTop
   const shouldShowDemoSite = useCallback((topic: Topic): boolean => {
     const kw = ['web scrape', 'scrape', 'extract data', 'demo site', 'crawl', 'http request', 'requests library', 'beautifulsoup', 'demo'];
     const t = topic.title.toLowerCase(), d = topic.description.toLowerCase();
-    return kw.some(k => t.includes(k) || d.includes(k)) || topic.content?.toLowerCase().includes('web scraping') === true;
+    return kw.some(k => t.includes(k) || d.includes(k)) || (topic.content && topic.content.toLowerCase().includes('web scraping')) === true;
   }, []);
 
   return (
@@ -493,25 +493,28 @@ export function CoursePlayer({ curriculum, completedTasks, toggleTask, activeTop
                         allSegments.push(...classworkParts);
                       }
                     }
-                    const extraClassworks = getClassworks()[activeTopic.id];
+                    const classworks = getClassworks();
+                    const extraClassworks = classworks?.[activeTopic.id];
                     if (extraClassworks) {
                       for (const cw of extraClassworks) {
                         allSegments.push({ type: 'classwork', value: '', classwork: cw });
                       }
                     }
+                    let checkpointCounter = 0;
                     return allSegments.map((seg, i) => {
                       if (seg.type === 'checkpoint' && seg.checkpoint) {
-                        return <CheckpointCard key={i} checkpoint={seg.checkpoint} checkpointIndex={i} onAnswer={(idx, correct) => handleCheckpointAnswer(activeTopic.id, i, correct)} />;
+                        const cIdx = checkpointCounter++;
+                        return <CheckpointCard key={`cp-${i}`} checkpoint={seg.checkpoint} checkpointIndex={cIdx} onAnswer={(idx, correct) => handleCheckpointAnswer(activeTopic.id, cIdx, correct)} />;
                       }
                       if (seg.type === 'classwork' && seg.classwork) {
                         try {
-                          return <ClassworkCard key={i} classwork={seg.classwork} />;
+                          return <ClassworkCard key={`cw-${i}`} classwork={seg.classwork} />;
                         } catch (e) {
                           console.error('[CoursePlayer] Error rendering ClassworkCard:', e);
-                          return <div key={i} className="my-6 p-4 border-2 border-red-400 bg-red-50 rounded-xl"><p className="text-red-700 font-bold">Classwork render error</p><pre className="text-red-600 text-sm mt-2">{String(e)}</pre></div>;
+                          return <div key={`err-${i}`} className="my-6 p-4 border-2 border-red-400 bg-red-50 rounded-xl"><p className="text-red-700 font-bold">Classwork render error</p><pre className="text-red-600 text-sm mt-2">{String(e)}</pre></div>;
                         }
                       }
-                      return <div key={i}><ReactMarkdown remarkPlugins={[remarkGfm]} components={MarkdownComponents}>{seg.value}</ReactMarkdown></div>;
+                      return <div key={`md-${i}`}><ReactMarkdown remarkPlugins={[remarkGfm]} components={MarkdownComponents}>{seg.value}</ReactMarkdown></div>;
                     });
 
                   })() : <p className="text-gray-400">{activeTopic.description}</p>}
@@ -530,7 +533,7 @@ export function CoursePlayer({ curriculum, completedTasks, toggleTask, activeTop
                   {topicComments.map((c, i) => {
                     const isOwn = c.user === userCode;
                     return (
-                    <div key={i} className={`flex gap-3 p-3 rounded-lg ${isOwn ? 'bg-accent/5 border border-accent/20' : 'bg-emerald-50 border border-emerald-200'}`}>
+                    <div key={`${c.user}-${c.time}-${i}`} className={`flex gap-3 p-3 rounded-lg ${isOwn ? 'bg-accent/5 border border-accent/20' : 'bg-emerald-50 border border-emerald-200'}`}>
                       <div className={`shrink-0 w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold text-white ${isOwn ? 'bg-accent' : 'bg-emerald-500'}`}>
                         {isOwn ? 'You' : c.user.charAt(0).toUpperCase()}
                       </div>

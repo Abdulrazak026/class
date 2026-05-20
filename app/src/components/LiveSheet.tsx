@@ -238,8 +238,12 @@ export function LiveSheet({ topicId: externalTopicId, topicTitle, content }: { t
     else if (e.key === 'Enter' && !editing && selectedCell) { setEditing(true); }
     else if (e.key === 'Tab') {
       if (!selectedCell) return;
-      const colIdx = selectedCell.charCodeAt(0) - 65;
-      const rowIdx = parseInt(selectedCell.slice(1));
+      const colMatch = selectedCell.match(/^([A-Z]+)(\d+)$/);
+      if (!colMatch) return;
+      let colIdx = 0;
+      for (let i = 0; i < colMatch[1].length; i++) colIdx = colIdx * 26 + (colMatch[1].charCodeAt(i) - 64);
+      colIdx--;
+      const rowIdx = parseInt(colMatch[2]);
       const nextCol = (colIdx + 1) % cols;
       const nextRow = nextCol === 0 ? rowIdx + 1 : rowIdx;
       if (nextRow > rows || (nextRow === rowIdx && nextCol === 0)) {

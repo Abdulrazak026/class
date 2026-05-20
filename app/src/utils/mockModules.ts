@@ -25,7 +25,7 @@ export class MockDataFrame {
 
   _col(key: string): MockSeries { return new MockSeries(this._data[key] || [], { name: key }); }
   _set(key: string, value: any) {
-    if (Array.isArray(value)) this._data[key] = value;
+    if (Array.isArray(value)) this._data[key] = [...value];
     else if (value && typeof value === 'object' && value.__type === 'series') this._data[key] = value.values;
     else this._data[key] = [value];
   }
@@ -39,6 +39,7 @@ export class MockDataFrame {
     }
     if (key instanceof Array) {
       const rows = key.map((i: number) => {
+        if (i < 0) i = this.length + i;
         const row: Record<string, any> = {};
         for (const [k, v] of Object.entries(this._data)) row[k] = v[i];
         return row;
@@ -106,7 +107,6 @@ export class MockDataFrame {
       const idx = Math.floor(Math.random() * indices.length);
       sampled.push(indices.splice(idx, 1)[0]);
     }
-    if (n === 1) return this.iloc(sampled[0]);
     const newData: Record<string, any[]> = {};
     for (const k of Object.keys(this._data)) newData[k] = sampled.map(i => this._data[k][i]);
     return new MockDataFrame(newData);
@@ -179,7 +179,7 @@ export class MockDataFrame {
       }
       for (const k of Object.keys(this._data)) groups[key]._data[k].push(this._data[k][i]);
     }
-    return new MockGroupBy(groups, Object.keys(this._data));
+    return new MockGroupBy(groups, Object.keys(this._data), col);
   }
 
   melt(opts?: { id_vars?: string[]; value_vars?: string[]; var_name?: string; value_name?: string }) {
@@ -439,10 +439,12 @@ class MockGroupBy {
   __type = 'groupby';
   private groups: Record<string, MockDataFrame>;
   private cols: string[];
+  private groupCol: string;
 
-  constructor(groups: Record<string, MockDataFrame>, cols: string[]) {
+  constructor(groups: Record<string, MockDataFrame>, cols: string[], groupCol?: string) {
     this.groups = groups;
     this.cols = cols;
+    this.groupCol = groupCol || '';
   }
 
   _selectCol(col: string) {
@@ -450,7 +452,7 @@ class MockGroupBy {
     for (const [key, df] of Object.entries(this.groups)) {
       newGroups[key] = new MockDataFrame({ [col]: df._data[col] || [] });
     }
-    return new MockGroupBy(newGroups, [col]);
+    return new MockGroupBy(newGroups, [col], this.groupCol);
   }
 
   agg(fn: any) {
@@ -459,7 +461,8 @@ class MockGroupBy {
     }
     if (Array.isArray(fn)) {
       const result: Record<string, any[]> = {};
-      result['__group__'] = Object.keys(this.groups);
+      const groupLabel = this.groupCol || '__group__';
+      result[groupLabel] = Object.keys(this.groups);
       for (const f of fn) {
         const vals = Object.values(this.groups).map(g => this._aggCol(g, this.cols[0], f));
         result[String(f)] = vals;
@@ -468,7 +471,8 @@ class MockGroupBy {
     }
     if (typeof fn === 'object') {
       const result: Record<string, any[]> = {};
-      result['__group__'] = Object.keys(this.groups);
+      const groupLabel = this.groupCol || '__group__';
+      result[groupLabel] = Object.keys(this.groups);
       for (const [col, f] of Object.entries(fn)) {
         const vals = Object.values(this.groups).map(g => this._aggCol(g, col, String(f)));
         result[col] = vals;
@@ -491,13 +495,20 @@ class MockGroupBy {
       const mid = Math.floor(s.length / 2);
       return s.length % 2 ? s[mid] : (s[mid - 1] + s[mid]) / 2;
     }
+    if (fn === 'std') {
+      const mean = vals.reduce((a: number, b: number) => a + b, 0) / vals.length;
+      return Math.sqrt(vals.reduce((sq: number, v: number) => sq + (v - mean) ** 2, 0) / vals.length);
+    }
     return 0;
   }
 
   private _apply(fn: string) {
     const result: Record<string, any[]> = {};
-    result['__group__'] = Object.keys(this.groups);
-    for (const col of Object.keys(Object.values(this.groups)[0]?._data || {})) {
+    const keys = Object.keys(this.groups);
+    if (keys.length === 0) return new MockDataFrame({});
+    const groupLabel = this.groupCol || '__group__';
+    result[groupLabel] = keys;
+    for (const col of Object.keys(Object.values(this.groups)[0]._data || {})) {
       result[col] = Object.values(this.groups).map(g => this._aggCol(g, col, fn));
     }
     return new MockDataFrame(result);
