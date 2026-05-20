@@ -1,0 +1,49 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Access codes — readable by ID only (no listing)
+    match /accessCodes/{codeHash} {
+      allow read: if true;
+      allow list: if false;
+      allow create: if false;
+      allow update: if request.resource.data.status == 'used' || request.resource.data.status == 'revoked' || request.resource.data.status == 'available';
+      allow delete: if false;
+    }
+
+    // Config — readable by ID, no listing
+    match /config/{docId} {
+      allow read: if true;
+      allow list: if false;
+      allow write: if false;
+    }
+
+    // User registry — needed for device registration
+    match /userRegistry/{userId} {
+      allow read: if true;
+      allow write: if true;
+    }
+
+    // Progress sync
+    match /progress/{userId} {
+      allow read: if true;
+      allow write: if true;
+    }
+
+    // Study room chat
+    match /chat/{docId} {
+      allow read: if true;
+      allow write: if true;
+    }
+
+    // Topic comments
+    match /topicComments/{docId} {
+      allow read: if true;
+      allow write: if true;
+    }
+
+    // Deny everything else
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
