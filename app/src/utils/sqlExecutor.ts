@@ -522,7 +522,7 @@ function parseMainSelect(trimmed: string, cteCtx?: Record<string, TableData>): P
       continue;
     }
 
-    const winMatch = raw.match(/^(\w+)\((.+?)\)\s*OVER\s*\((.*?)\)(?:\s+AS\s+(\w+))?$/i);
+    const winMatch = raw.match(/^(\w+)\((.*?)\)\s*OVER\s*\((.*?)\)(?:\s+AS\s+(\w+))?$/i);
     if (winMatch) {
       const fn = winMatch[1].toUpperCase();
       const arg = winMatch[2].trim();
@@ -1086,6 +1086,19 @@ function applyWindowFunc(rows: Record<string, string>[], wf: NonNullable<ParsedQ
         if (wf.orderByCol) uniqueVals.add(rows[j][wf.orderByCol] || '');
       }
       row[wf.alias] = String(uniqueVals.size);
+    } else if (wf.fn === 'PERCENT_RANK') {
+      const n = rows.length;
+      row[wf.alias] = n > 1 ? String(Math.round((i / (n - 1)) * 10000) / 10000) : '0';
+    } else if (wf.fn === 'CUME_DIST') {
+      let lastIdx = i;
+      if (wf.orderByCol) {
+        const curVal = rows[i][wf.orderByCol];
+        for (let j = i + 1; j < rows.length; j++) {
+          if (rows[j][wf.orderByCol] === curVal) lastIdx = j;
+          else break;
+        }
+      }
+      row[wf.alias] = String(Math.round(((lastIdx + 1) / rows.length) * 10000) / 10000);
     } else if (wf.fn === 'NTILE') {
       const n = parseInt(wf.arg) || 1;
       const bucketSize = Math.ceil(rows.length / n);
