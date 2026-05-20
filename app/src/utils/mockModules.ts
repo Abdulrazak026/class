@@ -88,18 +88,28 @@ export class MockDataFrame {
   }
 
   head(n = 5) {
+    const nn = Math.max(0, n);
     const newData: Record<string, any[]> = {};
-    for (const [k, v] of Object.entries(this._data)) newData[k] = v.slice(0, n);
+    for (const [k, v] of Object.entries(this._data)) newData[k] = v.slice(0, nn);
     return new MockDataFrame(newData);
   }
   tail(n = 5) {
+    const nn = Math.max(0, n);
     const newData: Record<string, any[]> = {};
-    for (const [k, v] of Object.entries(this._data)) newData[k] = v.slice(-n);
+    for (const [k, v] of Object.entries(this._data)) newData[k] = v.slice(-nn || this.length);
     return new MockDataFrame(newData);
   }
   sample(n = 1) {
-    const idx = Math.floor(Math.random() * this.length);
-    return this.iloc(idx);
+    const indices = Array.from({ length: this.length }, (_, i) => i);
+    const sampled: number[] = [];
+    for (let i = 0; i < Math.min(n, this.length); i++) {
+      const idx = Math.floor(Math.random() * indices.length);
+      sampled.push(indices.splice(idx, 1)[0]);
+    }
+    if (n === 1) return this.iloc(sampled[0]);
+    const newData: Record<string, any[]> = {};
+    for (const k of Object.keys(this._data)) newData[k] = sampled.map(i => this._data[k][i]);
+    return new MockDataFrame(newData);
   }
   info() {
     let s = `<class 'MockDataFrame'>\n`;
@@ -265,9 +275,18 @@ export class MockDataFrame {
   }
 
   sort_values(cols: string | string[]) {
-    const col = typeof cols === 'string' ? cols : cols[0];
+    const colList = typeof cols === 'string' ? [cols] : cols;
+    if (!colList.length || !this._data[colList[0]]) return this;
     const indices = Array.from({ length: this.length }, (_, i) => i);
-    indices.sort((a, b) => String(this._data[col]?.[a] ?? '').localeCompare(String(this._data[col]?.[b] ?? '')));
+    indices.sort((a, b) => {
+      for (const col of colList) {
+        const va = this._data[col]?.[a], vb = this._data[col]?.[b];
+        if (va == null && vb == null) continue;
+        if (va == null) return 1; if (vb == null) return -1;
+        if (va !== vb) return va > vb ? 1 : -1;
+      }
+      return 0;
+    });
     const newData: Record<string, any[]> = {};
     for (const k of Object.keys(this._data)) newData[k] = indices.map(i => this._data[k][i]);
     return new MockDataFrame(newData);
@@ -299,8 +318,17 @@ export class MockDataFrame {
     for (const [k1] of nums) {
       result[k1] = [];
       for (const [k2] of nums) {
-        if (k1 === k2) result[k1].push(1);
-        else result[k1].push(0.5);
+        if (k1 === k2) { result[k1].push(1); continue; }
+        const v1 = this._data[k1]?.filter((v: any) => !isNaN(Number(v))).map(Number) || [];
+        const v2 = this._data[k2]?.filter((v: any) => !isNaN(Number(v))).map(Number) || [];
+        const n = Math.min(v1.length, v2.length);
+        if (n < 2) { result[k1].push(0); continue; }
+        const m1 = v1.slice(0, n).reduce((s: number, v: number) => s + v, 0) / n;
+        const m2 = v2.slice(0, n).reduce((s: number, v: number) => s + v, 0) / n;
+        const num = v1.slice(0, n).reduce((s: number, v: number, i: number) => s + (v - m1) * (v2[i] - m2), 0);
+        const d1 = Math.sqrt(v1.slice(0, n).reduce((s: number, v: number) => s + (v - m1) ** 2, 0)) || 1;
+        const d2 = Math.sqrt(v2.slice(0, n).reduce((s: number, v: number) => s + (v - m2) ** 2, 0)) || 1;
+        result[k1].push(+(num / (d1 * d2)).toFixed(4));
       }
     }
     return new MockDataFrame(result);
@@ -360,14 +388,13 @@ export class MockDataFrame {
       const result: Record<string, any[]> = {};
       const keys = Object.keys(counts).sort((a, b) => counts[b] - counts[a]);
       result[col] = keys;
-      result['count'] = keys.map(k => normalize ? Math.round((counts[k] / total) * 100) / 100 : counts[k]);
+      result['count'] = keys.map(k => normalize ? parseFloat((counts[k] / total).toFixed(4)) : counts[k]);
       return new MockDataFrame(result);
     }
     return this;
   }
 
   isin(values: any[]) {
-    const col = Object.keys(this._data)[0];
     const newData: Record<string, any[]> = {};
     for (const [k, v] of Object.entries(this._data)) newData[k] = v.map((x: any) => values.includes(x));
     return new MockDataFrame(newData);

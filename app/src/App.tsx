@@ -27,7 +27,6 @@ export default function App() {
   const lastMsgCountRef = React.useRef(0);
   const [unreadCount, setUnreadCount] = useState(0);
   const [accessGranted, setAccessGranted] = useState(() => hasToken);
-  const [devLoading, setDevLoading] = useState(isLocalhost && !hasToken);
   const [activeTab, setActiveTab] = useLocalStorage<Tab>('active-tab', 'overview');
   const [isMobileOpen, setIsMobileOpen] = useState(false);
   const [completedTasks, setCompletedTasks] = useLocalStorage<string[]>('completed-tasks', []);
@@ -41,48 +40,33 @@ export default function App() {
   const [userId, setUserId] = useState<number | null>(null);
 
   useEffect(() => {
-    if (!devLoading) return;
-    (async () => {
-      try {
-        const [encRes, classworksRes] = await Promise.all([
-          fetch('/data.enc?t=' + Date.now(), { cache: 'no-cache' }),
-          fetch('/classworks.enc?t=' + Date.now(), { cache: 'no-cache' }),
-        ]);
-        const encData = await encRes.arrayBuffer();
-        let classworksData: ArrayBuffer | null = null;
-        if (classworksRes.ok) classworksData = await classworksRes.arrayBuffer();
-
-        const key = 'DACAMP-2026';
-        const decrypted = await decryptFile(encData, key);
-        let decryptedClassworks = null;
-        if (classworksData) {
-          try { decryptedClassworks = await decryptFile(classworksData, key); } catch {}
-        }
-
-        setDecryptedData(JSON.parse(decrypted), decryptedClassworks ? JSON.parse(decryptedClassworks) : null);
-        localStorage.setItem('access-token', JSON.stringify({ dev: true, grantedAt: Date.now() }));
-        setAccessGranted(true);
-      } catch (e) {
-        console.error('Dev auto-unlock failed:', e);
-      }
-      setDevLoading(false);
-    })();
-  }, [devLoading]);
-
-  if (devLoading) {
-    return (
-      <div className="fixed inset-0 z-[100] bg-gradient-to-br from-slate-900 via-slate-800 to-indigo-950 flex items-center justify-center">
-        <div className="text-center">
-          <Loader2 className="w-10 h-10 animate-spin text-indigo-400 mx-auto mb-4" />
-          <p className="text-slate-400 text-sm">Loading course content...</p>
-        </div>
-      </div>
-    );
-  }
-
-  useEffect(() => {
     document.documentElement.classList.toggle('dark', darkMode);
   }, [darkMode]);
+
+  useEffect(() => {
+    if (isLocalhost && !hasToken) {
+      (async () => {
+        try {
+          const [encRes, classworksRes] = await Promise.all([
+            fetch('/data.enc?t=' + Date.now(), { cache: 'no-cache' }),
+            fetch('/classworks.enc?t=' + Date.now(), { cache: 'no-cache' }),
+          ]);
+          const encData = await encRes.arrayBuffer();
+          let classworksData: ArrayBuffer | null = null;
+          if (classworksRes.ok) classworksData = await classworksRes.arrayBuffer();
+          const key = 'DACAMP-2026';
+          const decrypted = await decryptFile(encData, key);
+          let decryptedClassworks = null;
+          if (classworksData) {
+            try { decryptedClassworks = await decryptFile(classworksData, key); } catch {}
+          }
+          setDecryptedData(JSON.parse(decrypted), decryptedClassworks ? JSON.parse(decryptedClassworks) : null);
+          localStorage.setItem('access-token', JSON.stringify({ dev: true, grantedAt: Date.now() }));
+          setAccessGranted(true);
+        } catch (e) { console.error('Dev auto-unlock failed:', e); }
+      })();
+    }
+  }, []);
 
   useEffect(() => {
     registerDevice().then(setUserId);
@@ -146,7 +130,8 @@ export default function App() {
       } else {
         const today = new Date().toISOString().slice(0, 10);
         const stored = localStorage.getItem('streak-dates');
-        const dates: string[] = stored ? JSON.parse(stored) : [];
+        let dates: string[] = [];
+        try { dates = stored ? JSON.parse(stored) : []; } catch { dates = []; }
         if (!dates.includes(today)) {
           localStorage.setItem('streak-dates', JSON.stringify([...dates, today]));
         }

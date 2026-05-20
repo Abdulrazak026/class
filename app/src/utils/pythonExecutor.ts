@@ -2,6 +2,80 @@ import { generateChart } from './chartRenderer';
 import { createMockPandas, createMockNumpy, createMockScipyStats, createMockSeaborn, createMockStatistics } from './mockModules';
 import { DEMO_BASE_URL, getHtmlForUrl } from './demoSiteData';
 
+const mockMath = {
+  __type: 'module', pi: Math.PI, e: Math.E, sqrt: Math.sqrt, pow: Math.pow,
+  floor: Math.floor, ceil: Math.ceil, abs: Math.abs, round: Math.round,
+  sin: Math.sin, cos: Math.cos, tan: Math.tan, log: Math.log, log10: Math.log10,
+  exp: Math.exp, max: Math.max, min: Math.min,
+};
+
+class MockDateTime {
+  __type = 'module';
+  datetime = class {
+    __type = 'datetime'; year: number; month: number; day: number;
+    constructor(...args: number[]) {
+      const d = args.length ? new Date(args[0], (args[1]||1)-1, args[2]||1) : new Date();
+      this.year = d.getFullYear(); this.month = d.getMonth()+1; this.day = d.getDate();
+    }
+    strftime(fmt: string) { return fmt.replace('%Y', String(this.year)).replace('%m', String(this.month).padStart(2,'0')).replace('%d', String(this.day).padStart(2,'0')); }
+  };
+  date = class {
+    __type = 'date'; year: number; month: number; day: number;
+    constructor(y: number, m: number, d: number) { this.year = y; this.month = m; this.day = d; }
+  };
+  timedelta = class {
+    __type = 'timedelta'; days: number;
+    constructor(days: number) { this.days = days; }
+  };
+}
+
+class MockCollections {
+  __type = 'module';
+  Counter = class {
+    __type = 'counter'; _data: Record<string, number>;
+    constructor(iterable?: any[]) {
+      this._data = {};
+      if (iterable) for (const item of iterable) this._data[item] = (this._data[item] || 0) + 1;
+    }
+    get(key: string) { return this._data[key] || 0; }
+    most_common(n?: number) { return Object.entries(this._data).sort((a, b) => b[1] - a[1]).slice(0, n); }
+  };
+  defaultdict = class {
+    __type = 'defaultdict'; _default: () => any; _data: Record<string, any>;
+    constructor(defaultFn: () => any) { this._default = defaultFn; this._data = {}; }
+    get(key: string) { if (!(key in this._data)) this._data[key] = this._default(); return this._data[key]; }
+  };
+}
+
+class MockRe {
+  __type = 'module';
+  match(pattern: string, text: string) { const m = text.match(new RegExp(pattern)); return m ? { group: (i?: number) => m[i ?? 0] } : null; }
+  search(pattern: string, text: string) { const m = text.search(new RegExp(pattern)); return m >= 0 ? { start: () => m } : null; }
+  findall(pattern: string, text: string) { return text.match(new RegExp(pattern, 'g')) || []; }
+  sub(pattern: string, repl: string, text: string) { return text.replace(new RegExp(pattern, 'g'), repl); }
+  compile(pattern: string) { return new MockRePattern(pattern); }
+}
+
+class MockRePattern {
+  private pattern: RegExp;
+  constructor(pattern: string) { this.pattern = new RegExp(pattern, 'g'); }
+  findall(text: string) { return text.match(this.pattern) || []; }
+  sub(repl: string, text: string) { return text.replace(this.pattern, repl); }
+  search(text: string) { const m = this.pattern.exec(text); return m ? { group: () => m[0] } : null; }
+}
+
+class MockCsv {
+  __type = 'module';
+  reader(data: string) { return data.split('\n').filter(Boolean).map(line => line.split(',')); }
+  writer() { return { writerow: (row: string[]) => {}, writerows: (rows: string[][]) => {} }; }
+}
+
+class MockJson {
+  __type = 'module';
+  dumps(obj: any) { return JSON.stringify(obj); }
+  loads(str: string) { return JSON.parse(str); }
+}
+
 export interface PythonOutput {
   type: 'stdout' | 'stderr' | 'info';
   text: string;
@@ -687,7 +761,7 @@ export function executePython(code: string): PythonOutput[] {
           continue;
         }
         if (moduleName === 'statistics') {
-          variables[alias || moduleName] = mockStatistics;
+          variables[alias || moduleName] = createMockStatistics();
           variables[alias || moduleName].__type = 'statistics';
           continue;
         }

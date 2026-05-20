@@ -68,7 +68,8 @@ function isSkillCompleted(matchers: string[], allTopics: Topic[], completedTasks
 function calcDayStreak(): number {
   const stored = localStorage.getItem('streak-dates');
   if (!stored) return 0;
-  const dates: string[] = JSON.parse(stored);
+  let dates: string[] = [];
+  try { dates = JSON.parse(stored); } catch { dates = []; }
   if (dates.length === 0) return 0;
   const today = new Date().toISOString().slice(0, 10);
   const sorted = [...new Set(dates)].sort().reverse();

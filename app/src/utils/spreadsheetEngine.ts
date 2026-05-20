@@ -27,6 +27,8 @@ function parseRange(range: string): string[] {
   if (!m) return [];
   const c1 = colToIndex(m[1].toUpperCase()), r1 = parseInt(m[2]) - 1;
   const c2 = colToIndex(m[3].toUpperCase()), r2 = parseInt(m[4]) - 1;
+  const colCount = Math.abs(c2 - c1) + 1, rowCount = Math.abs(r2 - r1) + 1;
+  if (colCount * rowCount > 100000) return [];
   const cells: string[] = [];
   for (let r = r1; r <= r2; r++) for (let c = c1; c <= c2; c++) cells.push(`${indexToCol(c)}${r + 1}`);
   return cells;
@@ -244,7 +246,7 @@ export function evaluateFormula(formula: string, data: SpreadsheetData, visited:
     if (expr.startsWith('PROPER(')) {
       const args = extractArgs(formula, 'PROPER');
       const text = getStr(evaluateSimple(args.trim(), data));
-      return text.replace(/\w\S*/g, w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase());
+      return text.replace(/\b\w/g, c => c.toUpperCase());
     }
     if (expr.startsWith('FIND(')) {
       const args = extractArgs(formula, 'FIND');
@@ -372,7 +374,9 @@ export function evaluateFormula(formula: string, data: SpreadsheetData, visited:
       const lookupVal = getStr(evaluateSimple(parts[0], data)).toLowerCase();
       const range = parseRange(parts[1]);
       const colIdx = Math.floor(getNum(evaluateSimple(parts[2], data))) - 1;
-      const tableCols = Math.max(...range.map(ref => colToIndex(ref.replace(/\d+$/, '').toUpperCase()))) + 1;
+      const firstColIdx = colToIndex(firstColLetter.toUpperCase());
+      const lastColLetter = range[range.length - 1].replace(/\d+$/, '').toUpperCase();
+      const tableCols = colToIndex(lastColLetter) - firstColIdx + 1;
       const tableRows: { first: string; row: string[] }[] = [];
       const firstColLetter = range[0].replace(/\d+$/, '');
       for (const ref of range) {
@@ -383,7 +387,7 @@ export function evaluateFormula(formula: string, data: SpreadsheetData, visited:
             const cellRef = `${indexToCol(colToIndex(firstColLetter) + c)}${rowIdx}`;
             row.push(getStr(getCellValue(cellRef, data, new Set(visited))));
           }
-          if (row[0]) tableRows.push({ first: String(rowIdx), row });
+          if (typeof row[0] === 'string' && row[0] !== '') tableRows.push({ first: String(rowIdx), row });
         }
       }
       const found = tableRows.find(r => r.row[0].toLowerCase() === lookupVal);
@@ -448,7 +452,7 @@ export function evaluateFormula(formula: string, data: SpreadsheetData, visited:
       if (comma === -1) return 0;
       const range = parseRange(inner.slice(0, comma).trim());
       const k = Math.floor(getNum(evaluateSimple(inner.slice(comma + 1).trim(), data))) || 1;
-      const vals = range.map(ref => getNum(getCellValue(ref, data, new Set(visited)))).filter(v => v !== 0 || getCellValue(ref, data, new Set(visited)) === 0).sort((a, b) => isSmall ? a - b : b - a);
+      const vals = range.map(ref => getNum(getCellValue(ref, data, new Set(visited)))).sort((a, b) => isSmall ? a - b : b - a);
       return vals[k - 1] || 0;
     }
     if (expr.startsWith('ROUND(')) {
@@ -467,7 +471,9 @@ export function evaluateFormula(formula: string, data: SpreadsheetData, visited:
       return getStr(v);
     });
     if (/[a-zA-Z_$][0-9a-zA-Z_$]*\s*\(/.test(resolved)) return '#ERROR!';
-    return Function(`"use strict"; return (${resolved})`)();
+    const safeResolved = resolved.replace(/[^0-9+\-*/.()eE\s]/g, '');
+    if (!safeResolved || safeResolved !== resolved) return '#ERROR!';
+    return Function(`"use strict" ; return (${safeResolved})`)();
   } catch { return '#ERROR'; }
 }
 

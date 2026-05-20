@@ -121,7 +121,8 @@ export interface ChatMessage {
 
 export async function sendChatMessage(msg: ChatMessage) {
   if (!hasFirebaseConfig || !db) {
-    const existing = JSON.parse(localStorage.getItem('study-chat') || '[]');
+    let existing: ChatMessage[] = [];
+    try { existing = JSON.parse(localStorage.getItem('study-chat') || '[]'); } catch { existing = []; }
     existing.push(msg);
     localStorage.setItem('study-chat', JSON.stringify(existing));
     return;
@@ -141,7 +142,8 @@ export function subscribeToChat(
   onError?: (e: Error) => void
 ) {
   if (!hasFirebaseConfig || !db) {
-    const saved = JSON.parse(localStorage.getItem('study-chat') || '[]');
+    let saved: ChatMessage[] = [];
+    try { saved = JSON.parse(localStorage.getItem('study-chat') || '[]'); } catch { saved = []; }
     onMessages(saved);
     return () => {};
   }
@@ -187,7 +189,8 @@ export async function addTopicComment(comment: TopicComment) {
 
 function fallbackAddTopicComment(comment: TopicComment) {
   const key = `topic-comments-${comment.topicId}`;
-  const existing = JSON.parse(localStorage.getItem(key) || '[]');
+  let existing: TopicComment[] = [];
+  try { existing = JSON.parse(localStorage.getItem(key) || '[]'); } catch { existing = []; }
   existing.push({ user: comment.user, text: comment.text, time: comment.time, topicId: comment.topicId });
   localStorage.setItem(key, JSON.stringify(existing));
   window.dispatchEvent(new CustomEvent('topic-comment-added', { detail: comment.topicId }));
@@ -198,13 +201,13 @@ function subscribeLocalTopicComments(
   onComments: (comments: TopicComment[]) => void
 ): () => void {
   const key = `topic-comments-${topicId}`;
-  const saved = JSON.parse(localStorage.getItem(key) || '[]');
+  let saved: TopicComment[] = [];
+  try { saved = JSON.parse(localStorage.getItem(key) || '[]'); } catch { saved = []; }
   onComments(saved);
-  const handler = (e: Event) => {
-    const detail = (e as CustomEvent).detail;
-    if (detail === topicId) {
-      onComments(JSON.parse(localStorage.getItem(key) || '[]'));
-    }
+  const handler = () => {
+    let updated: TopicComment[] = [];
+    try { updated = JSON.parse(localStorage.getItem(key) || '[]'); } catch { updated = []; }
+    onComments(updated);
   };
   window.addEventListener('topic-comment-added', handler);
   return () => window.removeEventListener('topic-comment-added', handler);
@@ -214,22 +217,24 @@ export function subscribeToTopicComments(
   topicId: string,
   onComments: (comments: TopicComment[]) => void,
   onError?: (e: Error) => void
-) {
+): () => void {
   if (!hasFirebaseConfig || !db) {
     return subscribeLocalTopicComments(topicId, onComments);
   }
-  let cleanups: (() => void)[] = [];
   const q = query(
     collection(db, 'topicComments'),
     where('topicId', '==', topicId),
     orderBy('createdAt', 'asc'),
-    limit(100)
+    limit(200)
   );
+  const cleanups: (() => void)[] = [];
   const unsub = onSnapshot(q, (snap) => {
     const comments: TopicComment[] = [];
     snap.forEach((d) => {
-      const data = d.data() as TopicComment;
-      comments.push(data);
+      const data = d.data();
+      if (data && typeof data === 'object' && typeof data.text === 'string' && typeof data.user === 'string' && typeof data.topicId === 'string') {
+        comments.push({ text: data.text.slice(0, 5000), user: data.user.slice(0, 100), time: typeof data.time === 'string' ? data.time.slice(0, 100) : '', topicId: data.topicId });
+      }
     });
     onComments(comments);
   }, (err) => {

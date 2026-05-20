@@ -64,7 +64,7 @@ export async function checkAccessCode(codeHash: string): Promise<UnlockResult> {
     return {
       success: true,
       message: 'Course unlocked!',
-      userId,
+      userId: claimResult.userId,
       contentKey,
     };
   } catch (e: any) {

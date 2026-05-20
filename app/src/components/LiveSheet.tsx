@@ -237,13 +237,17 @@ export function LiveSheet({ topicId: externalTopicId, topicTitle, content }: { t
     if (e.key === 'Enter' && editing) { handleCellBlur(); }
     else if (e.key === 'Enter' && !editing && selectedCell) { setEditing(true); }
     else if (e.key === 'Tab') {
-      e.preventDefault();
       if (!selectedCell) return;
       const colIdx = selectedCell.charCodeAt(0) - 65;
       const rowIdx = parseInt(selectedCell.slice(1));
       const nextCol = (colIdx + 1) % cols;
       const nextRow = nextCol === 0 ? rowIdx + 1 : rowIdx;
-      if (nextRow <= rows) setSelectedCell(`${colLabels[nextCol]}${nextRow}`);
+      if (nextRow > rows || (nextRow === rowIdx && nextCol === 0)) {
+        (e.target as HTMLElement)?.closest('.spreadsheet-container')?.focus();
+        return;
+      }
+      e.preventDefault();
+      setSelectedCell(`${colLabels[nextCol]}${nextRow}`);
     }
   }, [editing, selectedCell, cols, rows, handleCellBlur]);
 
@@ -303,7 +307,9 @@ export function LiveSheet({ topicId: externalTopicId, topicTitle, content }: { t
         const num = parseFloat(raw);
         return isNaN(num) ? '0' : String(num);
       });
-      return String(Function('"use strict"; return (' + expr + ')')());
+      const safeExpr = expr.replace(/[^0-9+\-*/.()eE\s]/g, '');
+      if (!safeExpr || safeExpr !== expr) return '#ERROR';
+      return String(Function('"use strict"; return (' + safeExpr + ')')());
     } catch { return '#ERROR'; }
   }, [getCellVal]);
 

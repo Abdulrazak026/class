@@ -117,7 +117,7 @@ export function LockScreen({ onUnlock }: LockScreenProps) {
             <rect key={`bar-${i}`} x={100 + i * 140} y={600 - h * 4}
               width={60} height={h * 4} rx={4}
               fill={colors[i]} opacity="0.6"
-              className="animate-lockBar">
+            >
               <animate attributeName="height" values={`${h * 2};${h * 4};${h * 2}`}
                 dur={`${2 + i * 0.3}s`} repeatCount="indefinite" />
               <animate attributeName="y" values={`${600 - h * 2};${600 - h * 4};${600 - h * 2}`}
@@ -130,7 +130,7 @@ export function LockScreen({ onUnlock }: LockScreenProps) {
                    C650,380 700,340 800,360 C900,380 950,300 1050,320
                    C1100,330 1150,280 1200,290"
             fill="none" stroke="white" strokeWidth="3" opacity="0.4"
-            className="animate-lockLine">
+            >
             <animate attributeName="d"
               values="M0,500 C100,480 200,520 300,450 C400,380 450,420 550,400 C650,380 700,340 800,360 C900,380 950,300 1050,320 C1100,330 1150,280 1200,290;
                       M0,480 C100,500 200,440 300,470 C400,420 450,390 550,420 C650,400 700,370 800,340 C900,320 950,360 1050,310 C1100,290 1150,320 1200,280;

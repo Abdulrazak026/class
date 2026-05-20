@@ -260,7 +260,7 @@ export const topicClassworks: Record<string, ParsedClasswork[]> = {
     {
       task: `Write a query counting how many orders were placed in each year.`,
       language: 'sql',
-      code: `SELECT COUNT(*) AS order_count, status FROM orders GROUP BY status;`,
+      code: `SELECT strftime('%Y', order_date) AS year, COUNT(*) AS order_count\nFROM orders\nGROUP BY year;`,
       expectedOutput: ``,
       hint: `Use strftime to extract the year from a date.`,
     },

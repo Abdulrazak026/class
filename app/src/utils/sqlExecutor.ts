@@ -304,13 +304,35 @@ function scalarCompare(row: Record<string, string>, col: string, op: string, val
   if (op === '<=') return parseFloat(rv) <= parseFloat(val);
   if (op === '!=') return rv.toLowerCase() !== val.toLowerCase();
   if (op === 'LIKE') {
-    const pattern = '^' + val.replace(/%/g, '.*').replace(/_/g, '.').toLowerCase() + '$';
+    const escaped = val.replace(/[.+*?^${}()|[\]\\]/g, '\\$&').replace(/%/g, '.*').replace(/_/g, '.');
+    const pattern = '^' + escaped.toLowerCase() + '$';
     return new RegExp(pattern).test(rv.toLowerCase());
   }
   return true;
 }
 
 function evalStringFn(fn: string, val: string, args: string[]): string {
+  if (fn === 'CASE') {
+    const whenMatch = val.match(/CASE\s+(?:WHEN\s+(.+?)\s+THEN\s+(.+?)\s+)+?(?:ELSE\s+(.+?))?\s+END/i);
+    if (!whenMatch) return val;
+    let rest = val.replace(/^CASE\s+/i, '');
+    const whens: { cond: string; result: string }[] = [];
+    let elseVal = '';
+    while (rest) {
+      const wm = rest.match(/^WHEN\s+(.+?)\s+THEN\s+(.+?)(?:\s+(?:WHEN|ELSE|END)|$)/i);
+      if (wm) { whens.push({ cond: wm[1].trim(), result: wm[2].trim() }); rest = rest.slice(wm[0].length).trim(); continue; }
+      const em = rest.match(/^ELSE\s+(.+?)\s+END/i);
+      if (em) { elseVal = em[1].trim(); break; }
+      break;
+    }
+    for (const w of whens) {
+      const eq = w.cond.match(/^(.+?)\s*=\s*(.+)$/);
+      if (eq) { if (eq[1].trim().toLowerCase() === eq[2].trim().toLowerCase()) return w.result; }
+      const n = Number(w.cond);
+      if (!isNaN(n)) { if (n) return w.result; }
+    }
+    return elseVal || '0';
+  }
   if (fn === 'UPPER') return val.toUpperCase();
   if (fn === 'LOWER') return val.toLowerCase();
   if (fn === 'LENGTH') return String(val.length);
@@ -548,7 +570,7 @@ function parseMainSelect(trimmed: string, cteCtx?: Record<string, TableData>): P
       continue;
     }
 
-    const stringFnMatch = raw.match(/^(UPPER|LOWER|LENGTH|SUBSTR)\s*\((.+?)\)(?:\s+AS\s+(\w+))?$/i);
+    const stringFnMatch = raw.match(/^(UPPER|LOWER|LENGTH|SUBSTR|CASE)\s*\((.+)\)(?:\s+AS\s+(\w+))?$/i);
     if (stringFnMatch) {
       const fn = stringFnMatch[1].toUpperCase();
       const arg = stringFnMatch[2].trim();
@@ -582,6 +604,7 @@ function parseMainSelect(trimmed: string, cteCtx?: Record<string, TableData>): P
       const alias = aliasMatch?.[1] ? aliasMatch[1].toLowerCase() : 'case_expr';
       columns.push(alias);
       columnKeys.push(raw.toLowerCase());
+      stringFuncs!.push({ alias, fn: 'CASE', arg: raw, colKey: raw });
     } else {
       columns.push(raw.includes('.') ? raw.split('.').pop()!.toLowerCase() : raw.toLowerCase());
       columnKeys.push(raw.includes('.') ? raw.split('.').pop()!.toLowerCase() : raw.trim().toLowerCase());
@@ -795,13 +818,16 @@ export function executeSQL(query: string, cteCtx?: Record<string, TableData>): Q
     if (actualCols.length > vals.length) {
       return { error: 'Not enough values provided.' };
     }
-    const nextId = String(Math.max(0, ...table.rows.map(r => parseInt(r.id) || 0)) + 1);
-    const newRow: Record<string, string> = { id: nextId };
+    const newRow: Record<string, string> = {};
+    if (table.columns.includes('id')) {
+      const nextId = String(Math.max(0, ...table.rows.map(r => parseInt(r.id) || 0)) + 1);
+      newRow.id = nextId;
+    }
     for (let i = 0; i < actualCols.length; i++) {
       newRow[actualCols[i]] = vals[i] || '';
     }
     TABLES[tableName] = { ...table, rows: [...table.rows, newRow] };
-    return { command: 'INSERT', table: tableName, affectedRows: 1, message: `Inserted 1 row into "${tableName}" with id=${nextId}.` };
+    return { command: 'INSERT', table: tableName, affectedRows: 1, message: `Inserted 1 row into "${tableName}".` };
   }
 
   if (/^SELECT.+UNION\s+(ALL\s+)?SELECT/is.test(trimmed)) {
@@ -1015,7 +1041,7 @@ export function executeSQL(query: string, cteCtx?: Record<string, TableData>): Q
         if (havingOp === '>=') return parseFloat(rv) >= parseFloat(havingVal);
         if (havingOp === '<=') return parseFloat(rv) <= parseFloat(havingVal);
         if (havingOp === '!=') return rv.toLowerCase() !== havingVal.toLowerCase();
-        return true;
+  return false;
       });
     }
   }
