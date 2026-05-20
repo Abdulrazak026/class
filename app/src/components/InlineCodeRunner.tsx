@@ -52,7 +52,7 @@ export function InlineCodeRunner({ language, code, task, initialCode, expectedOu
         } else if ('command' in sqlResult) {
           setOutput([{ type: 'stdout', text: sqlResult.message }]);
         } else {
-          const rows = sqlResult.rows.map(r => sqlResult.columns.map((c, idx) => r[sqlResult.columnKeys[idx]] ?? '').join(' | ')).join('\n');
+          const rows = sqlResult.rows.map(r => sqlResult.columns.map((c, idx) => r[sqlResult.columnKeys[idx]] ?? r[sqlResult.columns[idx]] ?? '').join(' | ')).join('\n');
           const header = sqlResult.columns.join(' | ');
           setOutput([{ type: 'stdout', text: `${header}\n${'-'.repeat(header.length)}\n${rows}\n\n(${sqlResult.rows.length} rows)` }]);
         }

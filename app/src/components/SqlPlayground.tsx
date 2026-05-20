@@ -137,7 +137,7 @@ export function SqlPlayground({ topicTitle, content }: { topicTitle?: string; co
               ) : (
                 result.rows.map((row, i) => (
                   <tr key={i} className={i % 2 === 0 ? 'bg-surface/20' : 'bg-deeper/20'}>
-                    {result.columns.map((col, i) => (<td key={col} className="px-3 py-1.5 text-[13px] font-mono text-slate-700 border-b border-border/50">{row[result.columnKeys?.[i] || col] || ''}</td>))}
+                    {result.columns.map((col, i) => (<td key={col} className="px-3 py-1.5 text-[13px] font-mono text-slate-700 border-b border-border/50">{row[result.columnKeys?.[i] || col] ?? row[col] ?? ''}</td>))}
                   </tr>
                 ))
               )}
