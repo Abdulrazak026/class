@@ -768,7 +768,36 @@ function evaluate(expr: string, vars: Record<string, any>): any {
     let obj = evaluate(bracketChain[1], vars);
     const brackets = bracketChain[2].match(/\[.+?\]/g) || [];
     for (const bk of brackets) {
-      const key = evaluate(bk.slice(1, -1), vars);
+      const keyExpr = bk.slice(1, -1);
+      // Handle Python slice notation e.g. [1:3] or [:3] or [1:]
+      if (
+        keyExpr.includes(":") &&
+        !keyExpr.includes("'") &&
+        !keyExpr.includes('"')
+      ) {
+        const sliceParts = keyExpr.split(":");
+        const sliceStart = sliceParts[0].trim()
+          ? Number(evaluate(sliceParts[0].trim(), vars))
+          : 0;
+        const arrLen = Array.isArray(obj)
+          ? obj.length
+          : typeof obj === "string"
+            ? obj.length
+            : 0;
+        const sliceEnd =
+          sliceParts[1] && sliceParts[1].trim()
+            ? Number(evaluate(sliceParts[1].trim(), vars))
+            : arrLen;
+        if (Array.isArray(obj)) {
+          obj = obj.slice(sliceStart, sliceEnd);
+          continue;
+        }
+        if (typeof obj === "string") {
+          obj = obj.slice(sliceStart, sliceEnd);
+          continue;
+        }
+      }
+      const key = evaluate(keyExpr, vars);
       if (obj == null) return undefined;
       if (typeof obj === "object") {
         if (obj.__type === "dataframe") {
@@ -866,7 +895,7 @@ function evaluate(expr: string, vars: Record<string, any>): any {
     if (Array.isArray(obj)) {
       if (method === "append") {
         obj.push(args[0]);
-        return obj;
+        return null; // Python's list.append() returns None
       }
       if (method === "pop") return obj.pop();
       if (method === "sort") return [...obj].sort();
@@ -1442,7 +1471,8 @@ export function executePython(code: string): PythonOutput[] {
     }
 
     const val = evaluate(trimmed, variables);
-    if (val !== undefined) {
+    if (val !== undefined && val !== null) {
+      // null = Python None: don't auto-print (matches Python REPL behavior)
       results.push({ type: "stdout", text: String(val) });
       lastValue = undefined;
     }
@@ -1597,7 +1627,7 @@ export function executePython(code: string): PythonOutput[] {
       i++;
       while (i < lines.length) {
         const nextLine = lines[i].trim();
-        combined += "\n" + nextLine;
+        combined += " " + nextLine; // normalize to single line so assign regex works
         i++;
         if (!hasUnbalanced(combined)) break;
       }
