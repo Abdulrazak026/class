@@ -648,6 +648,10 @@ function evaluate(expr: string, vars: Record<string, any>): any {
   if (s === "None") return null;
 
   if (!isNaN(Number(s))) return Number(s);
+  if (/^[\d_]+$/.test(s) && s.includes("_")) {
+    const noUnd = s.replace(/_/g, "");
+    if (!isNaN(Number(noUnd))) return Number(noUnd);
+  }
 
   const ternaryMatch = s.match(/^(.+)\s+if\s+(.+)\s+else\s+(.+)$/);
   if (ternaryMatch) {
@@ -673,9 +677,22 @@ function evaluate(expr: string, vars: Record<string, any>): any {
               : c,
     );
     if (prefix.includes("f")) {
-      inner = inner.replace(/\{(.+?)\}/g, (_, expr2) =>
-        String(evaluate(expr2.trim(), vars) ?? ""),
-      );
+      inner = inner.replace(/\{([^}]+)\}/g, (_, expr2) => {
+        const colonIdx = expr2.search(/:[^:{]/);
+        const exprPart = colonIdx >= 0 ? expr2.slice(0, colonIdx) : expr2;
+        const fmtPart = colonIdx >= 0 ? expr2.slice(colonIdx + 1) : "";
+        const val = evaluate(exprPart.trim(), vars);
+        if (!fmtPart) return String(val ?? "");
+        const num = Number(val);
+        if (!isNaN(num)) {
+          const decMatch = fmtPart.match(/^\.?(\d+)f$/);
+          if (decMatch) return num.toFixed(parseInt(decMatch[1]));
+          if (fmtPart === ",") return num.toLocaleString();
+          if (fmtPart === "d") return Math.round(num).toString();
+          if (fmtPart === "e") return num.toExponential();
+        }
+        return String(val ?? "");
+      });
     }
     return inner;
   }
@@ -760,6 +777,9 @@ function evaluate(expr: string, vars: Record<string, any>): any {
     const obj = evaluate(attrMatch[1], vars);
     const attr = attrMatch[2];
     if (obj && typeof obj === "object" && attr in obj) return obj[attr];
+    // Instance attribute access
+    if (obj && typeof obj === "object" && obj.__type === "instance")
+      return obj[attr];
     return `Error: attribute ${attr} not found`;
   }
 
@@ -853,6 +873,23 @@ function evaluate(expr: string, vars: Record<string, any>): any {
       args.push(parsedArgs.keywords);
 
     if (obj && typeof obj === "object" && obj.__type) {
+      // Instance method call
+      if (
+        obj.__type === "instance" &&
+        obj.__methods?.[method] &&
+        _callUserFunc
+      ) {
+        const m = obj.__methods[method];
+        const mFn = {
+          __type: "userfunction",
+          params: m.params,
+          body: m.body,
+          closure: {},
+        };
+        return _callUserFunc(mFn, [obj, ...args], { self: obj, ...obj });
+      }
+      // self.attr read
+      if (obj.__type === "instance" && method in obj) return obj[method];
       if (obj.__type === "plt" && typeof obj[method] === "function")
         return obj[method](...args);
       if (obj.__type === "axes" && typeof obj[method] === "function")
@@ -915,6 +952,15 @@ function evaluate(expr: string, vars: Record<string, any>): any {
   if (funcMatch) {
     const fn = funcMatch[1];
     const rawArgs = funcMatch[2];
+    // User-defined function or class instantiation
+    if (
+      fn in vars &&
+      (vars[fn]?.__type === "userfunction" || vars[fn]?.__type === "class") &&
+      _callUserFunc
+    ) {
+      const parsedA = parseArgs(rawArgs, vars);
+      return _callUserFunc(vars[fn], parsedA.positional, vars);
+    }
     if (fn === "print") {
       const argVals = splitTopLevel(rawArgs, ",").map((a) =>
         evaluate(a.trim(), vars),
@@ -1022,7 +1068,7 @@ function evaluate(expr: string, vars: Record<string, any>): any {
   }
 
   const opMatch = s.match(
-    /^(.+?)\s*(==|!=|>=|<=|not\s+in|>|<|[+\-*/%]|and|or|in)\s*(.+)$/,
+    /^(.+?)\s*(==|!=|>=|<=|not\s+in|\*\*|>|<|[+\-*/%]|and|or|in)\s*(.+)$/,
   );
   if (opMatch) {
     let left = opMatch[1].trim(),
@@ -1043,6 +1089,7 @@ function evaluate(expr: string, vars: Record<string, any>): any {
         return String(lv ?? "") + String(rv ?? "");
       return Number(lv ?? 0) + Number(rv ?? 0);
     }
+    if (op === "**") return Math.pow(Number(lv ?? 0), Number(rv ?? 0));
     if (op === "-") return Number(lv ?? 0) - Number(rv ?? 0);
     if (op === "*") return Number(lv ?? 0) * Number(rv ?? 0);
     if (op === "/")
@@ -1064,6 +1111,11 @@ function evaluate(expr: string, vars: Record<string, any>): any {
 
   return `Error: cannot evaluate "${s}"`;
 }
+
+// Module-level hook so evaluate() can call user-defined functions and classes
+let _callUserFunc:
+  | ((fn: any, args: any[], callVars: Record<string, any>) => any)
+  | null = null;
 
 function parseArgs(
   rawArgs: string,
@@ -1116,6 +1168,98 @@ export function executePython(code: string): PythonOutput[] {
   const results: PythonOutput[] = [];
   const lines = code.split("\n");
   const variables: Record<string, any> = {};
+
+  // Recursive executor for user-defined functions and class methods
+  const callUserFunc = (
+    fn: any,
+    args: any[],
+    callScope: Record<string, any>,
+  ): any => {
+    // Class instantiation
+    if (fn.__type === "class") {
+      const instance: Record<string, any> = {
+        __type: "instance",
+        __class: fn.name,
+        __methods: fn.__methods,
+      };
+      const initM = fn.__methods?.["__init__"];
+      if (initM) {
+        const scope = { ...fn, ...callScope, ...variables, self: instance };
+        initM.params.forEach((p: any, idx: number) => {
+          scope[p.name] =
+            args[idx] !== undefined
+              ? args[idx]
+              : p.default !== undefined
+                ? evaluate(p.default, callScope)
+                : undefined;
+        });
+        runBody(initM.body, scope, instance);
+      }
+      return instance;
+    }
+    // User function
+    const scope: Record<string, any> = {
+      ...fn.closure,
+      ...variables,
+      ...callScope,
+    };
+    fn.params.forEach((p: any, idx: number) => {
+      scope[p.name] =
+        args[idx] !== undefined
+          ? args[idx]
+          : p.default !== undefined
+            ? evaluate(p.default, callScope)
+            : undefined;
+    });
+    return runBody(fn.body, scope, null);
+  };
+
+  // Run a list of body lines in a scope, return value from `return`
+  const runBody = (
+    body: string[],
+    scope: Record<string, any>,
+    selfObj: any,
+  ): any => {
+    for (const rawLine of body) {
+      const t = rawLine
+        .trim()
+        .replace(/(?:#.*)$/, "")
+        .trim();
+      if (!t || t.startsWith("#")) continue;
+      if (t.startsWith("return ")) return evaluate(t.slice(7).trim(), scope);
+      if (t === "return") return null;
+      // self.attr = value
+      const selfAssign = t.match(/^self\.([a-zA-Z_]\w*)\s*=\s*(.+)/);
+      if (selfAssign && selfObj) {
+        selfObj[selfAssign[1]] = evaluate(selfAssign[2], scope);
+        continue;
+      }
+      // plain assignment
+      const assignMatch = t.match(/^([a-zA-Z_]\w*)\s*=\s*(.+)/);
+      if (assignMatch && !t.includes("==")) {
+        scope[assignMatch[1]] = evaluate(assignMatch[2], scope);
+        continue;
+      }
+      // print
+      const printMatch = t.match(/^print\((.*)\)$/);
+      if (printMatch) {
+        const pArgs = splitTopLevel(printMatch[1], ",").map((a: string) =>
+          evaluate(a.trim(), scope),
+        );
+        results.push({
+          type: "stdout",
+          text: pArgs
+            .map((v: any) => (v === null ? "None" : String(v ?? "")))
+            .join(" "),
+        });
+        continue;
+      }
+      evaluate(t, scope);
+    }
+    return null;
+  };
+
+  _callUserFunc = callUserFunc;
   let i = 0;
   let lastValue: any = undefined;
 
@@ -1326,6 +1470,16 @@ export function executePython(code: string): PythonOutput[] {
         if (moduleName === "json") {
           variables[alias || moduleName] = new MockJson();
           variables[alias || moduleName].__type = "json";
+          continue;
+        }
+        if (moduleName === "time") {
+          variables[alias || moduleName] = {
+            __type: "module",
+            time: () => Date.now() / 1000,
+            sleep: (_s: number) => null,
+            perf_counter: () => performance.now() / 1000,
+            process_time: () => performance.now() / 1000,
+          };
           continue;
         }
       }
@@ -1578,6 +1732,256 @@ export function executePython(code: string): PythonOutput[] {
       continue;
     }
 
+    // ── def: collect body, store as callable ──────────────────────────────
+    const defMatchMain = trimmed.match(
+      /^def\s+([a-zA-Z_]\w*)\s*\(([^)]*)\)(?:\s*->.*)?:/,
+    );
+    if (defMatchMain) {
+      const fnName = defMatchMain[1];
+      const rawP = defMatchMain[2] || "";
+      const params = rawP
+        ? rawP
+            .split(",")
+            .map((p: string) => {
+              const parts = p.trim().split("=");
+              return {
+                name: parts[0].trim().replace(/^\*+/, ""),
+                default: parts[1]?.trim(),
+              };
+            })
+            .filter((p: any) => p.name)
+        : [];
+      const body: string[] = [];
+      i++;
+      while (
+        i < lines.length &&
+        (lines[i].startsWith("  ") ||
+          lines[i].startsWith("\t") ||
+          lines[i] === "")
+      ) {
+        if (lines[i].trim()) body.push(lines[i]);
+        i++;
+      }
+      variables[fnName] = {
+        __type: "userfunction",
+        params,
+        body,
+        closure: { ...variables },
+      };
+      continue;
+    }
+
+    // ── class: collect methods ────────────────────────────────────────────
+    const classMatchMain = trimmed.match(
+      /^class\s+([A-Za-z_]\w*)\s*(?:\(([^)]*)\))?:/,
+    );
+    if (classMatchMain) {
+      const cName = classMatchMain[1];
+      const parentName = classMatchMain[2]?.trim() || null;
+      const methods: Record<string, any> = {};
+      i++;
+      while (
+        i < lines.length &&
+        (lines[i].startsWith("  ") ||
+          lines[i].startsWith("\t") ||
+          lines[i] === "")
+      ) {
+        const cl = lines[i];
+        const ct = cl.trim();
+        const mDef = ct.match(
+          /^def\s+([a-zA-Z_]\w*)\s*\(([^)]*)\)(?:\s*->.*)?:/,
+        );
+        if (mDef) {
+          const mName = mDef[1];
+          const mParams = (mDef[2] || "")
+            .split(",")
+            .map((p: string) => {
+              const pts = p.trim().split("=");
+              return { name: pts[0].trim(), default: pts[1]?.trim() };
+            })
+            .filter((p: any) => p.name && p.name !== "self");
+          const mBody: string[] = [];
+          i++;
+          while (
+            i < lines.length &&
+            (lines[i].startsWith("    ") ||
+              lines[i].startsWith("\t\t") ||
+              lines[i] === "")
+          ) {
+            if (lines[i].trim()) mBody.push(lines[i]);
+            i++;
+          }
+          methods[mName] = { params: mParams, body: mBody };
+        } else {
+          i++;
+        }
+      }
+      const parentCls = parentName ? variables[parentName] : null;
+      variables[cName] = {
+        __type: "class",
+        name: cName,
+        __methods: parentCls ? { ...parentCls.__methods, ...methods } : methods,
+      };
+      continue;
+    }
+
+    // ── try/except/finally ────────────────────────────────────────────────
+    if (trimmed === "try:") {
+      const tryBlock: string[] = [];
+      i++;
+      while (
+        i < lines.length &&
+        (lines[i].startsWith("  ") ||
+          lines[i].startsWith("\t") ||
+          lines[i] === "")
+      ) {
+        if (lines[i].trim()) tryBlock.push(lines[i].trim());
+        i++;
+      }
+      type ExBlk = { types: string[]; varName: string | null; body: string[] };
+      const exceptBlocks: ExBlk[] = [];
+      let finallyBlock: string[] = [];
+      while (i < lines.length) {
+        const nt = lines[i].trim();
+        const exM = nt.match(/^except(?:\s+([\w ,()]+?))?(?:\s+as\s+(\w+))?:$/);
+        if (exM) {
+          const types = (exM[1] || "")
+            .replace(/[()]/g, "")
+            .split(",")
+            .map((t: string) => t.trim())
+            .filter(Boolean);
+          const varName = exM[2] || null;
+          const body: string[] = [];
+          i++;
+          while (
+            i < lines.length &&
+            (lines[i].startsWith("  ") ||
+              lines[i].startsWith("\t") ||
+              lines[i] === "")
+          ) {
+            if (lines[i].trim()) body.push(lines[i].trim());
+            i++;
+          }
+          exceptBlocks.push({ types, varName, body });
+        } else if (nt === "finally:") {
+          i++;
+          while (
+            i < lines.length &&
+            (lines[i].startsWith("  ") ||
+              lines[i].startsWith("\t") ||
+              lines[i] === "")
+          ) {
+            if (lines[i].trim()) finallyBlock.push(lines[i].trim());
+            i++;
+          }
+          break;
+        } else break;
+      }
+      // Run try block; file ops always throw FileNotFoundError in browser
+      const needsFileSystem = tryBlock.some(
+        (l) => l.includes("open(") && !l.includes("'w'") && !l.includes('"w"'),
+      );
+      let tryError: string | null = needsFileSystem
+        ? "FileNotFoundError"
+        : null;
+      if (!tryError) {
+        const prevLen = results.length;
+        for (const bLine of tryBlock) execLine(bLine);
+        // Check if any new results look like errors
+        const newResults = results.slice(prevLen);
+        const errResult = newResults.find(
+          (r) => typeof r.text === "string" && r.text.startsWith("Error:"),
+        );
+        if (errResult) {
+          results.splice(prevLen);
+          tryError = errResult.text;
+        }
+      }
+      if (tryError) {
+        let handled = false;
+        for (const eb of exceptBlocks) {
+          const matches =
+            eb.types.length === 0 ||
+            eb.types.some(
+              (t) =>
+                t === "Exception" ||
+                t === "BaseException" ||
+                tryError!.includes(t),
+            );
+          if (matches) {
+            if (eb.varName) variables[eb.varName] = tryError;
+            for (const bLine of eb.body) execLine(bLine);
+            handled = true;
+            break;
+          }
+        }
+      }
+      for (const bLine of finallyBlock) execLine(bLine);
+      continue;
+    }
+
+    // ── with statement ────────────────────────────────────────────────────
+    const withMatch = trimmed.match(/^with\s+(.+)\s+as\s+([a-zA-Z_]\w*)\s*:/);
+    if (withMatch) {
+      const ctxExpr = withMatch[1].trim();
+      const asVar = withMatch[2];
+      const mockFiles: Record<string, string> = {
+        "data.csv": "id,name,age\n1,Alice,25\n2,Bob,30\n3,Charlie,35",
+        "sales.csv":
+          "date,product,amount\n2024-01-01,Widget A,100\n2024-01-02,Widget B,200",
+        "orders.csv":
+          "order_id,customer,amount\n1,Alice,150\n2,Bob,80\n3,Alice,200",
+      };
+      const openM = ctxExpr.match(
+        /^open\s*\(\s*['"]([^'"]+)['"]\s*(?:,\s*['"]([^'"]*)['"])?\s*\)/,
+      );
+      if (openM) {
+        const fname = openM[1];
+        const fmode = openM[2] || "r";
+        const fcontent = mockFiles[fname] ?? `[Simulated: ${fname}]`;
+        if (fmode.startsWith("r")) {
+          const flines = fcontent.split("\n");
+          variables[asVar] = {
+            __type: "file",
+            _content: fcontent,
+            _lines: flines,
+            read: () => fcontent,
+            readlines: () => flines,
+            __iter__: flines,
+          };
+        } else {
+          let written = "";
+          variables[asVar] = {
+            __type: "file",
+            _content: "",
+            write: (s: string) => {
+              written += s;
+              variables[asVar]._content = written;
+              return null;
+            },
+            writelines: (ls: string[]) => {
+              written += ls.join("");
+              variables[asVar]._content = written;
+              return null;
+            },
+          };
+        }
+      }
+      const withBlock: string[] = [];
+      i++;
+      while (
+        i < lines.length &&
+        (lines[i].startsWith("  ") ||
+          lines[i].startsWith("\t") ||
+          lines[i] === "")
+      ) {
+        if (lines[i].trim()) withBlock.push(lines[i].trim());
+        i++;
+      }
+      for (const bLine of withBlock) execLine(bLine);
+      continue;
+    }
+
     const forMatch = trimmed.match(/^for\s+([a-zA-Z_]\w*)\s+in\s+(.+):$/);
     if (forMatch) {
       const iterable = evaluate(forMatch[2], variables);
@@ -1592,8 +1996,13 @@ export function executePython(code: string): PythonOutput[] {
         if (lines[i].trim()) block.push(lines[i].trim());
         i++;
       }
-      if (Array.isArray(iterable) || typeof iterable === "string") {
-        for (const item of iterable) {
+      // Support iterating over file objects
+      const iterTarget =
+        iterable?.__type === "file" && iterable.__iter__
+          ? iterable.__iter__
+          : iterable;
+      if (Array.isArray(iterTarget) || typeof iterTarget === "string") {
+        for (const item of iterTarget) {
           variables[forMatch[1]] = item;
           for (const bLine of block) execLine(bLine);
         }
