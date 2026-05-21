@@ -1347,8 +1347,12 @@ export function executePython(code: string): PythonOutput[] {
           if (blockLines[bi].trim()) body.push(blockLines[bi]);
           bi++;
         }
-        if (Array.isArray(iterable) || typeof iterable === "string") {
-          for (const item of iterable) {
+        const iterT =
+          iterable?.__type === "file" && iterable.__iter__
+            ? iterable.__iter__
+            : iterable;
+        if (Array.isArray(iterT) || typeof iterT === "string") {
+          for (const item of iterT) {
             variables[forMatch[1]] = item;
             execBlock(body);
           }
@@ -1373,6 +1377,112 @@ export function executePython(code: string): PythonOutput[] {
           execBlock(body);
           guard++;
         }
+        continue;
+      }
+      // with statement inside a block
+      const innerWithMatch = trimmed.match(
+        /^with\s+(.+)\s+as\s+([a-zA-Z_]\w*)\s*:/,
+      );
+      if (innerWithMatch) {
+        const ctxE = innerWithMatch[1].trim();
+        const asV = innerWithMatch[2];
+        const mockF: Record<string, string> = {
+          "data.csv": "id,name,age\n1,Alice,25\n2,Bob,30\n3,Charlie,35",
+          "sales.csv":
+            "date,product,amount\n2024-01-01,Widget A,100\n2024-01-02,Widget B,200",
+          "orders.csv":
+            "order_id,customer,amount\n1,Alice,150\n2,Bob,80\n3,Alice,200",
+        };
+        const openMI = ctxE.match(
+          /^open\s*\(\s*['"]([^'"]+)['"]\s*(?:,\s*['"]([^'"]*)['"])?\s*\)/,
+        );
+        if (openMI) {
+          const fn = openMI[1],
+            fm = openMI[2] || "r";
+          const fc = mockF[fn] ?? `[Simulated: ${fn}]`;
+          if (fm.startsWith("r")) {
+            const fl = fc.split("\n");
+            variables[asV] = {
+              __type: "file",
+              _content: fc,
+              _lines: fl,
+              read: () => fc,
+              readlines: () => fl,
+              __iter__: fl,
+            };
+          } else {
+            let wr = "";
+            variables[asV] = {
+              __type: "file",
+              _content: "",
+              write: (s: string) => {
+                wr += s;
+                variables[asV]._content = wr;
+                return null;
+              },
+              writelines: (ls: string[]) => {
+                wr += ls.join("");
+                variables[asV]._content = wr;
+                return null;
+              },
+            };
+          }
+        } else if (trimmed.includes("open(")) {
+          // file not in mock — simulated missing
+          variables[asV] = {
+            __type: "file",
+            __missing: true,
+            read: () => null,
+            _content: "",
+          };
+        }
+        const innerBody: string[] = [];
+        bi++;
+        while (
+          bi < blockLines.length &&
+          (blockLines[bi].startsWith("  ") ||
+            blockLines[bi].startsWith("\t") ||
+            blockLines[bi] === "")
+        ) {
+          if (blockLines[bi].trim()) innerBody.push(blockLines[bi]);
+          bi++;
+        }
+        execBlock(innerBody);
+        continue;
+      }
+      // try/except inside a block (simple: execute try, swallow errors)
+      if (trimmed === "try:") {
+        const tryB: string[] = [];
+        bi++;
+        while (
+          bi < blockLines.length &&
+          (blockLines[bi].startsWith("  ") ||
+            blockLines[bi].startsWith("\t") ||
+            blockLines[bi] === "")
+        ) {
+          if (blockLines[bi].trim()) tryB.push(blockLines[bi]);
+          bi++;
+        }
+        while (bi < blockLines.length) {
+          const nt2 = blockLines[bi].trim();
+          if (nt2.startsWith("except") || nt2 === "finally:") {
+            bi++;
+            while (
+              bi < blockLines.length &&
+              (blockLines[bi].startsWith("  ") ||
+                blockLines[bi].startsWith("\t") ||
+                blockLines[bi] === "")
+            )
+              bi++;
+          } else break;
+        }
+        const prevL = results.length;
+        execBlock(tryB);
+        // remove any error outputs from the try block
+        const errs = results
+          .slice(prevL)
+          .filter((r) => String(r.text).startsWith("Error:"));
+        if (errs.length) results.splice(prevL);
         continue;
       }
       execLine(line);
@@ -1625,8 +1735,15 @@ export function executePython(code: string): PythonOutput[] {
     }
 
     const val = evaluate(trimmed, variables);
-    if (val !== undefined && val !== null) {
+    if (
+      val !== undefined &&
+      val !== null &&
+      !(typeof val === "object" && val?.__type === "file") &&
+      !(typeof val === "object" && val?.__type === "instance") &&
+      !(typeof val === "object" && val?.__type === "class")
+    ) {
       // null = Python None: don't auto-print (matches Python REPL behavior)
+      // file/instance/class objects should not auto-print as [object Object]
       results.push({ type: "stdout", text: String(val) });
       lastValue = undefined;
     }
@@ -1835,7 +1952,7 @@ export function executePython(code: string): PythonOutput[] {
           lines[i].startsWith("\t") ||
           lines[i] === "")
       ) {
-        if (lines[i].trim()) tryBlock.push(lines[i].trim());
+        if (lines[i].trim()) tryBlock.push(lines[i]); // keep indentation
         i++;
       }
       type ExBlk = { types: string[]; varName: string | null; body: string[] };
@@ -1859,7 +1976,7 @@ export function executePython(code: string): PythonOutput[] {
               lines[i].startsWith("\t") ||
               lines[i] === "")
           ) {
-            if (lines[i].trim()) body.push(lines[i].trim());
+            if (lines[i].trim()) body.push(lines[i]); // keep indentation
             i++;
           }
           exceptBlocks.push({ types, varName, body });
@@ -1871,7 +1988,7 @@ export function executePython(code: string): PythonOutput[] {
               lines[i].startsWith("\t") ||
               lines[i] === "")
           ) {
-            if (lines[i].trim()) finallyBlock.push(lines[i].trim());
+            if (lines[i].trim()) finallyBlock.push(lines[i]); // keep indentation
             i++;
           }
           break;
@@ -1879,15 +1996,19 @@ export function executePython(code: string): PythonOutput[] {
       }
       // Run try block; file ops always throw FileNotFoundError in browser
       const needsFileSystem = tryBlock.some(
-        (l) => l.includes("open(") && !l.includes("'w'") && !l.includes('"w"'),
+        (l) =>
+          l.trim().includes("open(") &&
+          !l.includes("'w'") &&
+          !l.includes('"w"') &&
+          !l.includes("'a'") &&
+          !l.includes('"a"'),
       );
       let tryError: string | null = needsFileSystem
         ? "FileNotFoundError"
         : null;
       if (!tryError) {
         const prevLen = results.length;
-        for (const bLine of tryBlock) execLine(bLine);
-        // Check if any new results look like errors
+        execBlock(tryBlock);
         const newResults = results.slice(prevLen);
         const errResult = newResults.find(
           (r) => typeof r.text === "string" && r.text.startsWith("Error:"),
@@ -1898,7 +2019,6 @@ export function executePython(code: string): PythonOutput[] {
         }
       }
       if (tryError) {
-        let handled = false;
         for (const eb of exceptBlocks) {
           const matches =
             eb.types.length === 0 ||
@@ -1910,13 +2030,12 @@ export function executePython(code: string): PythonOutput[] {
             );
           if (matches) {
             if (eb.varName) variables[eb.varName] = tryError;
-            for (const bLine of eb.body) execLine(bLine);
-            handled = true;
+            execBlock(eb.body);
             break;
           }
         }
       }
-      for (const bLine of finallyBlock) execLine(bLine);
+      execBlock(finallyBlock);
       continue;
     }
 
@@ -1975,10 +2094,10 @@ export function executePython(code: string): PythonOutput[] {
           lines[i].startsWith("\t") ||
           lines[i] === "")
       ) {
-        if (lines[i].trim()) withBlock.push(lines[i].trim());
+        if (lines[i].trim()) withBlock.push(lines[i]); // keep indentation for execBlock
         i++;
       }
-      for (const bLine of withBlock) execLine(bLine);
+      execBlock(withBlock);
       continue;
     }
 
