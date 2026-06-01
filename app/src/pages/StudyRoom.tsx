@@ -292,7 +292,7 @@ const CHALLENGES: Record<Exclude<PracticeTab, 'chat'>, Challenge[]> = {
       hint: 'SUMPRODUCT multiplies arrays element-wise and sums. Or do =D2*E2+D3*E3+... but SUMPRODUCT is cleaner.',
       verify: (out) => {
         const n = parseFloat(out);
-        return !isNaN(n) && n > 6000 && n < 8000;
+        return !isNaN(n) && n > 9000 && n < 9500;
       },
     },
     {
@@ -354,7 +354,7 @@ const CHALLENGES: Record<Exclude<PracticeTab, 'chat'>, Challenge[]> = {
       hint: 'SUMPRODUCT(array1, array2) multiplies corresponding elements and sums them.',
       verify: (out) => {
         const n = parseFloat(out);
-        return !isNaN(n) && n > 6000 && n < 8000;
+        return !isNaN(n) && n > 9000 && n < 9500;
       },
     },
     {
