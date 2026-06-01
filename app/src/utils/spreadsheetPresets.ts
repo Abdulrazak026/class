@@ -203,6 +203,20 @@ presets['w2-d5'] = {
     ['A8', 'JOHN SMITH'], ['B8', 'john@email.com'], ['C8', '555-123-4567'], ['D8', '  New York  '], ['E8', 'Active'],
   ]),
   highlightCells: ['A2', 'A3', 'B3', 'B6', 'A8'],
+  verify: (data) => {
+    const msgs: string[] = [];
+    const a2 = (data['A2'] || '').trim();
+    if (a2 === 'JOHN SMITH') msgs.push('Apply PROPER to convert all-caps names to Proper Case');
+    const d2 = (data['D2'] || '').trim();
+    if (d2 === '  New York  ' || d2 === 'New York') msgs.push('Use TRIM to remove extra spaces from City column');
+    const formulas = Object.values(data).filter(v => v.startsWith('='));
+    if (formulas.length === 0) msgs.push('Add formulas to clean the data (PROPER, TRIM, IF, SUBSTITUTE)');
+    const allFormulas = formulas.join(' ');
+    if (formulas.length > 0 && !allFormulas.includes('PROPER') && !allFormulas.includes('TRIM') && !allFormulas.includes('SUBSTITUTE') && !allFormulas.includes('IF'))
+      msgs.push('Use text functions like PROPER, TRIM, SUBSTITUTE, or IF to clean data');
+    if (msgs.length === 0) return { passed: true, messages: ['All requirements met!'] };
+    return { passed: false, messages: msgs };
+  },
 };
 
 // Week 3: Data Analysis
@@ -268,7 +282,20 @@ presets['w3-d4'] = {
   highlightCells: ['B2', 'B13'],
 };
 
-presets['w3-d5'] = presets['w3-d1'];
+presets['w3-d5'] = {
+  ...presets['w3-d1'],
+  verify: (data) => {
+    const msgs: string[] = [];
+    const vals = Object.values(data).filter(v => v && v.startsWith('='));
+    if (!vals.some(v => v.includes('SUM'))) msgs.push('Add a SUM formula for total sales');
+    if (!vals.some(v => v.includes('AVERAGE'))) msgs.push('Add an AVERAGE formula');
+    if (!vals.some(v => v.includes('COUNT') || v.includes('COUNTA'))) msgs.push('Add a COUNT formula');
+    const dataRows = [2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20].filter(r => data[`A${r}`] && data[`A${r}`].trim());
+    if (dataRows.length < 5) msgs.push('Enter at least 5 rows of sales data');
+    if (msgs.length === 0) return { passed: true, messages: ['All requirements met!'] };
+    return { passed: false, messages: msgs };
+  },
+};
 
 // Week 4: Advanced Formulas (new)
 presets['w_adv1-d1'] = {
@@ -371,6 +398,19 @@ presets['w_adv1-d5'] = {
     ['B11', 'Avg Margin'], ['C11', '=AVERAGE(E2:E6)'],
   ]),
   readOnlyCells: ['D2', 'D3', 'D4', 'D5', 'D6', 'E2', 'E3', 'E4', 'E5', 'E6', 'F3', 'F4', 'F5', 'F6', 'C8', 'C9', 'C10', 'C11'],
+  verify: (data) => {
+    const msgs: string[] = [];
+    const formulas = Object.values(data).filter(v => v.startsWith('='));
+    const allFormulas = formulas.join(' ');
+    if (!allFormulas.includes('AVERAGE')) msgs.push('Use AVERAGE of historical growth rates to project 2025');
+    if (!allFormulas.includes('SUM')) msgs.push('Add SUM formulas for totals in the summary section');
+    const has2025 = Object.entries(data).some(([ref, v]) => ref.startsWith('A') && v.includes('2025'));
+    if (!has2025) msgs.push('Add a row for 2025 projection');
+    const hasScenario = Object.entries(data).some(([ref, v]) => ref.startsWith('A') && /best|expected|worst|scenario/i.test(v));
+    if (!hasScenario) msgs.push('Add Best Case, Expected Case, and Worst Case scenarios');
+    if (msgs.length === 0) return { passed: true, messages: ['All requirements met!'] };
+    return { passed: false, messages: msgs };
+  },
 };
 
 // Week 5: Power Tools & Productivity (new)
@@ -449,6 +489,16 @@ presets['w_pwr1-d5'] = {
     ['A14', 'T014'], ['B14', '2024-07-01'], ['C14', 'Widget A'], ['D14', '1600'], ['E14', 'Electronics'],
   ]),
   highlightCells: ['A2', 'B2', 'D2'],
+  verify: (data) => {
+    const msgs: string[] = [];
+    const formulas = Object.values(data).filter(v => v.startsWith('='));
+    if (formulas.length === 0) msgs.push('Add formulas to clean, transform, or analyze the data');
+    const allFormulas = formulas.join(' ');
+    if (formulas.length > 0 && !allFormulas.includes('SUM') && !allFormulas.includes('AVERAGE') && !allFormulas.includes('COUNT'))
+      msgs.push('Add summary formulas (SUM, AVERAGE, COUNT) for the report');
+    if (msgs.length === 0) return { passed: true, messages: ['All requirements met!'] };
+    return { passed: false, messages: msgs };
+  },
 };
 
 // Week 6: Excel Capstone (formerly w4-d5)
