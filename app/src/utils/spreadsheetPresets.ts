@@ -1,9 +1,15 @@
+export interface VerifyResult {
+  passed: boolean;
+  messages: string[];
+}
+
 export interface SpreadsheetPreset {
   data: Record<string, string>;
   cols: number;
   rows: number;
   highlightCells?: string[];
   readOnlyCells?: string[];
+  verify?: (data: Record<string, string>) => VerifyResult;
 }
 
 const presets: Record<string, SpreadsheetPreset> = {};
@@ -93,6 +99,23 @@ presets['w1-d5'] = {
     ['A6', ''], ['B6', ''], ['C6', ''], ['D6', ''], ['E6', ''],
     ['A7', ''], ['B7', ''], ['C7', ''], ['D7', ''], ['E7', ''],
   ]),
+  verify: (data) => {
+    const msgs: string[] = [];
+    const cats = [2,3,4,5,6].filter(r => data[`A${r}`] && data[`A${r}`].trim());
+    if (cats.length < 5) msgs.push(`Enter at least ${5 - cats.length} more spending categories in column A`);
+    const budgetedRows = [2,3,4,5,6].filter(r => data[`B${r}`] && parseFloat(data[`B${r}`]));
+    if (budgetedRows.length < 5) msgs.push(`Add Budgeted amounts for all categories in column B`);
+    const actualRows = [2,3,4,5,6].filter(r => data[`C${r}`] && parseFloat(data[`C${r}`]));
+    if (actualRows.length < 5) msgs.push(`Add Actual amounts for all categories in column C`);
+    const diffFormulas = [2,3,4,5,6].filter(r => data[`D${r}`] && data[`D${r}`].startsWith('='));
+    if (diffFormulas.length === 0) msgs.push('Add Difference formulas in column D (e.g. =C2-B2)');
+    const statusFormulas = [2,3,4,5,6].filter(r => data[`E${r}`] && data[`E${r}`].toUpperCase().includes('IF'));
+    if (statusFormulas.length === 0) msgs.push('Add IF formulas in column E for Status (e.g. =IF(D2>0,"Overspent","On Track"))');
+    const hasSum = Object.values(data).some(v => v && v.toUpperCase().includes('SUM'));
+    if (!hasSum) msgs.push('Add SUM formulas for category totals');
+    if (msgs.length === 0) return { passed: true, messages: ['All requirements met!'] };
+    return { passed: false, messages: msgs };
+  },
 };
 
 // Week 2: Data Manipulation

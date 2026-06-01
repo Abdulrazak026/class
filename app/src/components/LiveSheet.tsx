@@ -1,9 +1,9 @@
 import React, { useState, useCallback, useMemo, useRef, useEffect } from 'react';
 import { motion } from 'motion/react';
-import { Calculator, RotateCcw, ArrowUpDown, Search, BarChart3, Filter, X, Table as TableIcon, Plus, CheckCircle2, Bold, DollarSign } from 'lucide-react';
+import { Calculator, RotateCcw, ArrowUpDown, Search, BarChart3, Filter, X, Table as TableIcon, Plus, CheckCircle2, XCircle, Bold, DollarSign } from 'lucide-react';
 import { evaluateFormula } from '../utils/spreadsheetEngine';
 import type { SpreadsheetData } from '../utils/spreadsheetEngine';
-import { getPreset } from '../utils/spreadsheetPresets';
+import { getPreset, VerifyResult } from '../utils/spreadsheetPresets';
 import { saveProjectData, submitProject, subscribeToProject, getMyUserId } from '../firebase/services';
 
 const DEFAULT_COLS = 7;
@@ -23,7 +23,7 @@ function toSpreadsheetData(cells: Record<string, string>, cols: number, rows: nu
   return data;
 }
 
-function createFromPreset(topicId: string): { data: Record<string, string>; cols: number; rows: number; readOnly: Set<string>; highlight: Set<string> } | null {
+function createFromPreset(topicId: string): { data: Record<string, string>; cols: number; rows: number; readOnly: Set<string>; highlight: Set<string>; verify?: (data: Record<string, string>) => VerifyResult } | null {
   const preset = getPreset(topicId);
   if (!preset) return null;
   const newData: Record<string, string> = {};
@@ -35,7 +35,7 @@ function createFromPreset(topicId: string): { data: Record<string, string>; cols
   }
   const readOnly = new Set<string>(preset.readOnlyCells || []);
   const highlight = new Set<string>(preset.highlightCells || []);
-  return { data: newData, cols: preset.cols, rows: preset.rows, readOnly, highlight };
+  return { data: newData, cols: preset.cols, rows: preset.rows, readOnly, highlight, verify: preset.verify };
 }
 
 function createDefaultData(): Record<string, string> {
@@ -145,7 +145,7 @@ export function LiveSheet({ topicId: externalTopicId, topicTitle, content, onSub
   const presetInfo = useMemo(() => {
     const result = externalTopicId ? createFromPreset(externalTopicId) : null;
     if (result) return result;
-    return { data: createDefaultData(), cols: DEFAULT_COLS, rows: DEFAULT_ROWS, readOnly: new Set<string>(), highlight: new Set<string>() };
+    return { data: createDefaultData(), cols: DEFAULT_COLS, rows: DEFAULT_ROWS, readOnly: new Set<string>(), highlight: new Set<string>(), verify: undefined };
   }, [externalTopicId]);
 
   const data = editedData || presetInfo.data;
@@ -361,6 +361,14 @@ export function LiveSheet({ topicId: externalTopicId, topicTitle, content, onSub
     setShowValidation(false); setValidationRules([]);
   }, []);
 
+  const [verifyResult, setVerifyResult] = useState<VerifyResult | null>(null);
+
+  const handleVerify = useCallback(() => {
+    if (!presetInfo.verify) return;
+    const result = presetInfo.verify(editedData || presetInfo.data);
+    setVerifyResult(result);
+  }, [presetInfo, editedData]);
+
   const handleSubmit = useCallback(async () => {
     if (!externalTopicId || userId === null) return;
     setSubmitting(true);
@@ -370,6 +378,7 @@ export function LiveSheet({ topicId: externalTopicId, topicTitle, content, onSub
       }
       await submitProject(userId, externalTopicId);
       setProjectSubmitted(true);
+      setVerifyResult(null);
       onSubmit?.();
     } finally {
       setSubmitting(false);
@@ -455,10 +464,18 @@ export function LiveSheet({ topicId: externalTopicId, topicTitle, content, onSub
         <div className="flex items-center gap-2">
           {selectedCell && <span className="text-[11px] font-mono text-slate-500 bg-surface px-2 py-1 rounded">{selectedCell}</span>}
           {externalTopicId && !projectSubmitted && (
-            <button onClick={handleSubmit} disabled={submitting}
-              className="text-[11px] px-3 py-1 rounded font-mono bg-emerald-600 text-white border border-emerald-600 hover:bg-emerald-500 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1">
-              {submitting ? 'Submitting...' : 'Submit'}
-            </button>
+            <>
+              {presetInfo.verify && (
+                <button onClick={handleVerify}
+                  className="text-[11px] px-3 py-1 rounded font-mono bg-accent text-white border border-accent hover:bg-accent-dark flex items-center gap-1">
+                  <CheckCircle2 className="w-3 h-3" /> Verify
+                </button>
+              )}
+              <button onClick={handleSubmit} disabled={submitting}
+                className="text-[11px] px-3 py-1 rounded font-mono bg-emerald-600 text-white border border-emerald-600 hover:bg-emerald-500 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1">
+                {submitting ? 'Submitting...' : 'Submit'}
+              </button>
+            </>
           )}
           <button onClick={handleReset} className="text-slate-500 hover:text-slate-700"><RotateCcw className="w-3.5 h-3.5" /></button>
         </div>
@@ -573,6 +590,24 @@ export function LiveSheet({ topicId: externalTopicId, topicTitle, content, onSub
           )}
         </div>
       </div>
+
+      {verifyResult && (
+        <div className={`px-4 py-3 border-b flex items-start gap-2 ${verifyResult.passed ? 'bg-emerald-50 border-emerald-200' : 'bg-red-50 border-red-200'}`}>
+          {verifyResult.passed ? (
+            <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
+          ) : (
+            <XCircle className="w-4 h-4 text-red-600 shrink-0 mt-0.5" />
+          )}
+          <div>
+            <p className={`text-xs font-bold ${verifyResult.passed ? 'text-emerald-800' : 'text-red-800'}`}>
+              {verifyResult.passed ? 'All checks passed!' : 'Some requirements not met:'}
+            </p>
+            {verifyResult.messages.map((msg, i) => (
+              <p key={i} className={`text-[11px] mt-0.5 ${verifyResult.passed ? 'text-emerald-700' : 'text-red-700'}`}>{msg}</p>
+            ))}
+          </div>
+        </div>
+      )}
 
       {projectSubmitted && (
         <div className="px-4 py-3 bg-emerald-50 border-b border-emerald-200 flex items-center gap-2">
