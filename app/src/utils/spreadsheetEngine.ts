@@ -139,6 +139,19 @@ export function evaluateFormula(formula: string, data: SpreadsheetData, visited:
   const expr = normalized.slice(1);
 
   try {
+    if (expr.startsWith('SUMPRODUCT(')) {
+      const args = splitArgs(expr.slice(11, -1));
+      const arrays = args.map(a => a.includes(':') ? parseRange(a) : [a]);
+      if (arrays.length < 2) { const c = arrays[0] || []; return c.reduce((s, ref) => s + getNum(getCellValue(ref, data, new Set(visited))), 0); }
+      const len = Math.max(...arrays.map(a => a.length));
+      let total = 0;
+      for (let i = 0; i < len; i++) {
+        let product = 1;
+        for (let j = 0; j < arrays.length; j++) product *= getNum(getCellValue(arrays[j][i] || arrays[j][arrays[j].length - 1], data, new Set(visited)));
+        total += product;
+      }
+      return total;
+    }
     if (expr.startsWith('SUM(')) {
       const range = expr.slice(4, -1);
       const cells = range.includes(':') ? parseRange(range) : splitArgs(range);
