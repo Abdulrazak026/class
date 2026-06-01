@@ -191,7 +191,7 @@ presets['w2-d4'] = {
 };
 
 presets['w2-d5'] = {
-  cols: 6, rows: 14,
+  cols: 6, rows: 30,
   data: d([
     ['A1', 'Name'], ['B1', 'Email'], ['C1', 'Phone'], ['D1', 'City'], ['E1', 'Status'],
     ['A2', 'JOHN SMITH'], ['B2', 'john@email.com'], ['C2', '555-123-4567'], ['D2', '  New York  '], ['E2', 'Active'],
@@ -201,6 +201,28 @@ presets['w2-d5'] = {
     ['A6', 'chris brown'], ['B6', ''], ['C6', '555-444-5555'], ['D6', '  Phoenix  '], ['E6', 'Active'],
     ['A7', 'JESSICA WONG'], ['B7', 'jessica@email.com'], ['C7', '555.777.8888'], ['D7', 'Philadelphia'], ['E7', 'Inactive'],
     ['A8', 'JOHN SMITH'], ['B8', 'john@email.com'], ['C8', '555-123-4567'], ['D8', '  New York  '], ['E8', 'Active'],
+    ['A9', '  bob johnson  '], ['B9', ''], ['C9', '555.222.1111'], ['D9', 'Dallas  '], ['E9', 'Active'],
+    ['A10', 'SUSAN LEE'], ['B10', 'susan@email.com'], ['C10', '555-333-4444'], ['D10', '  San Diego  '], ['E10', 'Active'],
+    ['A11', 'mike williams'], ['B11', 'mike@email.com'], ['C11', '1-800-555-0199'], ['D11', 'Denver'], ['E11', 'Inactive'],
+    ['A12', '  emma davis  '], ['B12', ''], ['C12', '(555) 666-7777'], ['D12', '  Seattle  '], ['E12', 'Active'],
+    ['A13', 'JAMES WILSON'], ['B13', 'james@email.com'], ['C13', '5558889999'], ['D13', 'Miami'], ['E13', 'Active'],
+    ['A14', 'olivia taylor'], ['B14', 'olivia@email.com'], ['C14', '555.111.2222'], ['D14', '  Boston  '], ['E14', 'Inactive'],
+    ['A15', '  daniel brown  '], ['B15', 'daniel@email.com'], ['C15', ''], ['D15', '  Atlanta  '], ['E15', 'Active'],
+    ['A16', 'SOPHIA MARTINEZ'], ['B16', ''], ['C16', '555-777-9999'], ['D16', 'Portland'], ['E16', 'Active'],
+    ['A17', 'liam garcia'], ['B17', 'liam@email.com'], ['C17', '+1-555-444-3333'], ['D17', '  Nashville  '], ['E17', 'Inactive'],
+    ['A18', '  isabella robinson  '], ['B18', 'isabella@email.com'], ['C18', '555.666.7788'], ['D18', '  Tampa  '], ['E18', 'Active'],
+    ['A19', 'JOHN SMITH'], ['B19', 'john@email.com'], ['C19', '555-123-4567'], ['D19', '  New York  '], ['E19', 'Active'],
+    ['A20', '  ethan clark  '], ['B20', 'ethan@email.com'], ['C20', '555-000-1111'], ['D20', 'Austin  '], ['E20', 'Inactive'],
+    ['A21', 'AVA WHITE'], ['B21', 'ava@email.com'], ['C21', '5552223333'], ['D21', '  Orlando  '], ['E21', 'Active'],
+    ['A22', 'noah hall'], ['B22', ''], ['C22', '555.444.5555'], ['D22', 'Charlotte'], ['E22', 'Active'],
+    ['A23', '  mia young  '], ['B23', 'mia@email.com'], ['C23', '(555) 888-0000'], ['D23', '  San Antonio  '], ['E23', 'Inactive'],
+    ['A24', 'JACKSON KING'], ['B24', 'jackson@email.com'], ['C24', '555-666-7777'], ['D24', '  Kansas City  '], ['E24', 'Active'],
+    ['A25', 'charlotte lewis'], ['B25', ''], ['C25', '555.999.1111'], ['D25', 'Milwaukee'], ['E25', 'Active'],
+    ['A26', '  logan walker  '], ['B26', 'logan@email.com'], ['C26', ''], ['D26', '  Richmond  '], ['E26', 'Inactive'],
+    ['A27', 'LILY HARRIS'], ['B27', 'lily@email.com'], ['C27', '+15557778888'], ['D27', 'Salt Lake City'], ['E27', 'Active'],
+    ['A28', '  benjamin allen  '], ['B28', 'benjamin@email.com'], ['C28', '555-333-2222'], ['D28', 'Hartford  '], ['E28', 'Active'],
+    ['A29', 'JOHN SMITH'], ['B29', 'john@email.com'], ['C29', '555-123-4567'], ['D29', '  New York  '], ['E29', 'Active'],
+    ['A30', '  harper scott  '], ['B30', ''], ['C30', '555.111.4444'], ['D30', '  Boise  '], ['E30', 'Inactive'],
   ]),
   highlightCells: ['A2', 'A3', 'B3', 'B6', 'A8'],
   verify: (data) => {
