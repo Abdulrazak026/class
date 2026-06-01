@@ -71,6 +71,32 @@ export default function App() {
   }, []);
 
   useEffect(() => {
+    if (!hasToken) return;
+    (async () => {
+      try {
+        const verRes = await fetch('/version.json?t=' + Date.now(), { cache: 'no-cache' });
+        const serverVer = await verRes.json();
+        const localVer = localStorage.getItem('live-data-version');
+        if (serverVer.version !== localVer) {
+          const [encRes, cwRes] = await Promise.all([
+            fetch('/data.enc?t=' + Date.now(), { cache: 'no-cache' }),
+            fetch('/classworks.enc?t=' + Date.now(), { cache: 'no-cache' }),
+          ]);
+          const encData = await encRes.arrayBuffer();
+          const cwData = cwRes.ok ? await cwRes.arrayBuffer() : null;
+          const token = JSON.parse(localStorage.getItem('access-token') || '{}');
+          const key = token.contentKey || 'DACAMP-2026';
+          const decrypted = await decryptFile(encData, key);
+          let decryptedCw = null;
+          if (cwData) { try { decryptedCw = await decryptFile(cwData, key); } catch {} }
+          setDecryptedData(JSON.parse(decrypted), decryptedCw ? JSON.parse(decryptedCw) : null);
+          setDataVersion(v => v + 1);
+        }
+      } catch (e) { console.warn('Data version check failed:', e); }
+    })();
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  useEffect(() => {
     registerDevice().then(setUserId).catch(() => setUserId(1));
   }, []);
 
