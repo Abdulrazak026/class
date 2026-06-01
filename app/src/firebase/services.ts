@@ -157,6 +157,98 @@ export function subscribeToChat(
   return unsub;
 }
 
+// --- Project Data (auto-save + submit) ---
+
+export interface ProjectData {
+  data: Record<string, string>;
+  formats?: Record<string, { bold?: boolean; currency?: boolean }>;
+  submitted: boolean;
+  submittedAt?: string;
+  updatedAt?: string;
+}
+
+const PROJECTS_COLLECTION = 'projects';
+
+export async function saveProjectData(userId: number, topicId: string, sheetData: Record<string, string>, formats?: Record<string, { bold?: boolean; currency?: boolean }>) {
+  if (!hasFirebaseConfig || !db) {
+    try {
+      localStorage.setItem(`project-${userId}-${topicId}`, JSON.stringify({ data: sheetData, formats, submitted: false }));
+    } catch {}
+    return;
+  }
+  try {
+    const docRef = doc(db, PROJECTS_COLLECTION, `user${userId}_${topicId}`);
+    await setDoc(docRef, {
+      data: sheetData,
+      formats: formats || {},
+      updatedAt: serverTimestamp(),
+    }, { merge: true });
+  } catch (e) {
+    console.warn('Project save failed:', e);
+  }
+}
+
+export async function submitProject(userId: number, topicId: string) {
+  if (!hasFirebaseConfig || !db) {
+    try {
+      const key = `project-${userId}-${topicId}`;
+      const existing = JSON.parse(localStorage.getItem(key) || '{}');
+      existing.submitted = true;
+      existing.submittedAt = new Date().toISOString();
+      localStorage.setItem(key, JSON.stringify(existing));
+    } catch {}
+    return;
+  }
+  try {
+    const docRef = doc(db, PROJECTS_COLLECTION, `user${userId}_${topicId}`);
+    await setDoc(docRef, {
+      submitted: true,
+      submittedAt: serverTimestamp(),
+    }, { merge: true });
+  } catch (e) {
+    console.warn('Project submit failed:', e);
+  }
+}
+
+export function subscribeToProject(
+  userId: number,
+  topicId: string,
+  onData: (data: ProjectData | null) => void,
+  onError?: (e: Error) => void
+): () => void {
+  if (!hasFirebaseConfig || !db) {
+    try {
+      const raw = localStorage.getItem(`project-${userId}-${topicId}`);
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        onData({ data: parsed.data || {}, formats: parsed.formats || undefined, submitted: parsed.submitted || false, submittedAt: parsed.submittedAt });
+      } else {
+        onData(null);
+      }
+    } catch { onData(null); }
+    return () => {};
+  }
+  const unsub = onSnapshot(
+    doc(db, PROJECTS_COLLECTION, `user${userId}_${topicId}`),
+    (snap) => {
+      if (snap.exists()) {
+        const d = snap.data();
+        onData({
+          data: d.data || {},
+          formats: d.formats || undefined,
+          submitted: d.submitted || false,
+          submittedAt: d.submittedAt?.toDate?.()?.toISOString?.() || d.submittedAt || undefined,
+          updatedAt: d.updatedAt?.toDate?.()?.toISOString?.() || d.updatedAt || undefined,
+        });
+      } else {
+        onData(null);
+      }
+    },
+    (err) => { if (onError) onError(err); }
+  );
+  return unsub;
+}
+
 // --- Topic Comments ---
 
 export interface TopicComment {

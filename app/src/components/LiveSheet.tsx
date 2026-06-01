@@ -1,9 +1,10 @@
-import React, { useState, useCallback, useMemo } from 'react';
+import React, { useState, useCallback, useMemo, useRef, useEffect } from 'react';
 import { motion } from 'motion/react';
-import { Calculator, RotateCcw, ArrowUpDown, Search, BarChart3, Filter, X, Table as TableIcon, Plus } from 'lucide-react';
+import { Calculator, RotateCcw, ArrowUpDown, Search, BarChart3, Filter, X, Table as TableIcon, Plus, CheckCircle2, Bold, DollarSign } from 'lucide-react';
 import { evaluateFormula } from '../utils/spreadsheetEngine';
 import type { SpreadsheetData } from '../utils/spreadsheetEngine';
 import { getPreset } from '../utils/spreadsheetPresets';
+import { saveProjectData, submitProject, subscribeToProject, getMyUserId } from '../firebase/services';
 
 const DEFAULT_COLS = 7;
 const DEFAULT_ROWS = 18;
@@ -54,7 +55,7 @@ function createDefaultData(): Record<string, string> {
   return d;
 }
 
-export function LiveSheet({ topicId: externalTopicId, topicTitle, content }: { topicId?: string; topicTitle?: string; content?: string }) {
+export function LiveSheet({ topicId: externalTopicId, topicTitle, content, onSubmit }: { topicId?: string; topicTitle?: string; content?: string; onSubmit?: () => void }) {
   const [editedData, setEditedData] = useState<Record<string, string> | null>(null);
   const [selectedCell, setSelectedCell] = useState<string | null>(null);
   const [editValue, setEditValue] = useState('');
@@ -84,10 +85,62 @@ export function LiveSheet({ topicId: externalTopicId, topicTitle, content }: { t
   const [calculatedFields, setCalculatedFields] = useState<{ name: string; formula: string }[]>([]);
 
   const [showValidation, setShowValidation] = useState(false);
+  const formulaInputRef = useRef<HTMLInputElement>(null);
   const [validationRules, setValidationRules] = useState<{ col: number; type: string; params: Record<string, string> }[]>([]);
   const [validationCol, setValidationCol] = useState<number>(0);
   const [validationType, setValidationType] = useState('dropdown');
   const [validationParam, setValidationParam] = useState('');
+
+  const userId = useMemo(() => getMyUserId(), []);
+  const [projectSubmitted, setProjectSubmitted] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [cellFormats, setCellFormats] = useState<Record<string, { bold?: boolean; currency?: boolean }>>({});
+
+  const toggleBold = useCallback(() => {
+    if (!selectedCell || isReadOnly(selectedCell)) return;
+    setCellFormats(prev => {
+      const cur = prev[selectedCell] || {};
+      const next = { ...prev, [selectedCell]: { ...cur, bold: !cur.bold } };
+      return next;
+    });
+  }, [selectedCell, projectSubmitted]);
+
+  const toggleCurrency = useCallback(() => {
+    if (!selectedCell || isReadOnly(selectedCell)) return;
+    setCellFormats(prev => {
+      const cur = prev[selectedCell] || {};
+      const next = { ...prev, [selectedCell]: { ...cur, currency: !cur.currency } };
+      return next;
+    });
+  }, [selectedCell, projectSubmitted]);
+
+  useEffect(() => {
+    if (!externalTopicId || userId === null) return;
+    const unsub = subscribeToProject(userId, externalTopicId, (projectData) => {
+      if (projectData) {
+        setProjectSubmitted(projectData.submitted);
+        if (projectData.data && Object.keys(projectData.data).length > 0) {
+          setEditedData(prev => prev || projectData.data);
+        }
+        if (projectData.formats) {
+          setCellFormats(projectData.formats);
+        }
+      }
+    });
+    return unsub;
+  }, [externalTopicId, userId]);
+
+  useEffect(() => {
+    if (!editedData || !externalTopicId || userId === null || projectSubmitted) return;
+    if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
+    saveTimerRef.current = setTimeout(() => {
+      setSaving(true);
+      saveProjectData(userId, externalTopicId, editedData, cellFormats).finally(() => setSaving(false));
+    }, 500);
+    return () => { if (saveTimerRef.current) clearTimeout(saveTimerRef.current); };
+  }, [editedData, externalTopicId, userId, projectSubmitted, cellFormats]);
 
   const presetInfo = useMemo(() => {
     const result = externalTopicId ? createFromPreset(externalTopicId) : null;
@@ -105,7 +158,7 @@ export function LiveSheet({ topicId: externalTopicId, topicTitle, content }: { t
 
   const getCellVal = useCallback((ref: string): string => {
     const v = data[ref.toUpperCase()];
-    if (!v) return '';
+    if (v === undefined || v === null) return '';
     if (v.startsWith('=')) {
       try {
         return String(evaluateFormula(v, ssData));
@@ -219,44 +272,87 @@ export function LiveSheet({ topicId: externalTopicId, topicTitle, content }: { t
   const handleCellClick = useCallback((ref: string) => {
     setSelectedCell(ref);
     setEditValue(data[ref] || '');
-    setEditing(false);
+    setEditing(true);
   }, [data]);
 
   const handleCellChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     setEditValue(e.target.value);
   }, []);
 
-  const handleCellBlur = useCallback(() => {
-    if (selectedCell && !readOnlyCells.has(selectedCell)) {
+  const commitEdit = useCallback(() => {
+    if (selectedCell && !(projectSubmitted || readOnlyCells.has(selectedCell))) {
       setEditedData(prev => ({ ...(prev || presetInfo.data), [selectedCell]: editValue }));
     }
     setEditing(false);
-  }, [selectedCell, editValue, readOnlyCells, presetInfo]);
+  }, [selectedCell, editValue, projectSubmitted, readOnlyCells, presetInfo]);
+
+  const navigateTo = useCallback((colIdx: number, rowIdx: number) => {
+    if (rowIdx > rows || rowIdx < 1) return;
+    if (colIdx < 0 || colIdx >= cols) return;
+    setSelectedCell(`${colLabels[colIdx]}${rowIdx}`);
+    setEditValue(data[`${colLabels[colIdx]}${rowIdx}`] || '');
+    setEditing(true);
+  }, [cols, rows, data]);
+
+  const moveToNextCell = useCallback((colIdx: number, rowIdx: number) => {
+    const nextCol = (colIdx + 1) % cols;
+    const nextRow = nextCol === 0 ? rowIdx + 1 : rowIdx;
+    if (nextRow > rows) return;
+    navigateTo(nextCol, nextRow);
+  }, [cols, rows, navigateTo]);
+
+  const moveToNextRow = useCallback((colIdx: number, rowIdx: number) => {
+    if (rowIdx + 1 > rows) return;
+    navigateTo(colIdx, rowIdx + 1);
+  }, [rows, navigateTo]);
+
+  const parseRef = useCallback((ref: string): [number, number] => {
+    const m = ref.match(/^([A-Z]+)(\d+)$/);
+    if (!m) return [-1, -1];
+    let ci = 0;
+    for (let i = 0; i < m[1].length; i++) ci = ci * 26 + (m[1].charCodeAt(i) - 64);
+    return [ci - 1, parseInt(m[2])];
+  }, []);
+
+  const handleCellBlur = useCallback(() => {
+    commitEdit();
+  }, [commitEdit]);
+
+  const handleInlineKeyDown = useCallback((e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      commitEdit();
+      if (selectedCell) {
+        const [ci, ri] = parseRef(selectedCell);
+        if (ci >= 0) moveToNextRow(ci, ri);
+      }
+    } else if (e.key === 'Tab') {
+      e.preventDefault();
+      commitEdit();
+      if (selectedCell) {
+        const [ci, ri] = parseRef(selectedCell);
+        if (ci >= 0) moveToNextCell(ci, ri);
+      }
+    } else if (e.key === 'Escape') {
+      setEditing(false);
+    }
+  }, [selectedCell, commitEdit, parseRef, moveToNextRow, moveToNextCell]);
 
   const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
-    if (e.key === 'Enter' && editing) { handleCellBlur(); }
+    if (e.key === 'Enter' && editing) { commitEdit(); }
     else if (e.key === 'Enter' && !editing && selectedCell) { setEditing(true); }
     else if (e.key === 'Tab') {
       if (!selectedCell) return;
-      const colMatch = selectedCell.match(/^([A-Z]+)(\d+)$/);
-      if (!colMatch) return;
-      let colIdx = 0;
-      for (let i = 0; i < colMatch[1].length; i++) colIdx = colIdx * 26 + (colMatch[1].charCodeAt(i) - 64);
-      colIdx--;
-      const rowIdx = parseInt(colMatch[2]);
-      const nextCol = (colIdx + 1) % cols;
-      const nextRow = nextCol === 0 ? rowIdx + 1 : rowIdx;
-      if (nextRow > rows || (nextRow === rowIdx && nextCol === 0)) {
-        e.preventDefault();
-        return;
-      }
       e.preventDefault();
-      setSelectedCell(`${colLabels[nextCol]}${nextRow}`);
+      commitEdit();
+      const [ci, ri] = parseRef(selectedCell);
+      if (ci >= 0) moveToNextCell(ci, ri);
     }
-  }, [editing, selectedCell, cols, rows, handleCellBlur]);
+  }, [editing, selectedCell, commitEdit, parseRef, moveToNextCell]);
 
   const handleReset = useCallback(() => {
     setEditedData(null);
+    setCellFormats({});
     setSortCol(null); setFilterCol(null); setFilterText('');
     setShowChart(false); setChartCol(null); setChartLabelCol(null); setChartType('bar');
     setPivotMode(false); setPivotRowField(null); setPivotColField(null); setPivotValField(null);
@@ -264,6 +360,21 @@ export function LiveSheet({ topicId: externalTopicId, topicTitle, content }: { t
     setShowCalcField(false); setCalculatedFields([]);
     setShowValidation(false); setValidationRules([]);
   }, []);
+
+  const handleSubmit = useCallback(async () => {
+    if (!externalTopicId || userId === null) return;
+    setSubmitting(true);
+    try {
+      if (editedData) {
+        await saveProjectData(userId, externalTopicId, editedData, cellFormats);
+      }
+      await submitProject(userId, externalTopicId);
+      setProjectSubmitted(true);
+      onSubmit?.();
+    } finally {
+      setSubmitting(false);
+    }
+  }, [externalTopicId, userId, editedData, cellFormats, onSubmit]);
 
   const toggleSort = useCallback((colIdx: number) => {
     if (sortCol === colIdx) { setSortAsc(!sortAsc); } else { setSortCol(colIdx); setSortAsc(true); }
@@ -287,7 +398,7 @@ export function LiveSheet({ topicId: externalTopicId, topicTitle, content }: { t
     })).filter(d => d.value > 0).slice(0, 20);
   }, [chartCol, chartLabelCol, visibleRows, getCellVal]);
 
-  const isReadOnly = (ref: string) => readOnlyCells.has(ref);
+  const isReadOnly = (ref: string) => projectSubmitted || readOnlyCells.has(ref);
 
   const slicerUniqueValues = useMemo(() => {
     const map: Record<string, string[]> = {};
@@ -331,10 +442,24 @@ export function LiveSheet({ topicId: externalTopicId, topicTitle, content }: { t
         <div className="flex items-center gap-2">
           <Calculator className="w-4 h-4 text-indigo-600" />
           <span className="text-sm font-semibold text-slate-800">LiveSheet</span>
-          <span className="text-[10px] text-slate-700 font-mono bg-surface px-2 py-0.5 rounded">Interactive</span>
+          {projectSubmitted ? (
+            <span className="text-[10px] text-emerald-700 font-mono bg-emerald-100 px-2 py-0.5 rounded">Submitted</span>
+          ) : saving ? (
+            <span className="text-[10px] text-slate-500 font-mono bg-surface px-2 py-0.5 rounded">Saving...</span>
+          ) : externalTopicId ? (
+            <span className="text-[10px] text-slate-700 font-mono bg-surface px-2 py-0.5 rounded">Auto-save</span>
+          ) : (
+            <span className="text-[10px] text-slate-700 font-mono bg-surface px-2 py-0.5 rounded">Interactive</span>
+          )}
         </div>
         <div className="flex items-center gap-2">
           {selectedCell && <span className="text-[11px] font-mono text-slate-500 bg-surface px-2 py-1 rounded">{selectedCell}</span>}
+          {externalTopicId && !projectSubmitted && (
+            <button onClick={handleSubmit} disabled={submitting}
+              className="text-[11px] px-3 py-1 rounded font-mono bg-emerald-600 text-white border border-emerald-600 hover:bg-emerald-500 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1">
+              {submitting ? 'Submitting...' : 'Submit'}
+            </button>
+          )}
           <button onClick={handleReset} className="text-slate-500 hover:text-slate-700"><RotateCcw className="w-3.5 h-3.5" /></button>
         </div>
       </div>
@@ -357,6 +482,26 @@ export function LiveSheet({ topicId: externalTopicId, topicTitle, content }: { t
               {sortAsc ? 'A→Z ↑' : 'Z→A ↓'}
             </button>
           )}
+        </div>
+
+        <div className="w-px h-5 bg-border" />
+
+        <div className="flex items-center gap-1">
+          <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Format</span>
+          <button onClick={toggleBold}
+            className={`text-[11px] px-2 py-1 rounded font-mono border flex items-center gap-1 ${
+              selectedCell && cellFormats[selectedCell]?.bold ? 'bg-accent/10 text-accent border-accent/30' : 'bg-deeper text-slate-500 border-border'
+            }`}
+            title="Bold">
+            <Bold className="w-3 h-3" />
+          </button>
+          <button onClick={toggleCurrency}
+            className={`text-[11px] px-2 py-1 rounded font-mono border flex items-center gap-1 ${
+              selectedCell && cellFormats[selectedCell]?.currency ? 'bg-accent/10 text-accent border-accent/30' : 'bg-deeper text-slate-500 border-border'
+            }`}
+            title="Currency">
+            <DollarSign className="w-3 h-3" />
+          </button>
         </div>
 
         <div className="w-px h-5 bg-border" />
@@ -429,10 +574,17 @@ export function LiveSheet({ topicId: externalTopicId, topicTitle, content }: { t
         </div>
       </div>
 
+      {projectSubmitted && (
+        <div className="px-4 py-3 bg-emerald-50 border-b border-emerald-200 flex items-center gap-2">
+          <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+          <span className="text-xs font-semibold text-emerald-800">Project submitted and marked as complete!</span>
+        </div>
+      )}
+
       {selectedCell && (
         <div className="px-4 py-2 bg-surface border-b border-border flex items-center gap-3">
           <span className="text-[11px] font-mono font-bold text-slate-600 w-12">{selectedCell}</span>
-          <input value={editing ? editValue : (data[selectedCell] || displayedValue)}
+          <input ref={formulaInputRef} value={editing ? editValue : (data[selectedCell] || displayedValue)}
             onChange={handleCellChange}
             onBlur={handleCellBlur}
             onFocus={() => { setEditValue(data[selectedCell] || ''); setEditing(true); }}
@@ -916,14 +1068,26 @@ export function LiveSheet({ topicId: externalTopicId, topicTitle, content }: { t
                   const isHighlighted = highlightCells.has(ref);
                   const isInvalid = invalidCells.has(ref);
                   return (
-                    <td key={ref} onClick={() => handleCellClick(ref)} onDoubleClick={() => { if (!isReadOnly(ref)) { setEditing(true); setEditValue(data[ref] || ''); } }}
-                      className={`px-2 py-1 border-b border-r cursor-pointer transition-colors text-[13px] font-mono ${
+                    <td key={ref} onClick={() => handleCellClick(ref)}
+                      className={`px-0 py-0 border-b border-r cursor-pointer transition-colors text-[13px] font-mono ${
                         isSelected ? 'bg-accent/10 ring-2 ring-inset ring-accent' : 'hover:bg-deeper/50'
                       } ${isReadOnlyCell ? 'bg-emerald-50' : ''} ${isHighlighted ? 'bg-amber-50' : ''} ${raw.startsWith('=') ? 'text-indigo-600' : 'text-slate-700'} ${
                         isInvalid ? 'border-red-400 bg-red-50' : 'border-border'
                       }`}
                       title={raw.startsWith('=') ? raw : ''}>
-                      {display || <span className="text-slate-300">—</span>}
+                      {isSelected && editing && !isReadOnly(ref) ? (
+                        <input autoFocus
+                          value={editValue}
+                          onChange={handleCellChange}
+                          onBlur={handleCellBlur}
+                          onKeyDown={handleInlineKeyDown}
+                          className="w-full h-full px-2 py-1 text-[13px] font-mono text-slate-800 bg-transparent border-0 outline-none"
+                        />
+                      ) : (
+                        <div className={`px-2 py-1 ${cellFormats[ref]?.bold ? 'font-bold' : ''} ${cellFormats[ref]?.currency ? 'text-emerald-700' : ''}`}>
+                          {cellFormats[ref]?.currency && display && !isNaN(parseFloat(display)) ? `$${parseFloat(display).toFixed(2)}` : display}
+                        </div>
+                      )}
                     </td>
                   );
                 })}

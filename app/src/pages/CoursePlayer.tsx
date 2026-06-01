@@ -458,7 +458,7 @@ export function CoursePlayer({ curriculum, completedTasks, toggleTask, activeTop
                 <h1 className="text-3xl sm:text-4xl font-extrabold text-gray-900 tracking-tight">{activeTopic.title}</h1>
               </div>
 
-              {shouldShowLiveSheet(activeTopic) && <LiveSheet topicId={activeTopic.id} topicTitle={activeTopic.title} content={activeTopic.content} />}
+              {shouldShowLiveSheet(activeTopic) && <LiveSheet topicId={activeTopic.id} topicTitle={activeTopic.title} content={activeTopic.content} onSubmit={() => toggleTask(activeTopic.id)} />}
               {shouldShowSql(activeTopic) && <SqlPlayground topicTitle={activeTopic.title} content={activeTopic.content} />}
               {shouldShowGit(activeTopic) && <GitTerminal />}
               {shouldShowPython(activeTopic) && <PythonPlayground topicId={activeTopic.id} topicTitle={activeTopic.title} content={activeTopic.content} />}
