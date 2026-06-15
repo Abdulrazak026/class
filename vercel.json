@@ -1,9 +1,17 @@
 {
   "version": 2,
   "public": true,
-  "buildCommand": "cd app && npm run build",
-  "outputDirectory": "app/dist",
+  "framework": null,
+  "builds": [
+    {
+      "src": "app/package.json",
+      "use": "@vercel/static-build",
+      "config": {
+        "distDir": "dist"
+      }
+    }
+  ],
   "rewrites": [
-    { "source": "/(.*)", "destination": "/index.html" }
+    { "source": "/(.*)", "destination": "/app/index.html" }
   ]
 }
