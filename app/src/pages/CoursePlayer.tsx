@@ -161,8 +161,8 @@ const MarkdownComponents = {
     }
     const match = /language-(\w+)/.exec(className || '');
     const lang = match?.[1];
-    if (lang === 'python' || lang === 'sql') {
-      return <InlineCodeRunner language={lang} code={String(children).replace(/\n$/, '')} />;
+    if (lang === 'python' || lang === 'sql' || lang === 'bash') {
+      return <InlineCodeRunner language={lang === 'bash' ? 'bash' : lang} code={String(children).replace(/\n$/, '')} />;
     }
     return (
       <div className="bg-gray-900 rounded-xl overflow-hidden my-4 border border-gray-800">
@@ -548,7 +548,7 @@ export function CoursePlayer({ curriculum, completedTasks, toggleTask, activeTop
                 {hasNextTopic && <button onClick={handleNextTopic} className="flex items-center gap-2 px-5 py-3 rounded-lg font-bold transition-all text-gray-500 bg-white border border-gray-200 hover:text-gray-800 hover:border-gray-300 shadow-sm">Next <ChevronRight className="w-5 h-5" /></button>}
               </div>
 
-              {showQuiz && <QuizModal topicTitle={activeTopic.title} quiz={activeTopic.quiz} onClose={() => setShowQuiz(false)} onPass={() => toggleTask(activeTopic!.id)} />}
+              {showQuiz && <QuizModal topicId={activeTopic.id} topicTitle={activeTopic.title} quiz={activeTopic.quiz} onClose={() => setShowQuiz(false)} onPass={() => toggleTask(activeTopic!.id)} />}
 
             </motion.div>
           ) : (

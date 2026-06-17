@@ -1,11 +1,13 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Send, MessagesSquare, TrendingUp, Wifi, WifiOff, Code, Database, Calculator, Play, CheckCircle2, XCircle, RotateCcw, Lightbulb, BookOpen, ChevronRight, Terminal, Timer, Filter, BarChart3, Trophy } from 'lucide-react';
+import { Send, MessagesSquare, TrendingUp, Wifi, WifiOff, Code, Database, Calculator, Play, CheckCircle2, XCircle, RotateCcw, Lightbulb, BookOpen, ChevronRight, Terminal, Timer, Filter, BarChart3, Trophy, GraduationCap } from 'lucide-react';
 import { Module } from '../data';
 import { ChatMessage } from '../firebase/services';
 import { hasFirebaseConfig } from '../firebase/config';
 import { executePython } from '../utils/pythonExecutor';
 import { executeSQL } from '../utils/sqlExecutor';
+import { ExamPlayer } from '../components/ExamPlayer';
+import { FlashcardDeck } from '../components/FlashcardDeck';
 
 interface StudyRoomProps {
   completedTasks: string[];
@@ -19,7 +21,7 @@ interface StudyRoomProps {
   onOpen?: () => void;
 }
 
-type PracticeTab = 'chat' | 'python' | 'sql';
+type PracticeTab = 'chat' | 'python' | 'sql' | 'exam';
 
 interface Challenge {
   id: string;
@@ -37,7 +39,7 @@ function runPython(code: string): string[] {
   return outputs.map(o => o.text);
 }
 
-const CHALLENGES: Record<Exclude<PracticeTab, 'chat'>, Challenge[]> = {
+const CHALLENGES: Record<Exclude<PracticeTab, 'chat' | 'exam'>, Challenge[]> = {
   python: [
     {
       id: 'py1', title: 'Monthly Revenue Trends', difficulty: 'Beginner',
@@ -288,7 +290,7 @@ const challengeTabs: { id: PracticeTab; label: string; icon: React.ReactNode }[]
   { id: 'chat', label: 'Chat', icon: <MessagesSquare className="w-4 h-4" /> },
   { id: 'python', label: 'Python', icon: <Code className="w-4 h-4" /> },
   { id: 'sql', label: 'SQL', icon: <Database className="w-4 h-4" /> },
-
+  { id: 'exam', label: 'Exam Prep', icon: <GraduationCap className="w-4 h-4" /> },
 ];
 
 type DifficultyFilter = 'all' | 'Beginner' | 'Intermediate' | 'Advanced';
@@ -313,6 +315,10 @@ export function StudyRoom({ completedTasks, completedTasksOwn, completedTasksOth
   const [challengeResult, setChallengeResult] = useState<'none' | 'pass' | 'fail'>('none');
   const [solvedChallenges, setSolvedChallenges] = useState<string[]>(loadCompleted);
   const [difficultyFilter, setDifficultyFilter] = useState<DifficultyFilter>('all');
+  const [showExam, setShowExam] = useState(false);
+  const [examCount, setExamCount] = useState(50);
+  const [examCertFilter, setExamCertFilter] = useState<string[]>([]);
+  const [examDiffFilter, setExamDiffFilter] = useState<string[]>([]);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   const onOpenRef = useRef(onOpen);
@@ -668,7 +674,78 @@ export function StudyRoom({ completedTasks, completedTasksOwn, completedTasksOth
                             <Trophy className="w-3 h-3" /> Solved
                           </span>
                         )}
-                      </div>
+      {/* Exam Tab */}
+      {activeTab === 'exam' && !showExam && (
+        <motion.div initial={{ opacity: 0, y: 5 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div className="bg-white border border-gray-200 rounded-xl p-6">
+              <div className="flex items-center gap-2 mb-4">
+                <GraduationCap className="w-5 h-5 text-accent" />
+                <h3 className="text-lg font-bold text-slate-800">Practice Exam</h3>
+              </div>
+              <div className="space-y-4">
+                <div>
+                  <label className="text-sm font-semibold text-slate-700 mb-2 block">Number of Questions</label>
+                  <div className="flex gap-2">
+                    {[25, 50, 100, 200].map(n => (
+                      <button key={n} onClick={() => setExamCount(n)}
+                        className={`px-4 py-2 rounded-lg text-sm font-bold transition-all ${examCount === n ? 'bg-accent text-white' : 'bg-gray-100 text-slate-600 hover:bg-gray-200'}`}>{n}</button>
+                    ))}
+                  </div>
+                </div>
+                <div>
+                  <label className="text-sm font-semibold text-slate-700 mb-2 block">Certification Focus</label>
+                  <div className="flex flex-wrap gap-1.5">
+                    {['All', 'Security+', 'CySA+', 'CISSP', 'CCSP', 'A+', 'Linux+', 'Network+'].map(c => (
+                      <button key={c} onClick={() => {
+                        if (c === 'All') setExamCertFilter([]);
+                        else setExamCertFilter(prev => prev.includes(c) ? prev.filter(x => x !== c) : [...prev, c]);
+                      }}
+                        className={`text-[11px] font-bold px-2.5 py-1 rounded-full transition-all ${
+                          c === 'All' && examCertFilter.length === 0 ? 'bg-accent text-white' :
+                          examCertFilter.includes(c) ? 'bg-accent text-white' :
+                          'bg-gray-100 text-slate-500 hover:bg-gray-200'
+                        }`}>{c}</button>
+                    ))}
+                  </div>
+                </div>
+                <div>
+                  <label className="text-sm font-semibold text-slate-700 mb-2 block">Difficulty Filter</label>
+                  <div className="flex gap-2">
+                    {['all', 'beginner', 'intermediate', 'advanced'].map(d => (
+                      <button key={d} onClick={() => {
+                        if (d === 'all') setExamDiffFilter([]);
+                        else setExamDiffFilter(prev => prev.includes(d) ? prev.filter(x => x !== d) : [...prev, d]);
+                      }}
+                        className={`text-[11px] font-bold px-2.5 py-1 rounded-full capitalize transition-all ${
+                          d === 'all' && examDiffFilter.length === 0 ? 'bg-accent text-white' :
+                          examDiffFilter.includes(d) ? 'bg-accent text-white' :
+                          'bg-gray-100 text-slate-500 hover:bg-gray-200'
+                        }`}>{d}</button>
+                    ))}
+                  </div>
+                </div>
+                <button onClick={() => setShowExam(true)}
+                  className="w-full bg-accent text-white py-3 rounded-xl font-bold hover:bg-accent-dark transition-all flex items-center justify-center gap-2">
+                  <Timer className="w-4 h-4" /> Start Exam
+                </button>
+              </div>
+            </div>
+
+            <FlashcardDeck certFilter={examCertFilter} />
+          </div>
+        </motion.div>
+      )}
+
+      {showExam && (
+        <ExamPlayer
+          onClose={() => setShowExam(false)}
+          questionCount={examCount}
+          certFilter={examCertFilter}
+          difficultyFilter={examDiffFilter}
+        />
+      )}
+    </div>
                       <span className={`text-[10px] font-mono px-1.5 py-0.5 rounded ${
                         selectedChallenge.difficulty === 'Beginner' ? 'bg-emerald-50 text-emerald-700' : selectedChallenge.difficulty === 'Intermediate' ? 'bg-amber-50 text-amber-700' : 'bg-red-50 text-red-700'
                       }`}>{selectedChallenge.difficulty}</span>

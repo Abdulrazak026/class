@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { CheckCircle2 } from 'lucide-react';
 import { InlineCodeRunner } from './InlineCodeRunner';
 
-export type ClassworkLanguage = 'python' | 'sql' | 'text';
+export type ClassworkLanguage = 'python' | 'sql' | 'text' | 'bash';
 
 export interface ParsedClasswork {
   task: string;
@@ -64,10 +64,10 @@ export function parseClassworks(content: string): { type: 'markdown' | 'classwor
     if (part.startsWith(':::classwork')) {
       const block = part.replace(/^:::classwork\s*\n?/, '').trim();
       const taskMatch = block.match(/^task:\s*(.+)/im);
-      const langMatch = block.match(/^language:\s*(python|sql|text)/im);
+      const langMatch = block.match(/^language:\s*(python|sql|text|bash)/im);
       const expectedMatch = block.match(/^expected:\s*(.+)/im);
       const hintMatch = block.match(/^hint:\s*(.+)/im);
-      const codeMatch = block.match(/```(python|sql|text)\s*\n([\s\S]*?)```/i);
+      const codeMatch = block.match(/```(python|sql|text|bash)\s*\n([\s\S]*?)```/i);
 
       if (taskMatch && langMatch) {
         const lang = langMatch[1].toLowerCase() as ClassworkLanguage;

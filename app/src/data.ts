@@ -1,4 +1,4 @@
-export const BUILD_VERSION = '2026.06.16.1';
+export const BUILD_VERSION = '2026.06.16.2';
 
 export type TaskType = 'learn' | 'practice' | 'project' | 'review' | 'lab';
 
@@ -6,6 +6,9 @@ export interface QuizQuestion {
   question: string;
   options: string[];
   correctAnswerIndex: number;
+  difficulty?: 'beginner' | 'intermediate' | 'advanced';
+  explanation?: string;
+  certTags?: string[];
 }
 
 export interface Topic {

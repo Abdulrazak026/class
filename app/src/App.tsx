@@ -64,7 +64,9 @@ export default function App() {
         if (classworksData) {
           try { decryptedClassworks = await decryptFile(classworksData, key); } catch {}
         }
-        setDecryptedData(JSON.parse(decrypted), decryptedClassworks ? JSON.parse(decryptedClassworks) : null);
+        const parsed = JSON.parse(decrypted);
+        console.log('[CYBERCAMP] Loaded curriculum v' + (parsed.version || '?') + ' with ' + (parsed.modules?.length || 0) + ' weeks, ' + (parsed.modules?.reduce((s: number, m: any) => s + (m.topics?.length || 0), 0) || 0) + ' topics');
+        setDecryptedData(parsed, decryptedClassworks ? JSON.parse(decryptedClassworks) : null);
         setDataVersion(v => v + 1);
       } catch (e) { console.error('Auto-load failed:', e); }
     })();

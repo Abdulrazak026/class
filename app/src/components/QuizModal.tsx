@@ -1,22 +1,29 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { X, CheckCircle2, XCircle, Award, ArrowRight } from 'lucide-react';
+import { X, CheckCircle2, XCircle, Award, ArrowRight, Lightbulb } from 'lucide-react';
 import { QuizQuestion } from '../data';
+import { saveAttempt, getTopicProgress, TopicProgress } from '../utils/quizStore';
 
 interface QuizModalProps {
+  topicId: string;
   topicTitle: string;
   quiz?: QuizQuestion[];
   onClose: () => void;
   onPass: () => void;
 }
 
-export function QuizModal({ topicTitle, quiz, onClose, onPass }: QuizModalProps) {
+export function QuizModal({ topicId, topicTitle, quiz, onClose, onPass }: QuizModalProps) {
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [selectedAnswers, setSelectedAnswers] = useState<Record<number, number>>({});
   const [revealed, setRevealed] = useState(false);
   const [finished, setFinished] = useState(false);
+  const [pastProgress, setPastProgress] = useState<TopicProgress | null>(null);
 
   const questions = quiz || [];
+
+  useEffect(() => {
+    getTopicProgress(topicId).then(setPastProgress);
+  }, [topicId]);
 
   const onCloseRef = useRef(onClose);
   onCloseRef.current = onClose;
@@ -31,7 +38,20 @@ export function QuizModal({ topicTitle, quiz, onClose, onPass }: QuizModalProps)
     setSelectedAnswers(prev => ({ ...prev, [currentQuestion]: idx }));
   };
 
-  const handleReveal = () => setRevealed(true);
+  const handleReveal = () => {
+    setRevealed(true);
+    const q = questions[currentQuestion];
+    if (q) {
+      const selected = selectedAnswers[currentQuestion];
+      saveAttempt(topicId, {
+        question: q.question,
+        selectedIndex: selected ?? -1,
+        correctIndex: q.correctAnswerIndex,
+        correct: selected === q.correctAnswerIndex,
+        timestamp: Date.now(),
+      });
+    }
+  };
 
   const handleNext = () => {
     if (currentQuestion < questions.length - 1) {
@@ -73,6 +93,9 @@ export function QuizModal({ topicTitle, quiz, onClose, onPass }: QuizModalProps)
             <div className="mb-4">{passed ? <CheckCircle2 className="w-16 h-16 text-emerald-500 mx-auto" /> : <XCircle className="w-16 h-16 text-red-400 mx-auto" />}</div>
             <h3 className="text-xl font-bold text-slate-800 mb-2">{passed ? 'Congratulations!' : 'Keep Learning!'}</h3>
             <p className="text-slate-600 mb-2">Score: {score}/{questions.length}</p>
+            {pastProgress && pastProgress.totalAttempts > 0 && (
+              <p className="text-slate-400 text-xs mb-2">Lifetime: {pastProgress.correctAttempts}/{pastProgress.totalAttempts} correct</p>
+            )}
             <p className="text-slate-500 text-sm mb-6">{passed ? 'You passed the quiz!' : 'Review the material and try again.'}</p>
             <button onClick={() => { if (passed) onPass(); onClose(); }}
               className="w-full bg-accent text-white py-2.5 rounded-lg font-bold hover:bg-accent-dark transition-all">
@@ -109,7 +132,16 @@ export function QuizModal({ topicTitle, quiz, onClose, onPass }: QuizModalProps)
             ))}
           </div>
 
-          <p className="text-sm text-slate-500 mb-2">Question {currentQuestion + 1} of {questions.length}</p>
+          <div className="flex items-center justify-between mb-2">
+            <p className="text-sm text-slate-500">Question {currentQuestion + 1} of {questions.length}</p>
+            {q.difficulty && (
+              <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full uppercase ${
+                q.difficulty === 'beginner' ? 'bg-emerald-100 text-emerald-700' :
+                q.difficulty === 'intermediate' ? 'bg-amber-100 text-amber-700' :
+                'bg-red-100 text-red-700'
+              }`}>{q.difficulty}</span>
+            )}
+          </div>
           <p className="text-lg font-bold text-slate-800 mb-6">{q.question}</p>
 
           <div className="space-y-2 mb-6">
@@ -144,10 +176,28 @@ export function QuizModal({ topicTitle, quiz, onClose, onPass }: QuizModalProps)
               Check Answer
             </button>
           ) : (
-            <button onClick={handleNext}
-              className="w-full bg-accent text-white py-3 rounded-xl font-bold hover:bg-accent-dark transition-all flex items-center justify-center gap-2">
-              {currentQuestion < questions.length - 1 ? <>Next <ArrowRight className="w-4 h-4" /></> : 'See Results'}
-            </button>
+            <div className="space-y-3">
+              {q.explanation && (
+                <div className="bg-indigo-50 border border-indigo-200 rounded-xl p-4 flex items-start gap-3">
+                  <Lightbulb className="w-5 h-5 text-indigo-600 shrink-0 mt-0.5" />
+                  <div>
+                    <p className="text-xs font-bold text-indigo-700 uppercase mb-1">Explanation</p>
+                    <p className="text-sm text-indigo-900 leading-relaxed">{q.explanation}</p>
+                    {q.certTags && q.certTags.length > 0 && (
+                      <div className="flex flex-wrap gap-1.5 mt-2">
+                        {q.certTags.map(tag => (
+                          <span key={tag} className="text-[10px] font-bold bg-indigo-200 text-indigo-800 px-2 py-0.5 rounded-full">{tag}</span>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+              <button onClick={handleNext}
+                className="w-full bg-accent text-white py-3 rounded-xl font-bold hover:bg-accent-dark transition-all flex items-center justify-center gap-2">
+                {currentQuestion < questions.length - 1 ? <>Next <ArrowRight className="w-4 h-4" /></> : 'See Results'}
+              </button>
+            </div>
           )}
         </motion.div>
       </motion.div>
