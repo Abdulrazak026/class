@@ -1,4 +1,4 @@
-export const BUILD_VERSION = '2026.06.16.2';
+export const BUILD_VERSION = '2026.06.17.1';
 
 export type TaskType = 'learn' | 'practice' | 'project' | 'review' | 'lab';
 

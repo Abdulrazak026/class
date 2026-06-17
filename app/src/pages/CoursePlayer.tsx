@@ -464,7 +464,11 @@ export function CoursePlayer({ curriculum, completedTasks, toggleTask, activeTop
               <div className="text-gray-700 leading-relaxed space-y-6">
                 <div className="prose prose-gray max-w-none break-words overflow-x-hidden prose-headings:text-gray-900 prose-strong:text-gray-900 prose-code:text-accent prose-code:bg-accent/5 prose-code:px-1 prose-code:rounded prose-a:text-accent">
                   {activeTopic.content ? (() => {
-                    const checkpointSegments = parseCheckpoints(activeTopic.content!);
+                    const rawContent = activeTopic.content!;
+                    const hasCheckpoints = rawContent.includes(':::checkpoint');
+                    if (hasCheckpoints) console.log('[CoursePlayer] Found :::checkpoint in content for', activeTopic.id, '— len:', rawContent.length);
+                    const checkpointSegments = parseCheckpoints(rawContent);
+                    if (hasCheckpoints) console.log('[CoursePlayer] checkpoint segments:', checkpointSegments.filter(s => s.type === 'checkpoint').length);
                     const allSegments: { type: 'markdown' | 'checkpoint' | 'classwork'; value: string; checkpoint?: ParsedCheckpoint; classwork?: ParsedClasswork }[] = [];
                     for (const seg of checkpointSegments) {
                       if (seg.type === 'checkpoint') {
