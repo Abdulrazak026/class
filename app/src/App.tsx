@@ -9,6 +9,7 @@ import {
   sendChatMessage, subscribeToChat, registerDevice,
   syncUserProgress, subscribeToProgress, getMyUserId,
 } from './firebase/services';
+import { BUILD_VERSION } from './data';
 import { doc, getDoc } from 'firebase/firestore';
 import { db } from './firebase/config';
 import { ErrorBoundary } from './components/ErrorBoundary';
@@ -46,7 +47,8 @@ export default function App() {
 
   useEffect(() => {
     const stored = localStorage.getItem('live-data');
-    if (stored) return;
+    const storedVer = localStorage.getItem('live-data-version');
+    if (stored && storedVer === BUILD_VERSION) return;
     (async () => {
       try {
         const [encRes, classworksRes] = await Promise.all([
