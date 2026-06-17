@@ -44,27 +44,28 @@ interface CoursePlayerProps {
 
 function parseCheckpoints(content: string): { type: 'markdown' | 'checkpoint'; value: string; checkpoint?: ParsedCheckpoint }[] {
   const segments: { type: 'markdown' | 'checkpoint'; value: string; checkpoint?: ParsedCheckpoint }[] = [];
-  const parts = content.split(/(?=:::checkpoint)/);
-  for (const part of parts) {
-    if (part.startsWith(':::checkpoint')) {
-      const block = part.replace(/^:::checkpoint\s*\n?/, '').trim();
-      const lines = block.split('\n').map(l => l.trim()).filter(l => l);
-      const question = lines[0] || '';
-      const options: string[] = [];
-      let correctIndex = -1;
-      for (const line of lines.slice(1)) {
-        const optMatch = line.match(/^([A-D]\))\s(.+)/);
-        if (optMatch) options.push(optMatch[2]);
-        const correctMatch = line.match(/^Correct:\s*([A-D])/i);
-        if (correctMatch) {
-          const idx = correctMatch[1].toUpperCase().charCodeAt(0) - 65;
-          if (idx >= 0 && idx < options.length) correctIndex = idx;
-        }
-      }
-      segments.push({ type: 'checkpoint', value: part, checkpoint: { question, options, correctIndex } });
-    } else {
-      segments.push({ type: 'markdown', value: part });
+  const parts = content.split(':::checkpoint');
+  for (let i = 0; i < parts.length; i++) {
+    const part = parts[i];
+    if (i === 0) {
+      if (part) segments.push({ type: 'markdown', value: part });
+      continue;
     }
+    const block = part.trim();
+    const lines = block.split('\n').map(l => l.trim()).filter(l => l);
+    const question = lines[0] || '';
+    const options: string[] = [];
+    let correctIndex = -1;
+    for (const line of lines.slice(1)) {
+      const optMatch = line.match(/^([A-D]\))\s(.+)/);
+      if (optMatch) options.push(optMatch[2]);
+      const correctMatch = line.match(/^Correct:\s*([A-D])/i);
+      if (correctMatch) {
+        const idx = correctMatch[1].toUpperCase().charCodeAt(0) - 65;
+        if (idx >= 0 && idx < options.length) correctIndex = idx;
+      }
+    }
+    segments.push({ type: 'checkpoint', value: ':::checkpoint\n' + part, checkpoint: { question, options, correctIndex } });
   }
   return segments;
 }
