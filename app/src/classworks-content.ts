@@ -3,7 +3,7 @@ import { ParsedClasswork } from "./components/ClassworkCard";
 export const topicClassworks: Record<string, ParsedClasswork[]> = {
   "w1-d1": [
     {
-      task: `List three tools you plan to use as a data analyst and what each is used for.`,
+      task: `List three tools you plan to use as a cybersecurity professional and what each is used for.`,
       language: "text",
       code: ``,
       expectedOutput: `spreadsheet||database||visualization||sql||excel||python`,
@@ -1275,7 +1275,7 @@ print(f't-statistic: {t_stat:.3f}, p-value: {p_value:.3f}')`,
   ],
   "w22-d4": [
     {
-      task: `Describe how you would build a personal brand as a data analyst on LinkedIn.`,
+      task: `Describe how you would build a personal brand as a cybersecurity professional on LinkedIn.`,
       language: "text",
       code: ``,
       expectedOutput: `linkedin||brand||profile||share||project||network||post`,
@@ -1293,7 +1293,7 @@ print(f't-statistic: {t_stat:.3f}, p-value: {p_value:.3f}')`,
   ],
   "w23-d1": [
     {
-      task: `How should you tailor your resume for a data analyst job application? What keywords would you include?`,
+      task: `How should you tailor your resume for a cybersecurity professional job application? What keywords would you include?`,
       language: "text",
       code: ``,
       expectedOutput: `resume||tailor||keywords||sql||python||tableau||job description`,
@@ -1302,7 +1302,7 @@ print(f't-statistic: {t_stat:.3f}, p-value: {p_value:.3f}')`,
   ],
   "w23-d2": [
     {
-      task: `List 5 strong action verbs to use in a data analyst resume bullets.`,
+      task: `List 5 strong action verbs to use in a cybersecurity professional resume bullets.`,
       language: "text",
       code: ``,
       expectedOutput: `analyzed||built||designed||optimized||automated||action verbs`,
@@ -1311,7 +1311,7 @@ print(f't-statistic: {t_stat:.3f}, p-value: {p_value:.3f}')`,
   ],
   "w23-d3": [
     {
-      task: `What sections should a strong LinkedIn profile for a data analyst include?`,
+      task: `What sections should a strong LinkedIn profile for a cybersecurity professional include?`,
       language: "text",
       code: ``,
       expectedOutput: `headline||about||experience||skills||recommendations||featured`,
@@ -1329,7 +1329,7 @@ print(f't-statistic: {t_stat:.3f}, p-value: {p_value:.3f}')`,
   ],
   "w23-d5": [
     {
-      task: `Create a list of 5 common data analyst interview questions and brief answers.`,
+      task: `Create a list of 5 common cybersecurity professional interview questions and brief answers.`,
       language: "text",
       code: ``,
       expectedOutput: `sql||join||missing data||project||interview||question`,
@@ -1379,7 +1379,7 @@ print(is_palindrome('hello'))`,
   ],
   "w24-d5": [
     {
-      task: `What questions should you ask the interviewer during a data analyst job interview?`,
+      task: `What questions should you ask the interviewer during a cybersecurity professional job interview?`,
       language: "text",
       code: ``,
       expectedOutput: `team structure||tools||data sources||career growth||interviewer||question`,
@@ -1388,10 +1388,10 @@ print(is_palindrome('hello'))`,
   ],
   "w25-d1": [
     {
-      task: `List the top 5 skills you learned in this course and how each prepares you for a data analyst role.`,
+      task: `List the top 5 skills you learned in this course and how each prepares you for a cybersecurity professional role.`,
       language: "text",
       code: ``,
-      expectedOutput: `sql||python||bi||statistics||storytelling||data analyst`,
+      expectedOutput: `sql||python||bi||statistics||storytelling||cybersecurity professional`,
       hint: `SQL for querying, Python for analysis, BI for dashboards, Statistics for inference, Storytelling for communication.`,
     },
   ],
@@ -1427,7 +1427,7 @@ print(is_palindrome('hello'))`,
       task: `Which data analytics certification will you pursue first: Google Data Analytics, IBM Data Analyst, or Microsoft PL-300? Why?`,
       language: "text",
       code: ``,
-      expectedOutput: `certification||google data analytics||ibm data analyst||pl-300||power bi||beginner`,
+      expectedOutput: `certification||google data analytics||ibm cybersecurity professional||pl-300||power bi||beginner`,
       hint: `Google is best for beginners, Microsoft PL-300 is best for Power BI roles.`,
     },
   ],

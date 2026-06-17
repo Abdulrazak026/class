@@ -16,11 +16,11 @@ const SCENARIOS: Scenario[] = [
     id: 's1',
     title: 'Coffee Shop Sales Decline',
     industry: 'Retail / Food & Beverage',
-    context: 'You are a junior data analyst at a regional coffee shop chain "Brew & Bean." Over the past 4 weeks, sales at the downtown location have dropped 18% compared to the same period last year. The manager has given you the sales data, foot traffic logs, and weather data. What do you do first?',
+    context: 'You are a junior cybersecurity analyst at a regional coffee shop chain "Brew & Bean." Over the past 4 weeks, sales at the downtown location have dropped 18% compared to the same period last year. The manager has given you the sales data, foot traffic logs, and weather data. What do you do first?',
     question: 'What is the most appropriate first step?',
     options: [
       { id: 's1a', text: 'Immediately recommend a discount campaign to boost sales', correct: false, explanation: 'Jumping to solutions without analysis is a common mistake. You need to understand the root cause first.', impact: 'Cost: ~$5,000 in discounts with no guarantee of success' },
-      { id: 's1b', text: 'Clean and explore the data, looking for patterns and anomalies before forming any hypotheses', correct: true, explanation: 'Excellent! A data analyst always starts by understanding the data quality and exploring patterns before making recommendations.', impact: 'Identified a key insight: a new competitor opened nearby and a construction project reduced foot traffic' },
+      { id: 's1b', text: 'Clean and explore the data, looking for patterns and anomalies before forming any hypotheses', correct: true, explanation: 'Excellent! A cybersecurity analyst always starts by understanding the data quality and exploring patterns before making recommendations.', impact: 'Identified a key insight: a new competitor opened nearby and a construction project reduced foot traffic' },
       { id: 's1c', text: 'Ask the manager what they think and go with their gut feeling', correct: false, explanation: 'While manager input is valuable, decisions should be data-driven, not based solely on intuition.', impact: 'Missed opportunity to discover data-driven insights' },
       { id: 's1d', text: 'Start building a dashboard without checking the data quality first', correct: false, explanation: 'Building dashboards on dirty data leads to misleading conclusions. Data quality check always comes first.', impact: 'Dashboard showed misleading trends due to missing data from a broken sensor' },
     ],

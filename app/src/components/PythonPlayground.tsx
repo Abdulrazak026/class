@@ -179,7 +179,7 @@ const pythonPresets: Record<string, string> = {
   ...PYTHON_FOUNDATION,
   'w13-d1': [
     '# Python basics: variables and types',
-    'name = "Data Analyst"',
+    'name = "Security Analyst"',
     'age = 28',
     'salary = 75000.50',
     'is_employed = True',
