@@ -138,7 +138,7 @@ export function NetworkVisualizer() {
         </div>
       </div>
 
-      <div className="relative w-full h-[400px] bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800 overflow-hidden">
+      <div className="relative w-full h-[300px] sm:h-[400px] bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800 overflow-hidden">
         <svg className="absolute inset-0 w-full h-full pointer-events-none" viewBox="0 0 100 60">
           {edges.map(edge => {
             const from = nodes.find(n => n.id === edge.from);

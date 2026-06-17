@@ -369,7 +369,7 @@ export function CoursePlayer({ curriculum, completedTasks, toggleTask, activeTop
               <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
                 className="fixed inset-0 bg-black/40 z-30 lg:hidden" onClick={() => setSidebarOpen(false)} />
               <motion.aside initial={{ x: -320 }} animate={{ x: 0 }} exit={{ x: -320 }} transition={{ type: 'spring', damping: 25, stiffness: 250 }}
-                className="fixed left-0 top-0 bottom-0 w-80 z-40 bg-white border-r border-gray-200 flex flex-col lg:hidden">
+                className="fixed left-0 top-0 bottom-0 w-72 z-40 bg-white border-r border-gray-200 flex flex-col lg:hidden">
                 <TabBar activeTab="syllabus" setActiveTab={setActiveTab} isMobile />
                 <div className="px-4 py-2 border-b border-gray-200 shrink-0 flex items-center justify-between">
                   <div>

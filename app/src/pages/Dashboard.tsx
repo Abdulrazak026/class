@@ -219,7 +219,7 @@ export function Dashboard({ curriculum, completedTasks, resumeTopicId, onOpenCou
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-8">
         {/* Quick Stats */}
         <motion.div initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.12 }}
-          className="lg:col-span-1 grid grid-cols-2 gap-3">
+          className="lg:col-span-1 grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div className="bg-white border border-gray-200 rounded-2xl p-4 shadow-sm">
             <div className="flex items-center gap-2 mb-2">
               <div className="w-8 h-8 rounded-lg bg-blue-50 flex items-center justify-center"><BookOpen className="w-4 h-4 text-blue-600" /></div>

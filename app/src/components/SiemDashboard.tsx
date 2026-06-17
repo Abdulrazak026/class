@@ -132,7 +132,7 @@ export function SiemDashboard() {
           </div>
         </div>
 
-        <div className="grid grid-cols-3 sm:grid-cols-6 gap-px bg-gray-200 dark:bg-gray-700">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-px bg-gray-200 dark:bg-gray-700">
           {[
             { label: 'Total Events', value: SUMMARY_STATS.totalEvents.toLocaleString(), icon: Activity, color: 'text-blue-600' },
             { label: 'Critical', value: SUMMARY_STATS.criticalAlerts, icon: AlertCircle, color: 'text-red-600' },

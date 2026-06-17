@@ -469,7 +469,7 @@ export function StudyRoom({ completedTasks, completedTasksOwn, completedTasksOth
       </motion.div>
 
       {/* Stats Bar */}
-      <motion.div initial={{ opacity: 0, y: 5 }} animate={{ opacity: 1, y: 0 }} className="grid grid-cols-3 gap-3">
+      <motion.div initial={{ opacity: 0, y: 5 }} animate={{ opacity: 1, y: 0 }} className="grid grid-cols-1 sm:grid-cols-3 gap-3">
         {(['python', 'sql'] as const).map(lang => {
           const total = (CHALLENGES[lang] || []).length;
           const done = challengeStats[lang];
@@ -560,7 +560,7 @@ export function StudyRoom({ completedTasks, completedTasksOwn, completedTasksOth
             </div>
           </div>
 
-          <div className="lg:col-span-2 bg-surface border border-border rounded-xl flex flex-col h-[500px] lg:h-[600px] shadow-sm">
+          <div className="lg:col-span-2 bg-surface border border-border rounded-xl flex flex-col max-h-[400px] sm:h-[500px] lg:h-[600px] shadow-sm">
             <div className="p-4 border-b border-border flex items-center gap-3">
               <div className={`w-2.5 h-2.5 rounded-full ${hasFirebaseConfig ? 'bg-green-500' : 'bg-amber-500'}`} />
               <span className="text-sm font-bold text-slate-800">Live Chat</span>
@@ -608,7 +608,7 @@ export function StudyRoom({ completedTasks, completedTasksOwn, completedTasksOth
       {(activeTab === 'python' || activeTab === 'sql') && (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Challenge List */}
-          <div className="lg:col-span-1 space-y-2 max-h-[600px] overflow-y-auto custom-scrollbar">
+          <div className="lg:col-span-1 space-y-2 max-h-[300px] sm:max-h-[600px] overflow-y-auto custom-scrollbar">
             <div className="flex items-center justify-between px-1 mb-3">
               <h3 className="text-sm font-bold text-slate-800">
                 {activeTab === 'python' ? 'Python' : activeTab === 'sql' ? 'SQL' : 'Excel'} Challenges
