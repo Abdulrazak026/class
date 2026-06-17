@@ -16,6 +16,7 @@ import { ClassworkCard, parseClassworks, ParsedClasswork } from '../components/C
 import { TopicComment } from '../firebase/services';
 import { hasFirebaseConfig } from '../firebase/config';
 import { getClassworks } from '../utils/dataLoader';
+import { SearchBar } from '../components/SearchBar';
 import type { Tab } from '../App';
 
 interface CheckpointState {
@@ -146,11 +147,11 @@ function SidebarTopicList({ curriculum, completedTasks, activeTopicId, onSelect 
 }
 
 function MobileSidebarContent(props: { curriculum: Module[]; completedTasks: string[]; activeTopicId: string | null; onSelect: (id: string) => void }) {
-  return <div className="overflow-y-auto flex-1 p-2 custom-scrollbar"><SidebarTopicList {...props} /></div>;
+  return <div className="overflow-y-auto flex-1 p-2 custom-scrollbar"><SearchBar onSelectTopic={props.onSelect} /><SidebarTopicList {...props} /></div>;
 }
 
 function DesktopSidebarContent(props: { curriculum: Module[]; completedTasks: string[]; activeTopicId: string | null; onSelect: (id: string) => void }) {
-  return <SidebarTopicList {...props} />;
+  return <><SearchBar onSelectTopic={props.onSelect} /><SidebarTopicList {...props} /></>;
 }
 
 const MarkdownComponents = {
