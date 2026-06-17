@@ -1,6 +1,6 @@
 import FlexSearch from 'flexsearch';
 
-let searchIndex: FlexSearch.Document<string, true> | null = null;
+let searchIndex: any = null;
 let searchPromise: Promise<void> | null = null;
 
 export interface SearchResult {
@@ -16,7 +16,7 @@ export async function initSearch(): Promise<void> {
     try {
       const resp = await fetch('/search-index.json?t=' + Date.now(), { cache: 'no-cache' });
       const data: Record<string, string> = await resp.json();
-      searchIndex = new FlexSearch.Document<string, true>({
+      searchIndex = new (FlexSearch as any).Document({
         document: { id: 'id', index: ['title', 'description'], store: ['title', 'description'] },
         tokenize: 'forward',
         cache: true,

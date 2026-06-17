@@ -27,7 +27,7 @@ function encryptFile(inputPath: string, outputPath: string): void {
 }
 
 async function generateSearchIndex(): Promise<void> {
-  const searchIndex = new FlexSearch.Document<string, true>({
+  const searchIndex = new (FlexSearch as any).Document({
     document: { id: 'id', index: ['title', 'description'], store: ['title', 'description'] },
     tokenize: 'forward',
     cache: true,
