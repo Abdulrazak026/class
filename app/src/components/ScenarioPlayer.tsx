@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion } from 'motion/react';
-import { Shield, Lightbulb, AlertTriangle, Wifi, Lock, Server, CheckCircle2, XCircle, ArrowRight, RotateCcw } from 'lucide-react';
+import { Shield, Lightbulb, AlertTriangle, Wifi, Lock, Server, CheckCircle2, XCircle, ArrowRight, RotateCcw, BarChart3 } from 'lucide-react';
 
 interface Scenario {
   id: string;
