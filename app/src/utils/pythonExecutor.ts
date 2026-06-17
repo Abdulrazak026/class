@@ -1,4 +1,3 @@
-import { generateChart } from "./chartRenderer";
 import {
   createMockPandas,
   createMockNumpy,
@@ -6,7 +5,6 @@ import {
   createMockSeaborn,
   createMockStatistics,
 } from "./mockModules";
-import { DEMO_BASE_URL, getHtmlForUrl } from "./demoSiteData";
 
 const mockMath = {
   __type: "module",
@@ -385,7 +383,35 @@ function renderChart(
   xlabel: string,
   ylabel: string,
 ): string {
-  return generateChart(series, title, xlabel, ylabel);
+  const w = 600, h = 300, pad = 50;
+  const allX = series.flatMap(s => s.x.map(Number));
+  const allY = series.flatMap(s => s.y.map(Number));
+  const xMin = Math.min(...allX), xMax = Math.max(...allX) || 1;
+  const yMin = Math.min(...allY), yMax = Math.max(...allY) || 1;
+  const sx = (x: number) => pad + ((x - xMin) / (xMax - xMin)) * (w - 2 * pad);
+  const sy = (y: number) => h - pad - ((y - yMin) / (yMax - yMin)) * (h - 2 * pad);
+  const colors = ['#06b6d4', '#22d3ee', '#0891b2', '#67e8f9'];
+  let paths = '';
+  series.forEach((s, i) => {
+    const c = colors[i % colors.length];
+    if (s.type === 'line') {
+      const pts = s.x.map((xi: any, j: number) => `${j === 0 ? 'M' : 'L'}${sx(Number(xi)).toFixed(1)},${sy(Number(s.y[j])).toFixed(1)}`).join(' ');
+      paths += `<path d="${pts}" stroke="${c}" stroke-width="2" fill="none"/>`;
+      s.x.forEach((xi: any, j: number) => {
+        paths += `<circle cx="${sx(Number(xi)).toFixed(1)}" cy="${sy(Number(s.y[j])).toFixed(1)}" r="3" fill="${c}"/>`;
+      });
+    } else {
+      const bw = ((w - 2 * pad) / allX.length) * 0.6;
+      s.x.forEach((xi: any, j: number) => {
+        const x = sx(Number(xi)) - bw / 2;
+        const y = sy(Number(s.y[j]));
+        const bh = h - pad - y;
+        paths += `<rect x="${x.toFixed(1)}" y="${y.toFixed(1)}" width="${Math.max(bw, 2).toFixed(1)}" height="${Math.max(bh, 1).toFixed(1)}" fill="${c}" opacity="0.8"/>`;
+      });
+    }
+  });
+  const chartSvg = `<div class="chart-container my-4 p-4 bg-white rounded-xl border border-gray-200 shadow-sm"><svg width="${w}" height="${h}" viewBox="0 0 ${w} ${h}" xmlns="http://www.w3.org/2000/svg"><text x="${w / 2}" y="${pad / 2}" text-anchor="middle" font-size="14" font-weight="bold" fill="#333">${title}</text><text x="${w / 2}" y="${h - 8}" text-anchor="middle" font-size="12" fill="#666">${xlabel}</text><text x="12" y="${h / 2}" text-anchor="middle" font-size="12" fill="#666" transform="rotate(-90, 12, ${h / 2})">${ylabel}</text>${paths}</svg></div>`;
+  return chartSvg;
 }
 
 class MockRandom {
@@ -417,18 +443,15 @@ class MockResponse {
 
   constructor(url: string) {
     this._url = url;
-    const html = getHtmlForUrl(url);
+    const knownUrls: Record<string, string> = {
+      'https://example.com': '<!DOCTYPE html><html><body><h1>Example Domain</h1><p>This domain is for use in illustrative examples.</p></body></html>',
+      'https://httpbin.org/get': JSON.stringify({ args: {}, headers: { Host: 'httpbin.org' }, url: 'https://httpbin.org/get' }),
+      'https://api.github.com/users/octocat': JSON.stringify({ name: 'octocat', public_repos: 8, login: 'octocat', location: 'San Francisco' }),
+    };
+    const html = knownUrls[url];
     if (html) {
       this.status_code = 200;
       this.text = html;
-    } else if (url.includes("api.github.com")) {
-      this.status_code = 200;
-      this.text = JSON.stringify({
-        name: "octocat",
-        public_repos: 8,
-        login: "octocat",
-        location: "San Francisco",
-      });
     } else {
       this.status_code = 404;
       this.text = "<html><body><h1>404 Not Found</h1></body></html>";

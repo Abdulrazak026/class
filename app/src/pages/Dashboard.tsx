@@ -12,45 +12,45 @@ interface DashboardProps {
 }
 
 const QUOTES = [
-  '"Data is the new oil." — Clive Humby',
-  '"Without data, you\'re just another person with an opinion." — W. Edwards Deming',
-  '"The goal is to turn data into information, and information into insight." — Carly Fiorina',
-  '"In God we trust. All others must bring data." — W. Edwards Deming',
-  '"It is a capital mistake to theorize before one has data." — Arthur Conan Doyle',
+  '"The only secure system is the one that is powered off." — Gene Spafford',
+  '"Security is not a product, but a process." — Bruce Schneier',
+  '"Amateurs hack systems, professionals hack people." — Bruce Schneier',
+  '"There are two types of companies: those that have been breached, and those who don\'t know it yet." — Dmitri Alperovitch',
+  '"In the world of cybersecurity, the paranoid survive." — Eugene Kaspersky',
 ];
 
 const SKILL_CATEGORIES = [
   {
-    title: 'SQL', icon: Database, gradient: 'from-blue-500 to-blue-600',
-    subtitle: 'Structured Query Language',
+    title: 'Network Security', icon: Database, gradient: 'from-cyan-500 to-cyan-600',
+    subtitle: 'Firewalls, IDS/IPS, VPN',
     skills: [
-      { label: 'SELECT', matchers: ['select', 'SELECT', 'sql'] },
-      { label: 'JOINs', matchers: ['join', 'JOIN'] },
-      { label: 'GROUP BY', matchers: ['group by', 'GROUP BY', 'group'] },
-      { label: 'Subqueries', matchers: ['subquer', 'nested query'] },
-      { label: 'Window Functions', matchers: ['window', 'OVER', 'partition'] },
+      { label: 'TCP/IP & OSI', matchers: ['tcp/ip', 'osi', 'network', 'subnet'] },
+      { label: 'Firewalls', matchers: ['firewall', 'iptables', 'acl'] },
+      { label: 'IDS/IPS', matchers: ['ids', 'ips', 'snort', 'suricata'] },
+      { label: 'Packet Analysis', matchers: ['wireshark', 'pcap', 'tcpdump', 'zeek'] },
+      { label: 'VPN & TLS', matchers: ['vpn', 'tls', 'ssl', 'ipsec'] },
     ],
   },
   {
-    title: 'Python', icon: Code, gradient: 'from-amber-500 to-amber-600',
-    subtitle: 'Data Analysis',
+    title: 'Security Tools', icon: Code, gradient: 'from-teal-500 to-teal-600',
+    subtitle: 'SIEM, EDR, Vuln Scanning',
     skills: [
-      { label: 'Variables & Loops', matchers: ['variable', 'loop', 'for i in', 'while'] },
-      { label: 'Pandas', matchers: ['pandas', 'dataframe', 'series'] },
-      { label: 'Matplotlib', matchers: ['matplotlib', 'plot', 'chart', 'visualization', 'histogram'] },
-      { label: 'Statistics', matchers: ['statistic', 'mean', 'median', 'correlation', 'regression'] },
-      { label: 'Functions', matchers: ['def ', 'function', 'lambda'] },
+      { label: 'SIEM / Log Analysis', matchers: ['splunk', 'elk', 'wazuh', 'siem', 'log'] },
+      { label: 'EDR / XDR', matchers: ['edr', 'xdr', 'crowdstrike', 'sentinelone', 'endpoint'] },
+      { label: 'Nmap & Scanning', matchers: ['nmap', 'scanning', 'enumeration'] },
+      { label: 'Metasploit', matchers: ['metasploit', 'exploit', 'msf'] },
+      { label: 'Burp Suite', matchers: ['burp', 'web app', 'proxy'] },
     ],
   },
   {
-    title: 'BI & Excel', icon: PieChart, gradient: 'from-purple-500 to-purple-600',
-    subtitle: 'Dashboards & Spreadsheets',
+    title: 'Core Competencies', icon: PieChart, gradient: 'from-blue-600 to-cyan-600',
+    subtitle: 'Foundations & Frameworks',
     skills: [
-      { label: 'Power BI / Tableau', matchers: ['power bi', 'tableau', 'dax', 'dashboard builder'] },
-      { label: 'DAX Formulas', matchers: ['dax', 'calculated field', 'measure'] },
-      { label: 'Pivot Tables', matchers: ['pivot table', 'pivot'] },
-      { label: 'Excel Functions', matchers: ['vlookup', 'xlookup', 'if(', 'sum(', 'average(', 'proper(', 'trim(', 'text function', 'logical function', 'formula'] },
-      { label: 'Data Storytelling', matchers: ['storytell', 'present', 'narrative', 'dashboard', 'visual best practice'] },
+      { label: 'CIA Triad & Risk', matchers: ['cia triad', 'risk', 'threat model', 'strike'] },
+      { label: 'Cryptography', matchers: ['crypto', 'aes', 'rsa', 'sha', 'tls'] },
+      { label: 'Linux & Windows', matchers: ['linux', 'bash', 'windows', 'powershell', 'active directory'] },
+      { label: 'Python Scripting', matchers: ['python', 'scripting', 'automation'] },
+      { label: 'Incident Response', matchers: ['incident response', 'ir', 'forensic', 'containment'] },
     ],
   },
 ];
@@ -122,9 +122,9 @@ export function Dashboard({ curriculum, completedTasks, resumeTopicId, onOpenCou
   }
 
   const stages = [
-    { label: 'Foundation', weeks: [0, 1, 2, 3, 4, 5, 6, 7], icon: Layers, color: 'from-blue-400 to-blue-600', desc: 'Excel, Git, SQL basics' },
-    { label: 'Core', weeks: [8, 9, 10, 11, 12, 13, 14, 15, 16], icon: Code, color: 'from-amber-400 to-amber-600', desc: 'SQL advanced, Python, Stats' },
-    { label: 'Advanced', weeks: [17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30], icon: Sparkles, color: 'from-purple-400 to-purple-600', desc: 'BI, ML, Portfolio, Job Prep' },
+    { label: 'IT Foundations', weeks: [0, 1, 2, 3, 4, 5, 6], icon: Layers, color: 'from-cyan-400 to-cyan-600', desc: 'Networking, Linux, Windows' },
+    { label: 'Security Core', weeks: [7, 8, 9, 10, 11, 12, 13, 14], icon: Code, color: 'from-teal-400 to-teal-600', desc: 'SIEM, Blue Team, Red Team' },
+    { label: 'Specialization', weeks: [15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35], icon: Sparkles, color: 'from-blue-500 to-cyan-500', desc: 'Certs, Career, Tracks' },
   ].map(stage => {
     const stageTopics = stage.weeks.flatMap(wIdx => curriculum[wIdx]?.topics || []);
     const stageDone = stageTopics.filter(t => completedTasks.includes(t.id)).length;
@@ -147,7 +147,7 @@ export function Dashboard({ curriculum, completedTasks, resumeTopicId, onOpenCou
           <CircularProgress value={pct} size={88} strokeWidth={7} />
           <div>
             <h1 className="text-3xl sm:text-4xl font-black text-gray-900 tracking-tight">
-              {done === 0 ? 'Welcome, Data Analyst' : 'Great work today'}
+              {done === 0 ? 'Welcome, Security Analyst' : 'Great work today'}
             </h1>
             <div className="flex items-center gap-2 mt-1.5 text-gray-400 text-sm">
               <Quote className="w-3.5 h-3.5 text-accent shrink-0" />
@@ -367,7 +367,7 @@ export function Dashboard({ curriculum, completedTasks, resumeTopicId, onOpenCou
       </motion.div>
 
       <footer className="mt-12 pt-6 border-t border-gray-200 text-center">
-        <p className="text-[11px] text-gray-400">&copy; {new Date().getFullYear()} Savannix Tech Ltd. All rights reserved.</p>
+        <p className="text-[11px] text-gray-400">&copy; {new Date().getFullYear()} CYBERCAMP-2026. All rights reserved.</p>
       </footer>
     </div>
   );

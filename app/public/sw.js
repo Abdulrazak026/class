@@ -3,7 +3,6 @@ const STATIC_ASSETS = [
   '/',
   '/index.html',
   '/manifest.json',
-  '/version.json',
 ];
 
 const FONT_URLS = [

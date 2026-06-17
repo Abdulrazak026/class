@@ -24,3 +24,5 @@ start.cmd
 start-silent.vbs
 run.vbs
 create-shortcut.vbs
+
+.env*.local

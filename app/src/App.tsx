@@ -7,11 +7,10 @@ import { decryptFile } from './utils/crypto';
 import {
   addTopicComment, subscribeToTopicComments, ChatMessage, TopicComment,
   sendChatMessage, subscribeToChat, registerDevice,
-  syncUserProgress, subscribeToProgress,
+  syncUserProgress, subscribeToProgress, getMyUserId,
 } from './firebase/services';
-import { UserCodePrompt } from './components/UserCodePrompt';
-import { UpdateBanner } from './components/UpdateBanner';
-import { LockScreen } from './components/LockScreen';
+import { doc, getDoc } from 'firebase/firestore';
+import { db } from './firebase/config';
 import { ErrorBoundary } from './components/ErrorBoundary';
 
 export type { Tab };
@@ -20,13 +19,14 @@ const Dashboard = lazy(() => import('./pages/Dashboard').then(m => ({ default: m
 const CoursePlayer = lazy(() => import('./pages/CoursePlayer').then(m => ({ default: m.CoursePlayer })));
 const Projects = lazy(() => import('./pages/Projects').then(m => ({ default: m.Projects })));
 const StudyRoom = lazy(() => import('./pages/StudyRoom').then(m => ({ default: m.StudyRoom })));
+const LabsPage = lazy(() => import('./pages/LabsPage').then(m => ({ default: m.LabsPage })));
+const CertsPage = lazy(() => import('./pages/CertsPage').then(m => ({ default: m.CertsPage })));
+const CareerPage = lazy(() => import('./pages/CareerPage').then(m => ({ default: m.CareerPage })));
+const InterviewsPage = lazy(() => import('./pages/InterviewsPage').then(m => ({ default: m.InterviewsPage })));
 
 export default function App() {
-  const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-  const hasToken = !!localStorage.getItem('access-token');
   const lastMsgCountRef = useRef(0);
   const [unreadCount, setUnreadCount] = useState(0);
-  const [accessGranted, setAccessGranted] = useState(() => hasToken);
   const [activeTab, setActiveTab] = useLocalStorage<Tab>('active-tab', 'overview');
   const [isMobileOpen, setIsMobileOpen] = useState(false);
   const [completedTasks, setCompletedTasks] = useLocalStorage<string[]>('completed-tasks', []);
@@ -45,59 +45,46 @@ export default function App() {
   }, [darkMode]);
 
   useEffect(() => {
-    if (isLocalhost && !hasToken) {
-      (async () => {
-        try {
-          const [encRes, classworksRes] = await Promise.all([
-            fetch('/data.enc?t=' + Date.now(), { cache: 'no-cache' }),
-            fetch('/classworks.enc?t=' + Date.now(), { cache: 'no-cache' }),
-          ]);
-          const encData = await encRes.arrayBuffer();
-          let classworksData: ArrayBuffer | null = null;
-          if (classworksRes.ok) classworksData = await classworksRes.arrayBuffer();
-          const key = 'DACAMP-2026';
-          const decrypted = await decryptFile(encData, key);
-          let decryptedClassworks = null;
-          if (classworksData) {
-            try { decryptedClassworks = await decryptFile(classworksData, key); } catch {}
-          }
-          setDecryptedData(JSON.parse(decrypted), decryptedClassworks ? JSON.parse(decryptedClassworks) : null);
-          localStorage.setItem('access-token', JSON.stringify({ dev: true, grantedAt: Date.now() }));
-          setAccessGranted(true);
-          setDataVersion(v => v + 1);
-        } catch (e) { console.error('Dev auto-unlock failed:', e); }
-      })();
-    }
+    const stored = localStorage.getItem('live-data');
+    if (stored) return;
+    (async () => {
+      try {
+        const [encRes, classworksRes] = await Promise.all([
+          fetch('/data.enc?t=' + Date.now(), { cache: 'no-cache' }),
+          fetch('/classworks.enc?t=' + Date.now(), { cache: 'no-cache' }),
+        ]);
+        const encData = await encRes.arrayBuffer();
+        let classworksData: ArrayBuffer | null = null;
+        if (classworksRes.ok) classworksData = await classworksRes.arrayBuffer();
+        const key = 'CYBERCAMP-2026';
+        const decrypted = await decryptFile(encData, key);
+        let decryptedClassworks = null;
+        if (classworksData) {
+          try { decryptedClassworks = await decryptFile(classworksData, key); } catch {}
+        }
+        setDecryptedData(JSON.parse(decrypted), decryptedClassworks ? JSON.parse(decryptedClassworks) : null);
+        setDataVersion(v => v + 1);
+      } catch (e) { console.error('Auto-load failed:', e); }
+    })();
   }, []);
 
   useEffect(() => {
-    if (!hasToken) return;
-    (async () => {
-      try {
-        const verRes = await fetch('/version.json?t=' + Date.now(), { cache: 'no-cache' });
-        const serverVer = await verRes.json();
-        const localVer = localStorage.getItem('live-data-version');
-        if (serverVer.version !== localVer) {
-          const [encRes, cwRes] = await Promise.all([
-            fetch('/data.enc?t=' + Date.now(), { cache: 'no-cache' }),
-            fetch('/classworks.enc?t=' + Date.now(), { cache: 'no-cache' }),
-          ]);
-          const encData = await encRes.arrayBuffer();
-          const cwData = cwRes.ok ? await cwRes.arrayBuffer() : null;
-          const token = JSON.parse(localStorage.getItem('access-token') || '{}');
-          const key = token.contentKey || 'DACAMP-2026';
-          const decrypted = await decryptFile(encData, key);
-          let decryptedCw = null;
-          if (cwData) { try { decryptedCw = await decryptFile(cwData, key); } catch {} }
-          setDecryptedData(JSON.parse(decrypted), decryptedCw ? JSON.parse(decryptedCw) : null);
-          setDataVersion(v => v + 1);
-        }
-      } catch (e) { console.warn('Data version check failed:', e); }
-    })();
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
-
-  useEffect(() => {
-    registerDevice().then(setUserId).catch(() => setUserId(1));
+    registerDevice().then(async (id) => {
+      setUserId(id);
+      if (!userCode && db) {
+        try {
+          const snap = await getDoc(doc(db, 'progress', `user${id}`));
+          if (snap.exists()) {
+            const data = snap.data();
+            if (data.userCode) setUserCode(data.userCode);
+            if (data.completedTasks?.length > 0 && completedTasks.length === 0) {
+              setCompletedTasks(data.completedTasks);
+            }
+          }
+        } catch {}
+      }
+      if (!userCode) setUserCode(`User ${id}`);
+    }).catch(() => { setUserId(1); setUserCode('User 1'); });
   }, []);
 
   useEffect(() => {
@@ -216,14 +203,8 @@ export default function App() {
 
   const topicComments = activeTopicId ? (onlineComments[activeTopicId] || []) : [];
 
-  if (!accessGranted) {
-    return <LockScreen onUnlock={() => { setAccessGranted(true); window.location.reload(); }} />;
-  }
-
   return (
     <>
-      {!userCode && <UserCodePrompt onSubmit={(code) => setUserCode(code)} />}
-      <UpdateBanner />
       <div className="flex bg-deep min-h-screen font-sans">
         {activeTab !== 'syllabus' && (
         <Sidebar 
@@ -248,7 +229,7 @@ export default function App() {
               <Menu className="w-6 h-6" />
             </button>
             )}
-            <h1 className="font-bold text-primary tracking-tight">Data Analyst Accelerator</h1>
+            <h1 className="font-bold text-primary tracking-tight">Cybersecurity Accelerator</h1>
           </header>
 
           <main className="flex-1 overflow-x-hidden">
@@ -281,6 +262,10 @@ export default function App() {
                   completedTasks={mergedTasks}
                 />
               )}
+              {activeTab === 'labs' && <LabsPage />}
+              {activeTab === 'certs' && <CertsPage />}
+              {activeTab === 'career' && <CareerPage />}
+              {activeTab === 'interviews' && <InterviewsPage />}
               {activeTab === 'studyroom' && (
                 <StudyRoom
                   completedTasks={mergedTasks}

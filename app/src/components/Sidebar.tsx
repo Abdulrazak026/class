@@ -1,9 +1,9 @@
 ﻿import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Home, BookOpen, BarChart3, MessageSquare, X, PanelLeftClose, PanelLeft, User, Moon, Sun, Cloud, CloudOff } from 'lucide-react';
+import { Home, BookOpen, BarChart3, MessageSquare, X, PanelLeftClose, PanelLeft, User, Moon, Sun, Cloud, CloudOff, Beaker, Award, Briefcase, MessageCircle } from 'lucide-react';
 import { getLiveVersion, hasLiveData, clearLiveData } from '../utils/dataLoader';
 
-export type Tab = 'overview' | 'syllabus' | 'projects' | 'studyroom';
+export type Tab = 'overview' | 'syllabus' | 'projects' | 'studyroom' | 'labs' | 'certs' | 'career' | 'interviews';
 
 interface SidebarProps {
   activeTab: Tab;
@@ -19,6 +19,10 @@ interface SidebarProps {
 const tabs: { id: Tab; label: string; icon: React.ReactNode }[] = [
   { id: 'overview', label: 'Overview', icon: <Home className="w-5 h-5" /> },
   { id: 'syllabus', label: 'Syllabus', icon: <BookOpen className="w-5 h-5" /> },
+  { id: 'labs', label: 'Labs', icon: <Beaker className="w-5 h-5" /> },
+  { id: 'certs', label: 'Certs', icon: <Award className="w-5 h-5" /> },
+  { id: 'career', label: 'Career', icon: <Briefcase className="w-5 h-5" /> },
+  { id: 'interviews', label: 'Interviews', icon: <MessageCircle className="w-5 h-5" /> },
   { id: 'projects', label: 'Projects', icon: <BarChart3 className="w-5 h-5" /> },
   { id: 'studyroom', label: 'Study Room', icon: <MessageSquare className="w-5 h-5" /> },
 ];
@@ -35,7 +39,7 @@ function SidebarContent({ activeTab, setActiveTab, collapsed, onToggleCollapse, 
       <div className={`p-4 border-b border-border flex items-center ${collapsed ? 'justify-center' : 'justify-between'}`}>
         {!collapsed && (
           <div>
-            <h1 className="text-lg font-bold text-slate-800 dark:text-slate-100 tracking-tight">Data Analyst</h1>
+            <h1 className="text-lg font-bold text-slate-800 dark:text-slate-100 tracking-tight">Cybersecurity</h1>
             <p className="text-xs text-slate-500 mt-0.5">Accelerator Program</p>
           </div>
         )}

@@ -4,7 +4,6 @@ import type { ParsedClasswork } from '../components/ClassworkCard';
 const LIVE_DATA_KEY = 'live-data';
 const LIVE_CLASSWORKS_KEY = 'live-classworks';
 const LIVE_VERSION_KEY = 'live-data-version';
-const UPDATE_URL_KEY = 'update-url';
 
 let cachedCurriculum: Module[] | null = null;
 let cachedClassworks: Record<string, ParsedClasswork[]> | null = null;
@@ -54,27 +53,6 @@ export function getClassworks(): Record<string, ParsedClasswork[]> {
     } catch {}
   }
   return {};
-}
-
-export function getDefaultUpdateUrl(): string {
-  const origin = window.location.origin;
-  if (origin.includes('localhost') || origin.includes('127.0.0.1')) {
-    return 'https://class-eight-mu.vercel.app';
-  }
-  return origin;
-}
-
-export function getUpdateUrl(): string {
-  return localStorage.getItem(UPDATE_URL_KEY) || getDefaultUpdateUrl();
-}
-
-export function setUpdateUrl(url: string): void {
-  localStorage.setItem(UPDATE_URL_KEY, url);
-}
-
-export function isUsingDefaultUrl(): boolean {
-  const stored = localStorage.getItem(UPDATE_URL_KEY);
-  return !stored || stored === getDefaultUpdateUrl();
 }
 
 export function getLiveVersion(): string {

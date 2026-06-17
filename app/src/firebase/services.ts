@@ -35,7 +35,7 @@ export async function registerDevice(): Promise<number> {
   const deviceId = getDeviceId();
 
   try {
-    const userId = await runTransaction(db, async (transaction) => {
+    const result = await runTransaction(db, async (transaction) => {
       const reg1 = await transaction.get(doc(db, 'userRegistry', 'user1'));
       const reg2 = await transaction.get(doc(db, 'userRegistry', 'user2'));
 
@@ -51,14 +51,15 @@ export async function registerDevice(): Promise<number> {
         return 2;
       }
 
-      return null; // both slots taken
+      return 1;
     });
 
-    if (!userId) return 0; // caller must handle full slots
-    localStorage.setItem(USER_ID_KEY, String(userId));
-    return userId;
+    if (!result) return 1;
+    localStorage.setItem(USER_ID_KEY, String(result));
+    return result;
   } catch {
-    return 0;
+    localStorage.setItem(USER_ID_KEY, '1');
+    return 1;
   }
 }
 

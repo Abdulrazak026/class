@@ -6,8 +6,6 @@ import { ChatMessage } from '../firebase/services';
 import { hasFirebaseConfig } from '../firebase/config';
 import { executePython } from '../utils/pythonExecutor';
 import { executeSQL } from '../utils/sqlExecutor';
-import { SpreadsheetRunner } from '../components/SpreadsheetRunner';
-import { evaluateFormula, createDefaultData } from '../utils/spreadsheetEngine';
 
 interface StudyRoomProps {
   completedTasks: string[];
@@ -21,7 +19,7 @@ interface StudyRoomProps {
   onOpen?: () => void;
 }
 
-type PracticeTab = 'chat' | 'python' | 'sql' | 'excel';
+type PracticeTab = 'chat' | 'python' | 'sql';
 
 interface Challenge {
   id: string;
@@ -284,255 +282,13 @@ const CHALLENGES: Record<Exclude<PracticeTab, 'chat'>, Challenge[]> = {
       verify: (out) => out.includes('2024-') && out.includes('rolling_avg') || out.includes('monthly_sales'),
     },
   ],
-  excel: [
-    {
-      id: 'xl1', title: 'Total Revenue', difficulty: 'Beginner',
-      description: 'Calculate total revenue across all 30 transactions. Each row has Price in column D and Qty in column E. Multiply D*E for each row and sum them up.\nThe data has 30 rows (D2:D31, E2:E31).',
-      starterCode: '',
-      hint: 'SUMPRODUCT multiplies arrays element-wise and sums. Or do =D2*E2+D3*E3+... but SUMPRODUCT is cleaner.',
-      verify: (out) => {
-        const n = parseFloat(out);
-        return !isNaN(n) && n > 9000 && n < 9500;
-      },
-    },
-    {
-      id: 'xl2', title: 'Average Order Value', difficulty: 'Beginner',
-      description: 'Calculate the average order value (average of all prices in column D). Then show both average and count.\nData range: D2:D31 (30 orders).',
-      starterCode: '',
-      hint: 'AVERAGE(range) calculates mean. Use COUNT(range) to verify count.',
-      verify: (out) => {
-        const n = parseFloat(out);
-        return !isNaN(n) && n > 100 && n < 200;
-      },
-    },
-    {
-      id: 'xl3', title: 'Sales Commission Calculator', difficulty: 'Intermediate',
-      description: 'A sales rep earns 15% commission on orders over $300, 10% on orders over $100, and 5% on all others. D2 = 149.99 (price for TXN-001). Calculate commission for the first transaction.',
-      starterCode: '',
-      hint: 'Nested IF: IF(condition, value_if_true, IF(next_condition, value_if_true, value_if_false))',
-      verify: (out) => out.includes('14.999') || out.includes('15') || out.includes('149.99') || out.includes('14.99'),
-    },
-    {
-      id: 'xl4', title: 'Budget Variance Analysis', difficulty: 'Intermediate',
-      description: 'Calculate the total units sold (sum of column E), the max price (column D), and the min price (column D). These are key inventory metrics.',
-      starterCode: '',
-      hint: 'SUM for total units, MAX for highest price, MIN for lowest. Use & to concatenate text.',
-      verify: (out) => out.includes('units') && out.includes('max') && out.includes('min'),
-    },
-    {
-      id: 'xl5', title: 'Category Sales Rank', difficulty: 'Intermediate',
-      description: 'Rank the first transaction (D2=149.99) against all prices. Determine if its price is above average. Show "Above Average" or "Below Average".',
-      starterCode: '',
-      hint: 'Compare a single cell to AVERAGE of the whole range. Use $ for absolute references.',
-      verify: (out) => (out.includes('Above') || out.includes('Below')),
-    },
-    {
-      id: 'xl6', title: 'VLOOKUP Product Price', difficulty: 'Advanced',
-      description: 'Use VLOOKUP to find the price of "Ergonomic Chair" in the product list. The product names are in B2:B31 and prices in D2:D31. Price column is the 3rd column in the lookup range if you select B:D.',
-      starterCode: '',
-      hint: 'VLOOKUP(lookup_value, table_array, col_index, [range_lookup]). col_index is 3 for D (Price). Set 4th arg to 0 for exact match.',
-      verify: (out) => out.includes('499.99') || out.includes('499.99'),
-    },
-    {
-      id: 'xl7', title: 'Profit Margin Calculation', difficulty: 'Intermediate',
-      description: 'Widget Pro costs $85 to make and sells at D2=149.99. Calculate: (1) Cost of Goods Sold for TXN-001 (price * qty, using D2*E2 where E2=2), (2) Revenue, (3) Profit Margin = (Revenue - COGS) / Revenue * 100.\nFirst calculate total cost = 85 * E2.',
-      starterCode: '',
-      hint: 'Margin = (Revenue - Cost) / Revenue * 100. Revenue = D2*E2, Cost = 85*E2.',
-      verify: (out) => out.includes('43.33') || out.includes('43.3'),
-    },
-    {
-      id: 'xl8', title: 'Nested IF Sales Tiers', difficulty: 'Advanced',
-      description: 'Categorize TXN-001 total (D2*E2 = 149.99*2 = 299.98):\n"High" if > 500, "Medium" if > 200, "Low" otherwise.',
-      starterCode: '',
-      hint: 'Nested IF: IF(condition1, result1, IF(condition2, result2, default))',
-      verify: (out) => out.includes('Medium'),
-    },
-    {
-      id: 'xl9', title: 'Total Revenue with SUMPRODUCT', difficulty: 'Intermediate',
-      description: 'Calculate total revenue across all 30 transactions using SUMPRODUCT. This multiplies each price by its quantity and sums the results.\nPrices: D2:D31, Quantities: E2:E31.',
-      starterCode: '',
-      hint: 'SUMPRODUCT(array1, array2) multiplies corresponding elements and sums them.',
-      verify: (out) => {
-        const n = parseFloat(out);
-        return !isNaN(n) && n > 9000 && n < 9500;
-      },
-    },
-    {
-      id: 'xl10', title: 'COUNTIF High-Value Orders', difficulty: 'Intermediate',
-      description: 'Count how many transactions have a price (column D) greater than $100. Also count those that are $100 or less.',
-      starterCode: '',
-      hint: 'COUNTIF(range, criteria) with ">100" as criteria. Use <=100 for the other count.',
-      verify: (out) => {
-        const n = parseInt(out);
-        return !isNaN(n) && n >= 15;
-      },
-    },
-    {
-      id: 'xl11', title: 'SUMIF by Region', difficulty: 'Advanced',
-      description: 'Calculate total revenue for "East" region transactions. The region is in column H (H2:H31). Revenue is Price * Qty, approximated as just the Price in D. Sum prices for East region.',
-      starterCode: '',
-      hint: 'SUMIF(criteria_range, criteria, sum_range). The criteria is the region name.',
-      verify: (out) => {
-        const n = parseFloat(out);
-        return !isNaN(n) && n > 800;
-      },
-    },
-    {
-      id: 'xl12', title: 'VLOOKUP with Category', difficulty: 'Advanced',
-      description: 'Use VLOOKUP to find the category of "Monitor 27\\" ". The lookup range is B2:D31, category is in column C (2nd column).',
-      starterCode: '',
-      hint: 'Escape double-quote with another double-quote inside a string. VLOOKUP with exact match (0).',
-      verify: (out) => out.includes('Electronics'),
-    },
-    {
-      id: 'xl13', title: 'Monthly Sales Growth Rate', difficulty: 'Advanced',
-      description: 'Calculate the month-over-month growth rate for total sales. Assume TXN-001 (D2=149.99) is January and TXN-002 (D3=29.99) is February. Growth = (Feb - Jan) / Jan * 100.',
-      starterCode: '',
-      hint: 'Growth = (current - previous) / previous * 100. D3 is Feb, D2 is Jan.',
-      verify: (out) => out.includes('-80') || out.includes('-79.99'),
-    },
-    {
-      id: 'xl14', title: 'INDEX-MATCH Lookup', difficulty: 'Advanced',
-      description: 'Use INDEX and MATCH to find the price of "Mechanical Keyboard" in the product list. Products in B2:B31, prices in D2:D31.\nINDEX-MATCH is more flexible than VLOOKUP.',
-      starterCode: '',
-      hint: 'INDEX(return_array, MATCH(lookup_value, lookup_array, 0)). MATCH finds the row number, INDEX returns the value.',
-      verify: (out) => out.includes('149.99'),
-    },
-    {
-      id: 'xl15', title: 'Conditional Discount with IF', difficulty: 'Intermediate',
-      description: 'TXN-001 has qty (E2) = 2 and price (D2) = 149.99. If quantity >= 3, apply 15% discount to total (D2*E2). Otherwise no discount.',
-      starterCode: '',
-      hint: 'IF condition applies discount factor 0.85. Since E2=2 (<3), no discount applies.',
-      verify: (out) => out.includes('299.98') || out.includes('299.98'),
-    },
-    {
-      id: 'xl16', title: 'Total Quantity Sold', difficulty: 'Beginner',
-      description: 'Calculate the total quantity of all items sold. Quantity is in column E (E2:E17). Use the SUM function.',
-      starterCode: '',
-      hint: 'SUM adds all values in a range. The data has 16 transactions (rows 2-17).',
-      verify: (out) => {
-        const n = parseFloat(out);
-        return !isNaN(n) && n > 50 && n < 60;
-      },
-    },
-    {
-      id: 'xl17', title: 'Cheapest & Most Expensive Item', difficulty: 'Beginner',
-      description: 'Find the cheapest and most expensive price in column D. Use MIN and MAX functions. Show them together using &.\n\nFormat: "Cheapest: $X, Most Expensive: $Y"',
-      starterCode: '',
-      hint: 'MIN finds the smallest value, MAX finds the largest. Use & to join text and numbers.',
-      verify: (out) => out.includes('Cheapest:') && out.includes('Most Expensive:') && out.includes('$'),
-    },
-    {
-      id: 'xl18', title: 'How Many Transactions?', difficulty: 'Beginner',
-      description: 'Count how many transactions have a price listed. Use COUNTA on column D (D2:D17). Then also count only numeric prices using COUNT.\n\nShow both results separated by " / ".',
-      starterCode: '',
-      hint: 'COUNTA counts non-empty cells (text + numbers). COUNT counts only numbers.',
-      verify: (out) => out.includes('entries') && out.includes('numeric'),
-    },
-    {
-      id: 'xl19', title: 'Pass or Fail Grade', difficulty: 'Beginner',
-      description: 'TXN-001 has quantity E2=2. If quantity >= 3, the order is "Bulk" otherwise "Individual". Use an IF formula to check.',
-      starterCode: '',
-      hint: 'IF(condition, value_if_true, value_if_false). E2=2 is less than 3, so "Individual".',
-      verify: (out) => out.includes('Individual'),
-    },
-    {
-      id: 'xl20', title: 'Subtotal Calculator', difficulty: 'Beginner',
-      description: 'Calculate the subtotal for TXN-001 by multiplying price (D2=149.99) by quantity (E2=2). Use a simple cell multiplication formula.',
-      starterCode: '',
-      hint: 'In spreadsheets, use * for multiplication. D2*E2 multiplies price by quantity.',
-      verify: (out) => out.includes('299.98') || out.includes('299.98'),
-    },
-    {
-      id: 'xl21', title: 'Total Value of All Items', difficulty: 'Beginner',
-      description: 'Calculate the total value of all items by multiplying each price by its quantity and summing the results. Use SUMPRODUCT on D2:D17 and E2:E17.',
-      starterCode: '',
-      hint: 'SUMPRODUCT multiplies each pair of cells and sums them. It\'s like =D2*E2 + D3*E3 + ... + D17*E17.',
-      verify: (out) => {
-        const n = parseFloat(out);
-        return !isNaN(n) && n > 4000 && n < 6000;
-      },
-    },
-    {
-      id: 'xl22', title: 'Above Average Price?', difficulty: 'Beginner',
-      description: 'Check if the first transaction\'s price (D2=149.99) is above the average price of all items. Show "Above Average" or "Below Average".',
-      starterCode: '',
-      hint: 'AVERAGE computes the mean. Compare D2 to AVERAGE(D2:D17).',
-      verify: (out) => (out.includes('Above') || out.includes('Below')),
-    },
-    {
-      id: 'xl23', title: 'Running Total Helper', difficulty: 'Intermediate',
-      description: 'Calculate the running total for TXN-001 and TXN-002. Add the prices of D2 and D3. This is like a cumulative sum.',
-      starterCode: '',
-      hint: 'Simple addition: D2 (149.99) + D3 (29.99) = 179.98.',
-      verify: (out) => out.includes('179.98') || out.includes('179.98'),
-    },
-    {
-      id: 'xl24', title: 'High Value Order Flag', difficulty: 'Intermediate',
-      description: 'TXN-001 total is D2*E2 = 299.98. If the subtotal of TXN-001 (price * qty) is greater than 200, show "High Value", otherwise "Standard".',
-      starterCode: '',
-      hint: 'Multiply D2*E2 first, then compare to 200.',
-      verify: (out) => out.includes('High Value'),
-    },
-    {
-      id: 'xl25', title: 'Average Quantity per Order', difficulty: 'Beginner',
-      description: 'Calculate the average quantity ordered per transaction. Quantity data is in column E (E2:E17).',
-      starterCode: '',
-      hint: 'AVERAGE(range) calculates the arithmetic mean.',
-      verify: (out) => {
-        const n = parseFloat(out);
-        return !isNaN(n) && n > 3 && n < 5;
-      },
-    },
-    {
-      id: 'xl26', title: 'Discount Amount', difficulty: 'Intermediate',
-      description: 'TXN-001 has subtotal D2*E2 = 299.98. If the subtotal > 250, apply a 10% discount. Calculate the discount amount only (not the final price).\n\nHint: discount = subtotal * 0.10',
-      starterCode: '',
-      hint: 'IF the total (D2*E2) exceeds 250, multiply by 0.1 to get 10% of it.',
-      verify: (out) => out.includes('29.998') || out.includes('30') || out.includes('29.99'),
-    },
-    {
-      id: 'xl27', title: 'Multiple Conditions with AND', difficulty: 'Intermediate',
-      description: 'Check if TXN-001 (B2="Widget Pro", E2=2) is both an "Electronics" item AND has quantity >= 2. Use AND inside IF.',
-      starterCode: '',
-      hint: 'AND(condition1, condition2) returns TRUE only if both are true.',
-      verify: (out) => out.includes('Eligible'),
-    },
-    {
-      id: 'xl28', title: 'Count Electronics Items', difficulty: 'Intermediate',
-      description: 'Count how many transactions are in the "Electronics" category. Category is in column C (C2:C17).',
-      starterCode: '',
-      hint: 'COUNTIF(range, criteria) counts cells that match the criteria.',
-      verify: (out) => {
-        const n = parseInt(out);
-        return !isNaN(n) && n >= 4;
-      },
-    },
-    {
-      id: 'xl29', title: 'Total Revenue Electronics', difficulty: 'Advanced',
-      description: 'Calculate total revenue (price * qty) for ONLY the Electronics category items. Use SUMIF on column C for category and column D for price.\nRevenue approximated as SUM of prices for Electronics items.',
-      starterCode: '',
-      hint: 'SUMIF(criteria_range, criteria, sum_range) sums values in sum_range where criteria_range matches.',
-      verify: (out) => {
-        const n = parseFloat(out);
-        return !isNaN(n) && n > 600 && n < 900;
-      },
-    },
-    {
-      id: 'xl30', title: 'XLOOKUP Product Category', difficulty: 'Advanced',
-      description: 'Use XLOOKUP to find the category of "Ergonomic Chair". Products are in B2:B17, categories in C2:C17.',
-      starterCode: '',
-      hint: 'XLOOKUP(lookup_value, lookup_array, return_array) finds the lookup in one column and returns the corresponding value from another.',
-      verify: (out) => out.includes('Office'),
-    },
-  ],
 };
 
 const challengeTabs: { id: PracticeTab; label: string; icon: React.ReactNode }[] = [
   { id: 'chat', label: 'Chat', icon: <MessagesSquare className="w-4 h-4" /> },
   { id: 'python', label: 'Python', icon: <Code className="w-4 h-4" /> },
   { id: 'sql', label: 'SQL', icon: <Database className="w-4 h-4" /> },
-  { id: 'excel', label: 'Excel', icon: <Calculator className="w-4 h-4" /> },
+
 ];
 
 type DifficultyFilter = 'all' | 'Beginner' | 'Intermediate' | 'Advanced';
@@ -684,30 +440,9 @@ export function StudyRoom({ completedTasks, completedTasksOwn, completedTasksOth
     }
   };
 
-  const handleRunExcel = () => {
-    if (!selectedChallenge) return;
-    const formula = code.trim();
-    if (formula.startsWith('=')) {
-      const data = createDefaultData();
-      try {
-        const result = evaluateFormula(formula, data);
-        setCodeOutput([String(result)]);
-        const passed = selectedChallenge.verify(String(result));
-        setChallengeResult(passed ? 'pass' : 'fail');
-        if (passed) markSolved(selectedChallenge.id);
-      } catch { setCodeOutput(['#ERROR']); setChallengeResult('fail'); }
-    } else {
-      setCodeOutput([formula]);
-      const passed = selectedChallenge.verify(formula);
-      setChallengeResult(passed ? 'pass' : 'fail');
-      if (passed) markSolved(selectedChallenge.id);
-    }
-  };
-
   const handleRunCode = useCallback(() => {
     if (activeTab === 'python') handleRunPython();
     else if (activeTab === 'sql') handleRunSQL();
-    else if (activeTab === 'excel') handleRunExcel();
     else setCodeOutput(['Run code to check your answer']);
   }, [code, activeTab, selectedChallenge]);
 
@@ -735,7 +470,7 @@ export function StudyRoom({ completedTasks, completedTasksOwn, completedTasksOth
 
       {/* Stats Bar */}
       <motion.div initial={{ opacity: 0, y: 5 }} animate={{ opacity: 1, y: 0 }} className="grid grid-cols-3 gap-3">
-        {(['python', 'sql', 'excel'] as const).map(lang => {
+        {(['python', 'sql'] as const).map(lang => {
           const total = (CHALLENGES[lang] || []).length;
           const done = challengeStats[lang];
           return (
@@ -743,7 +478,7 @@ export function StudyRoom({ completedTasks, completedTasksOwn, completedTasksOth
               <div className={`w-9 h-9 rounded-lg flex items-center justify-center ${
                 lang === 'python' ? 'bg-blue-50 text-blue-600' : lang === 'sql' ? 'bg-amber-50 text-amber-600' : 'bg-emerald-50 text-emerald-600'
               }`}>
-                {lang === 'python' ? <Code className="w-4 h-4" /> : lang === 'sql' ? <Database className="w-4 h-4" /> : <Calculator className="w-4 h-4" />}
+                {lang === 'python' ? <Code className="w-4 h-4" /> : <Database className="w-4 h-4" />}
               </div>
               <div className="flex-1 min-w-0">
                 <div className="text-[10px] uppercase tracking-wider font-semibold text-slate-500">{lang}</div>
@@ -870,7 +605,7 @@ export function StudyRoom({ completedTasks, completedTasksOwn, completedTasksOth
       )}
 
       {/* Practice Tabs */}
-      {(activeTab === 'python' || activeTab === 'sql' || activeTab === 'excel') && (
+      {(activeTab === 'python' || activeTab === 'sql') && (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Challenge List */}
           <div className="lg:col-span-1 space-y-2 max-h-[600px] overflow-y-auto custom-scrollbar">
@@ -897,12 +632,18 @@ export function StudyRoom({ completedTasks, completedTasksOwn, completedTasksOth
                 } ${solved ? 'opacity-80' : ''}`}>
                 <div className="flex items-center justify-between mb-1">
                   <span className={`text-sm font-semibold ${solved ? 'text-emerald-700' : 'text-slate-800'}`}>
-                    {solved && <Trophy className="w-3 h-3 inline mr-1 text-emerald-500" />}
                     {ch.title}
                   </span>
-                  <span className={`text-[10px] font-mono px-1.5 py-0.5 rounded ${
-                    ch.difficulty === 'Beginner' ? 'bg-emerald-50 text-emerald-700' : ch.difficulty === 'Intermediate' ? 'bg-amber-50 text-amber-700' : 'bg-red-50 text-red-700'
-                  }`}>{ch.difficulty}</span>
+                  <div className="flex items-center gap-2">
+                    {solved && (
+                      <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-emerald-50 text-emerald-700 flex items-center gap-1">
+                        <CheckCircle2 className="w-3 h-3" /> Done
+                      </span>
+                    )}
+                    <span className={`text-[10px] font-mono px-1.5 py-0.5 rounded ${
+                      ch.difficulty === 'Beginner' ? 'bg-emerald-50 text-emerald-700' : ch.difficulty === 'Intermediate' ? 'bg-amber-50 text-amber-700' : 'bg-red-50 text-red-700'
+                    }`}>{ch.difficulty}</span>
+                  </div>
                 </div>
                 <p className="text-xs text-slate-500 line-clamp-2">{ch.description}</p>
               </button>
@@ -990,17 +731,6 @@ export function StudyRoom({ completedTasks, completedTasksOwn, completedTasksOth
                   </div>
                 </div>
 
-                {/* Live Sheet for Excel Tab */}
-                {activeTab === 'excel' && (
-                  <div className="bg-surface border border-border rounded-xl overflow-hidden">
-                    <div className="px-4 py-2 bg-deeper border-b border-border">
-                      <span className="text-xs font-semibold text-slate-600 uppercase tracking-wider">Live Sheet</span>
-                    </div>
-                    <div className="p-3">
-                      <SpreadsheetRunner />
-                    </div>
-                  </div>
-                )}
               </>
             ) : (
               <div className="h-full flex flex-col items-center justify-center text-slate-400 py-20">

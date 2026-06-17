@@ -4,16 +4,12 @@ import { Menu, PlayCircle, BookOpen, Presentation, CheckCircle2, XCircle, Refres
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { motion, AnimatePresence } from 'motion/react';
-import { LiveSheet } from '../components/LiveSheet';
 import { SqlPlayground } from '../components/SqlPlayground';
 import { GitTerminal } from '../components/GitTerminal';
 import { PythonPlayground } from '../components/PythonPlayground';
-import { BIDashboard } from '../components/BIDashboard';
 import { QuizModal } from '../components/QuizModal';
 import { ScenarioPlayer } from '../components/ScenarioPlayer';
-import { DataModelingTool } from '../components/DataModelingTool';
 import { APIPlayground } from '../components/APIPlayground';
-import { DemoSite } from '../components/DemoSite';
 import { InlineCodeRunner } from '../components/InlineCodeRunner';
 import { ClassworkCard, parseClassworks, ParsedClasswork } from '../components/ClassworkCard';
 import { TopicComment } from '../firebase/services';
@@ -333,15 +329,6 @@ export function CoursePlayer({ curriculum, completedTasks, toggleTask, activeTop
     return new RegExp('\\b' + escaped + '\\b', 'i').test(text);
   }, []);
 
-  const shouldShowLiveSheet = useCallback((topic: Topic): boolean => {
-    if (['w3-d4'].includes(topic.id)) return true;
-    const kw = ['formula', 'budget', 'vlookup', 'xlookup', 'text function', 'logical function', 'conditional formatting', 'cleaning data', 'pivot table', 'data validation', 'excel', 'chart'];
-    const skip = ['w_pwr1-d3', 'w14-d2', 'w15-d3'];
-    if (skip.includes(topic.id)) return false;
-    const t = topic.title.toLowerCase(), d = topic.description.toLowerCase();
-    return kw.some(k => k.includes(' ') ? t.includes(k) || d.includes(k) : wordMatch(t, k) || wordMatch(d, k)) || t.includes('chart') || (topic.content && topic.content.toLowerCase().includes('spreadsheet below')) === true;
-  }, [wordMatch]);
-
   const shouldShowSql = useCallback((topic: Topic): boolean => {
     if (/^w(5|6|7|8|9|10|11|12)/.test(topic.id)) return true;
     const t = topic.title.toLowerCase(), d = topic.description.toLowerCase();
@@ -360,22 +347,8 @@ export function CoursePlayer({ curriculum, completedTasks, toggleTask, activeTop
     return wordMatch(t, 'python') || wordMatch(d, 'python') || (topic.content && topic.content.includes('```python')) || (topic.content && topic.content.toLowerCase().includes('python playground')) === true;
   }, [wordMatch]);
 
-  const shouldShowBI = useCallback((topic: Topic): boolean => {
-    const skip = ['w3-d4', 'w3-d5'];
-    if (skip.includes(topic.id)) return false;
-    const kw = ['dashboard', 'power bi', 'tableau', 'dax', 'calculated field', 'interactive filter', 'visual best practice', 'slicer', 'star schema', 'data modeling in bi', 'connecting data', 'chart', 'visual'];
-    const t = topic.title.toLowerCase(), d = topic.description.toLowerCase();
-    return kw.some(k => k.includes(' ') ? t.includes(k) || d.includes(k) : wordMatch(t, k) || wordMatch(d, k)) || (topic.content && topic.content.toLowerCase().includes('dashboard builder')) === true;
-  }, [wordMatch]);
-
   const shouldShowScenario = useCallback((topic: Topic): boolean => {
     const kw = ['scenario', 'decision', 'case study', 'business case', 'analytical thinking'];
-    const t = topic.title.toLowerCase(), d = topic.description.toLowerCase();
-    return kw.some(k => t.includes(k) || d.includes(k));
-  }, []);
-
-  const shouldShowDataModel = useCallback((topic: Topic): boolean => {
-    const kw = ['data modeling', 'schema', 'database design', 'normalization', 'creating tables', 'ddl'];
     const t = topic.title.toLowerCase(), d = topic.description.toLowerCase();
     return kw.some(k => t.includes(k) || d.includes(k));
   }, []);
@@ -384,12 +357,6 @@ export function CoursePlayer({ curriculum, completedTasks, toggleTask, activeTop
     const kw = ['api', 'rest', 'endpoint', 'request', 'response'];
     const t = topic.title.toLowerCase(), d = topic.description.toLowerCase();
     return kw.some(k => t.includes(k) || d.includes(k));
-  }, []);
-
-  const shouldShowDemoSite = useCallback((topic: Topic): boolean => {
-    const kw = ['web scrape', 'scrape', 'extract data', 'demo site', 'crawl', 'http request', 'requests library', 'beautifulsoup', 'demo'];
-    const t = topic.title.toLowerCase(), d = topic.description.toLowerCase();
-    return kw.some(k => t.includes(k) || d.includes(k)) || (topic.content && topic.content.toLowerCase().includes('web scraping')) === true;
   }, []);
 
   return (
@@ -458,14 +425,10 @@ export function CoursePlayer({ curriculum, completedTasks, toggleTask, activeTop
                 <h1 className="text-3xl sm:text-4xl font-extrabold text-gray-900 tracking-tight">{activeTopic.title}</h1>
               </div>
 
-              {shouldShowLiveSheet(activeTopic) && <LiveSheet topicId={activeTopic.id} topicTitle={activeTopic.title} content={activeTopic.content} onSubmit={() => toggleTask(activeTopic.id)} />}
               {shouldShowSql(activeTopic) && <SqlPlayground topicTitle={activeTopic.title} content={activeTopic.content} />}
               {shouldShowGit(activeTopic) && <GitTerminal />}
               {shouldShowPython(activeTopic) && <PythonPlayground topicId={activeTopic.id} topicTitle={activeTopic.title} content={activeTopic.content} />}
-              {shouldShowDemoSite(activeTopic) && <DemoSite topicId={activeTopic.id} topicTitle={activeTopic.title} />}
-              {shouldShowBI(activeTopic) && <BIDashboard topicId={activeTopic.id} topicTitle={activeTopic.title} />}
               {shouldShowScenario(activeTopic) && <ScenarioPlayer />}
-              {shouldShowDataModel(activeTopic) && <DataModelingTool />}
               {shouldShowAPI(activeTopic) && <APIPlayground />}
 
               {activeTopic.requirements && activeTopic.requirements.length > 0 && (

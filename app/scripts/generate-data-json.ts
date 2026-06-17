@@ -12,7 +12,7 @@ const publicDir = path.resolve(__dirname, '../public');
 
 // Content encryption key — must match what's in Firestore config/contentKey
 // Also accepted via env var VITE_CONTENT_KEY
-const CONTENT_KEY: string = (process as any).env?.VITE_CONTENT_KEY || 'DACAMP-2026';
+const CONTENT_KEY: string = (process as any).env?.VITE_CONTENT_KEY || 'CYBERCAMP-2026';
 
 function encryptFile(inputPath: string, outputPath: string): void {
   const data = fs.readFileSync(inputPath, 'utf-8');
@@ -56,11 +56,4 @@ encryptFile(classworksJsonPath, path.join(publicDir, 'classworks.enc'));
 fs.unlinkSync(dataJsonPath);
 fs.unlinkSync(classworksJsonPath);
 
-// Write version.json (plaintext — no course content)
-fs.writeFileSync(
-  path.join(publicDir, 'version.json'),
-  JSON.stringify({ version: BUILD_VERSION, timestamp: new Date().toISOString() }, null, 2),
-  'utf-8'
-);
-
-console.log(`Generated data.enc, classworks.enc, version.json (v${BUILD_VERSION})`);
+console.log(`Generated data.enc, classworks.enc (v${BUILD_VERSION})`);
