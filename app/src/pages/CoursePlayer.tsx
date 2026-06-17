@@ -10,6 +10,7 @@ import { PythonPlayground } from '../components/PythonPlayground';
 import { QuizModal } from '../components/QuizModal';
 import { ScenarioPlayer } from '../components/ScenarioPlayer';
 import { APIPlayground } from '../components/APIPlayground';
+import { TerminalSimulator } from '../components/TerminalSimulator';
 import { InlineCodeRunner } from '../components/InlineCodeRunner';
 import { ClassworkCard, parseClassworks, ParsedClasswork } from '../components/ClassworkCard';
 import { TopicComment } from '../firebase/services';
@@ -330,9 +331,9 @@ export function CoursePlayer({ curriculum, completedTasks, toggleTask, activeTop
   }, []);
 
   const shouldShowSql = useCallback((topic: Topic): boolean => {
-    if (/^w(5|6|7|8|9|10|11|12)/.test(topic.id)) return true;
+    if (/^w(0[5-9]|1[0-2]|5|6|7|8|9|10|11|12)/.test(topic.id)) return true;
     const t = topic.title.toLowerCase(), d = topic.description.toLowerCase();
-    return wordMatch(t, 'sql') || wordMatch(d, 'sql') || (topic.content && topic.content.includes('```sql')) || (topic.content && topic.content.toLowerCase().includes('sql playground')) === true;
+    return wordMatch(t, 'sql') || wordMatch(d, 'sql') || (topic.content && topic.content.includes('```sql')) || topic.content?.toLowerCase().includes('sql playground') === true;
   }, [wordMatch]);
 
   const shouldShowGit = useCallback((topic: Topic): boolean => {
@@ -342,19 +343,34 @@ export function CoursePlayer({ curriculum, completedTasks, toggleTask, activeTop
   }, []);
 
   const shouldShowPython = useCallback((topic: Topic): boolean => {
-    if (/^w(13|14|15|16|17)/.test(topic.id)) return true;
+    if (/^w(07|13|14|15|16|17|7|13|14|15|16|17)/.test(topic.id)) return true;
     const t = topic.title.toLowerCase(), d = topic.description.toLowerCase();
-    return wordMatch(t, 'python') || wordMatch(d, 'python') || (topic.content && topic.content.includes('```python')) || (topic.content && topic.content.toLowerCase().includes('python playground')) === true;
+    return wordMatch(t, 'python') || wordMatch(d, 'python') || (topic.content && topic.content.includes('```python')) || topic.content?.toLowerCase().includes('python playground') === true;
   }, [wordMatch]);
 
   const shouldShowScenario = useCallback((topic: Topic): boolean => {
-    const kw = ['scenario', 'decision', 'case study', 'business case', 'analytical thinking'];
+    const kw = ['scenario', 'decision', 'case study', 'business case', 'analytical thinking', 'capstone', 'incident response'];
     const t = topic.title.toLowerCase(), d = topic.description.toLowerCase();
-    return kw.some(k => t.includes(k) || d.includes(k));
+    return kw.some(k => t.includes(k) || d.includes(k)) || (topic.content && topic.content.includes(':::checkpoint'));
   }, []);
 
   const shouldShowAPI = useCallback((topic: Topic): boolean => {
     const kw = ['api', 'rest', 'endpoint', 'request', 'response'];
+    const t = topic.title.toLowerCase(), d = topic.description.toLowerCase();
+    return kw.some(k => t.includes(k) || d.includes(k));
+  }, []);
+
+  const shouldShowBash = useCallback((topic: Topic): boolean => {
+    if (/^w(0[1-6]|01|02|03|04|05|06|1|2|3|4|5|6)/.test(topic.id)) return true;
+    if (topic.content && topic.content.includes('```bash')) return true;
+    const kw = ['terminal', 'command line', 'bash', 'shell', 'linux command', 'powershell', 'cli'];
+    const t = topic.title.toLowerCase(), d = topic.description.toLowerCase();
+    return kw.some(k => t.includes(k) || d.includes(k));
+  }, []);
+
+  const shouldShowTerminal = useCallback((topic: Topic): boolean => {
+    if (/^w(0[1-6]|01|02|03|04|05|06|1|2|3|4|5|6)/.test(topic.id)) return true;
+    const kw = ['terminal', 'network', 'security tool', 'scan', 'ping', 'nmap', 'wireshark', 'tcpdump'];
     const t = topic.title.toLowerCase(), d = topic.description.toLowerCase();
     return kw.some(k => t.includes(k) || d.includes(k));
   }, []);
@@ -430,6 +446,7 @@ export function CoursePlayer({ curriculum, completedTasks, toggleTask, activeTop
               {shouldShowPython(activeTopic) && <PythonPlayground topicId={activeTopic.id} topicTitle={activeTopic.title} content={activeTopic.content} />}
               {shouldShowScenario(activeTopic) && <ScenarioPlayer />}
               {shouldShowAPI(activeTopic) && <APIPlayground />}
+              {shouldShowTerminal(activeTopic) && <TerminalSimulator />}
 
               {activeTopic.requirements && activeTopic.requirements.length > 0 && (
                 <div className="mb-10 bg-white border border-accent/20 rounded-xl p-6">
