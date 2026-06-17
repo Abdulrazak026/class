@@ -109,7 +109,7 @@ export function ScenarioPlayer() {
       {!finished ? (
         <div className="p-6">
           <div className="flex items-center gap-2 text-xs font-semibold text-purple-600 uppercase tracking-wider mb-4">
-            <TrendingUp className="w-3.5 h-3.5" />
+            <AlertTriangle className="w-3.5 h-3.5" />
             {scenario.industry}
           </div>
 
