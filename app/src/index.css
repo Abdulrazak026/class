@@ -183,3 +183,114 @@ body {
   }
 }
 
+/* Markdown custom directive styles */
+.prose .info-box p:last-child,
+.prose .warning-box p:last-child,
+.prose .tip-box p:last-child,
+.prose .danger-box p:last-child {
+  margin-bottom: 0;
+}
+
+/* Step guide connector line */
+.step-connector {
+  position: absolute;
+  left: 19px;
+  top: 40px;
+  bottom: 0;
+  width: 2px;
+  background: linear-gradient(to bottom, var(--app-accent), transparent);
+}
+
+/* Concept card icon glow */
+.concept-glow {
+  box-shadow: 0 0 20px var(--app-glow);
+}
+
+/* Animated list items */
+.objective-item {
+  transition: all 0.2s ease;
+}
+.objective-item:hover {
+  transform: translateX(4px);
+}
+
+/* Summary card gradient border */
+.summary-border {
+  position: relative;
+  background: linear-gradient(135deg, var(--app-accent), transparent);
+  padding: 1px;
+  border-radius: 12px;
+}
+.summary-border > div {
+  border-radius: 11px;
+}
+
+/* Key term tooltip animation */
+@keyframes tooltip-in {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.term-tooltip {
+  animation: tooltip-in 0.2s ease-out;
+}
+
+/* Content transition */
+.content-fade-in {
+  animation: fadeSlideIn 0.4s ease-out;
+}
+@keyframes fadeSlideIn {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Topic header gradient */
+.topic-header-gradient {
+  background: linear-gradient(135deg, var(--app-deeper), transparent);
+}
+
+/* Table of contents */
+.toc-item {
+  transition: all 0.15s ease;
+  border-left: 2px solid transparent;
+}
+.toc-item:hover {
+  border-left-color: var(--app-accent);
+  padding-left: 8px;
+}
+
+/* Code block line numbers */
+.code-line-numbers {
+  counter-reset: line;
+}
+.code-line-numbers > code {
+  counter-increment: line;
+}
+.code-line-numbers > code::before {
+  content: counter(line);
+  display: inline-block;
+  width: 2rem;
+  text-align: right;
+  margin-right: 1rem;
+  color: #4a5568;
+  font-size: 0.75rem;
+  user-select: none;
+}
+
+/* Dark mode adjustments for prose */
+.dark .prose {
+  --tw-prose-body: var(--app-secondary);
+  --tw-prose-headings: var(--app-primary);
+  --tw-prose-links: var(--app-accent);
+  --tw-prose-bold: var(--app-primary);
+  --tw-prose-counters: var(--app-muted);
+  --tw-prose-bullets: var(--app-muted);
+  --tw-prose-hr: var(--app-border);
+  --tw-prose-quotes: var(--app-secondary);
+  --tw-prose-quote-borders: var(--app-accent);
+  --tw-prose-code: var(--app-accent);
+  --tw-prose-pre-code: #e2e8f0;
+  --tw-prose-pre-bg: #1e293b;
+  --tw-prose-th-borders: var(--app-border);
+  --tw-prose-td-borders: var(--app-border);
+}
+

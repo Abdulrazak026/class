@@ -11,23 +11,20 @@ import { QuizModal } from '../components/QuizModal';
 import { ScenarioPlayer } from '../components/ScenarioPlayer';
 import { APIPlayground } from '../components/APIPlayground';
 import { TerminalSimulator } from '../components/TerminalSimulator';
+import { VirtualShell } from '../components/VirtualShell';
 import { InlineCodeRunner } from '../components/InlineCodeRunner';
 import { ClassworkCard, parseClassworks, ParsedClasswork } from '../components/ClassworkCard';
 import { TopicComment } from '../firebase/services';
 import { hasFirebaseConfig } from '../firebase/config';
 import { getClassworks } from '../utils/dataLoader';
 import { SearchBar } from '../components/SearchBar';
+import { InfoBox, WarningBox, TipBox, DangerBox, ConceptCard, LearningObjectives, StepGuide, SummaryCard, CodeBlock } from '../components/ContentComponents';
+import { parseContentDirectives, ParsedCheckpoint, ContentSegment } from '../utils/contentParser';
 import type { Tab } from '../App';
 
 interface CheckpointState {
   selected: number | null;
   revealed: boolean;
-}
-
-interface ParsedCheckpoint {
-  question: string;
-  options: string[];
-  correctIndex: number;
 }
 
 interface CoursePlayerProps {
@@ -42,32 +39,8 @@ interface CoursePlayerProps {
   setActiveTab: (tab: Tab) => void;
 }
 
-function parseCheckpoints(content: string): { type: 'markdown' | 'checkpoint'; value: string; checkpoint?: ParsedCheckpoint }[] {
-  const segments: { type: 'markdown' | 'checkpoint'; value: string; checkpoint?: ParsedCheckpoint }[] = [];
-  const parts = content.split(':::checkpoint');
-  for (let i = 0; i < parts.length; i++) {
-    const part = parts[i];
-    if (i === 0) {
-      if (part) segments.push({ type: 'markdown', value: part });
-      continue;
-    }
-    const block = part.trim();
-    const lines = block.split('\n').map(l => l.trim()).filter(l => l);
-    const question = lines[0] || '';
-    const options: string[] = [];
-    let correctIndex = -1;
-    for (const line of lines.slice(1)) {
-      const optMatch = line.match(/^([A-D]\))\s(.+)/);
-      if (optMatch) options.push(optMatch[2]);
-      const correctMatch = line.match(/^Correct:\s*([A-D])/i);
-      if (correctMatch) {
-        const idx = correctMatch[1].toUpperCase().charCodeAt(0) - 65;
-        if (idx >= 0 && idx < options.length) correctIndex = idx;
-      }
-    }
-    segments.push({ type: 'checkpoint', value: ':::checkpoint\n' + part, checkpoint: { question, options, correctIndex } });
-  }
-  return segments;
+function parseCheckpoints(content: string): ContentSegment[] {
+  return parseContentDirectives(content);
 }
 
 const getIcon = (type: string) => {
@@ -448,7 +421,7 @@ export function CoursePlayer({ curriculum, completedTasks, toggleTask, activeTop
               {shouldShowPython(activeTopic) && <PythonPlayground topicId={activeTopic.id} topicTitle={activeTopic.title} content={activeTopic.content} />}
               {shouldShowScenario(activeTopic) && <ScenarioPlayer />}
               {shouldShowAPI(activeTopic) && <APIPlayground />}
-              {shouldShowTerminal(activeTopic) && <TerminalSimulator />}
+              {shouldShowTerminal(activeTopic) && <VirtualShell />}
 
               {activeTopic.requirements && activeTopic.requirements.length > 0 && (
                 <div className="mb-10 bg-white border border-accent/20 rounded-xl p-6">
@@ -466,13 +439,10 @@ export function CoursePlayer({ curriculum, completedTasks, toggleTask, activeTop
                 <div className="prose prose-gray max-w-none break-words overflow-x-hidden prose-headings:text-gray-900 prose-strong:text-gray-900 prose-code:text-accent prose-code:bg-accent/5 prose-code:px-1 prose-code:rounded prose-a:text-accent">
                   {activeTopic.content ? (() => {
                     const rawContent = activeTopic.content!;
-                    const hasCheckpoints = rawContent.includes(':::checkpoint');
-                    if (hasCheckpoints) console.log('[CoursePlayer] Found :::checkpoint in content for', activeTopic.id, '— len:', rawContent.length);
                     const checkpointSegments = parseCheckpoints(rawContent);
-                    if (hasCheckpoints) console.log('[CoursePlayer] checkpoint segments:', checkpointSegments.filter(s => s.type === 'checkpoint').length);
-                    const allSegments: { type: 'markdown' | 'checkpoint' | 'classwork'; value: string; checkpoint?: ParsedCheckpoint; classwork?: ParsedClasswork }[] = [];
+                    const allSegments: ContentSegment[] = [];
                     for (const seg of checkpointSegments) {
-                      if (seg.type === 'checkpoint') {
+                      if (seg.type === 'checkpoint' || seg.type === 'info' || seg.type === 'warning' || seg.type === 'tip' || seg.type === 'danger' || seg.type === 'success' || seg.type === 'objectives' || seg.type === 'concept' || seg.type === 'steps' || seg.type === 'summary') {
                         allSegments.push(seg);
                       } else {
                         const classworkParts = parseClassworks(seg.value);
@@ -491,6 +461,35 @@ export function CoursePlayer({ curriculum, completedTasks, toggleTask, activeTop
                       if (seg.type === 'checkpoint' && seg.checkpoint) {
                         const cIdx = checkpointCounter++;
                         return <CheckpointCard key={`cp-${i}`} checkpoint={seg.checkpoint} checkpointIndex={cIdx} onAnswer={(idx, correct) => handleCheckpointAnswer(activeTopic.id, cIdx, correct)} />;
+                      }
+                      if (seg.type === 'info') return <InfoBox key={`info-${i}`}>{seg.value}</InfoBox>;
+                      if (seg.type === 'warning') return <WarningBox key={`warn-${i}`}>{seg.value}</WarningBox>;
+                      if (seg.type === 'tip') return <TipBox key={`tip-${i}`}>{seg.value}</TipBox>;
+                      if (seg.type === 'danger') return <DangerBox key={`danger-${i}`}>{seg.value}</DangerBox>;
+                      if (seg.type === 'success') return <InfoBox key={`success-${i}`} variant="success">{seg.value}</InfoBox>;
+                      if (seg.type === 'objectives') {
+                        const items = seg.value.split('\n').map(l => l.replace(/^[-*]\s*/, '').trim()).filter(Boolean);
+                        return <LearningObjectives key={`obj-${i}`} items={items} />;
+                      }
+                      if (seg.type === 'concept') {
+                        return <ConceptCard key={`concept-${i}`} title={seg.meta || 'Key Concept'}>{seg.value}</ConceptCard>;
+                      }
+                      if (seg.type === 'steps') {
+                        const lines = seg.value.split('\n').filter(l => l.trim().match(/^\d+[.)]\s/));
+                        const steps = lines.map(l => ({ title: l.replace(/^\d+[.)]\s*/, '').trim(), content: '' }));
+                        if (steps.length === 0) {
+                          return <div key={`steps-${i}`}><ReactMarkdown remarkPlugins={[remarkGfm]} components={MarkdownComponents}>{seg.value}</ReactMarkdown></div>;
+                        }
+                        return <StepGuide key={`steps-${i}`} steps={steps.map(s => ({ ...s, content: '' }))} />;
+                      }
+                      if (seg.type === 'summary') {
+                        const lines = seg.value.split('\n').map(l => l.replace(/^[-*]\s*/, '').trim()).filter(Boolean);
+                        const items = lines.map(l => {
+                          const colon = l.indexOf(':');
+                          if (colon > 0) return { label: l.slice(0, colon), description: l.slice(colon + 1).trim() };
+                          return { label: '', description: l };
+                        });
+                        return <SummaryCard key={`summary-${i}`} items={items} />;
                       }
                       if (seg.type === 'classwork' && seg.classwork) {
                         try {
