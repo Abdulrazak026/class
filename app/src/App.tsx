@@ -9,7 +9,6 @@ import {
   sendChatMessage, subscribeToChat, registerDevice,
   syncUserProgress, subscribeToProgress, getMyUserId,
 } from './firebase/services';
-import { BUILD_VERSION } from './data';
 import { doc, getDoc } from 'firebase/firestore';
 import { db } from './firebase/config';
 import { ErrorBoundary } from './components/ErrorBoundary';
@@ -46,26 +45,34 @@ export default function App() {
   }, [darkMode]);
 
   useEffect(() => {
+    // 1. Load from local cache immediately for instant render
     const stored = localStorage.getItem('live-data');
-    const storedVer = localStorage.getItem('live-data-version');
-    if (stored && storedVer === BUILD_VERSION) return;
+    if (stored) {
+      try {
+        const parsed = JSON.parse(stored);
+        if (parsed && Array.isArray(parsed.modules)) {
+          setDecryptedData(parsed);
+        }
+      } catch {}
+    }
+
+    // 2. Background fetch fresh data
     (async () => {
       try {
         const [encRes, classworksRes] = await Promise.all([
           fetch('/data.enc?t=' + Date.now(), { cache: 'no-cache' }),
           fetch('/classworks.enc?t=' + Date.now(), { cache: 'no-cache' }),
         ]);
-        const encData = await encRes.arrayBuffer();
-        let classworksData: ArrayBuffer | null = null;
-        if (classworksRes.ok) classworksData = await classworksRes.arrayBuffer();
+        const [encData, classworksData] = await Promise.all([
+          encRes.arrayBuffer(),
+          classworksRes.ok ? classworksRes.arrayBuffer() : Promise.resolve(null),
+        ]);
         const key = 'CYBERCAMP-2026';
-        const decrypted = await decryptFile(encData, key);
-        let decryptedClassworks = null;
-        if (classworksData) {
-          try { decryptedClassworks = await decryptFile(classworksData, key); } catch {}
-        }
+        const [decrypted, decryptedClassworks] = await Promise.all([
+          decryptFile(encData, key),
+          classworksData ? decryptFile(classworksData, key).catch(() => null) : Promise.resolve(null),
+        ]);
         const parsed = JSON.parse(decrypted);
-        console.log('[CYBERCAMP] Loaded curriculum v' + (parsed.version || '?') + ' with ' + (parsed.modules?.length || 0) + ' weeks, ' + (parsed.modules?.reduce((s: number, m: any) => s + (m.topics?.length || 0), 0) || 0) + ' topics');
         setDecryptedData(parsed, decryptedClassworks ? JSON.parse(decryptedClassworks) : null);
         setDataVersion(v => v + 1);
       } catch (e) { console.error('Auto-load failed:', e); }

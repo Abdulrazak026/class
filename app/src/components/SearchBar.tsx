@@ -13,8 +13,14 @@ export function SearchBar({ onSelectTopic }: SearchBarProps) {
   const [loading, setLoading] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+  const initRef = useRef(false);
 
-  useEffect(() => { initSearch(); }, []);
+  const ensureInit = useCallback(() => {
+    if (!initRef.current) {
+      initRef.current = true;
+      initSearch();
+    }
+  }, []);
 
   useEffect(() => {
     const handler = (e: MouseEvent) => {
@@ -53,8 +59,8 @@ export function SearchBar({ onSelectTopic }: SearchBarProps) {
     <div ref={containerRef} className="relative mx-2 mb-2">
       <div className="relative">
         <Search className="absolute left-2.5 top-2 w-3.5 h-3.5 text-gray-400" />
-        <input ref={inputRef} value={query} onChange={e => setQuery(e.target.value)}
-          onKeyDown={handleKeyDown} onFocus={() => query.length >= 2 && results.length > 0 && setOpen(true)}
+        <input ref={inputRef} value={query} onChange={e => { ensureInit(); setQuery(e.target.value); }}
+          onKeyDown={handleKeyDown} onFocus={() => { ensureInit(); query.length >= 2 && results.length > 0 && setOpen(true); }}
           placeholder="Search topics..."
           className="w-full bg-gray-100 border border-gray-200 rounded-lg pl-8 pr-8 py-2 text-xs text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-accent/30 focus:border-accent/50" />
         {query && (

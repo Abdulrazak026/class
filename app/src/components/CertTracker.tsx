@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Shield, Award, CheckCircle2, Clock, ExternalLink, Calendar, DollarSign, TrendingUp, BarChart3, Target, BookOpen, ChevronRight } from 'lucide-react';
+import { PHASES, getCertPhase } from '../data/phases';
 
 interface CertInfo {
   id: string;
@@ -103,15 +104,6 @@ const CERTS: CertInfo[] = [
   },
 ];
 
-const PHASES = [
-  { num: 1, label: 'IT Foundations (Weeks 01-07)', color: 'from-cyan-500 to-cyan-600' },
-  { num: 2, label: 'Security Core (Weeks 08-15)', color: 'from-teal-500 to-teal-600' },
-  { num: 3, label: 'Blue Team Ops (Weeks 16-25)', color: 'from-blue-500 to-blue-600' },
-  { num: 4, label: 'Red Team Ops (Weeks 26-37)', color: 'from-orange-500 to-orange-600' },
-  { num: 5, label: 'Specialization (Weeks 38-45)', color: 'from-purple-500 to-purple-600' },
-  { num: 6, label: 'Career Launch (Weeks 46-56)', color: 'from-emerald-500 to-emerald-600' },
-];
-
 export function CertTracker() {
   const [certs, setCerts] = useState(CERTS);
   const [viewMode, setViewMode] = useState<'grid' | 'roadmap'>('roadmap');
@@ -148,17 +140,20 @@ export function CertTracker() {
       </div>
 
       <div className="p-4">
-        {viewMode === 'roadmap' && (
+        {viewMode === 'roadmap' && (() => {
+          const oldPhaseNums = [...new Set(certs.map(c => c.phase))].sort();
+          return (
           <div className="space-y-4">
-            {PHASES.map(phase => {
-              const phaseCerts = certs.filter(c => c.phase === phase.num);
-              if (phaseCerts.length === 0) return null;
+            {oldPhaseNums.map(oldNum => {
+              const phase = getCertPhase(oldNum);
+              const phaseCerts = certs.filter(c => c.phase === oldNum);
+              if (!phase || phaseCerts.length === 0) return null;
               const phasePassed = phaseCerts.filter(c => c.passed).length;
               return (
-                <div key={phase.num}>
+                <div key={oldNum}>
                   <div className="flex items-center gap-3 mb-2">
                     <div className={`w-8 h-8 rounded-lg bg-gradient-to-br ${phase.color} flex items-center justify-center text-xs font-bold text-white shadow-sm`}>
-                      {phase.num}
+                      {oldNum}
                     </div>
                     <div className="flex-1">
                       <p className="text-xs font-bold text-gray-900 dark:text-gray-100">{phase.label}</p>
@@ -221,7 +216,8 @@ export function CertTracker() {
               );
             })}
           </div>
-        )}
+          );
+        })()}
 
         {viewMode === 'grid' && (
           <div className="overflow-x-auto">

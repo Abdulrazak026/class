@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { Module, Topic } from '../data';
 import { Menu, PlayCircle, BookOpen, Presentation, CheckCircle2, XCircle, RefreshCw, ListChecks, MessageSquare, Send, ChevronLeft, ChevronRight, Wifi, Lightbulb, AlertTriangle, Info, Terminal, Home, BarChart3, MessageSquare as MessageSquareIcon } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
@@ -263,6 +263,28 @@ export function CoursePlayer({ curriculum, completedTasks, toggleTask, activeTop
   const isCompleted = activeTopic ? completedTasks.includes(activeTopic.id) : false;
   const hasNextTopic = moduleIndex !== -1 && curriculum[moduleIndex] && (topicIndex < curriculum[moduleIndex].topics.length - 1 || moduleIndex < curriculum.length - 1);
 
+  const parsedContent = useMemo(() => {
+    if (!activeTopic?.content) return null;
+    const checkpointSegments = parseCheckpoints(activeTopic.content);
+    const segments: ContentSegment[] = [];
+    for (const seg of checkpointSegments) {
+      if (seg.type === 'checkpoint' || seg.type === 'info' || seg.type === 'warning' || seg.type === 'tip' || seg.type === 'danger' || seg.type === 'success' || seg.type === 'objectives' || seg.type === 'concept' || seg.type === 'steps' || seg.type === 'summary') {
+        segments.push(seg);
+      } else {
+        const classworkParts = parseClassworks(seg.value);
+        segments.push(...classworkParts);
+      }
+    }
+    const classworks = getClassworks();
+    const extraClassworks = classworks?.[activeTopic.id];
+    if (extraClassworks) {
+      for (const cw of extraClassworks) {
+        segments.push({ type: 'classwork', value: '', classwork: cw });
+      }
+    }
+    return segments;
+  }, [activeTopic?.content, activeTopic?.id]);
+
   const addComment = () => {
     if (!activeTopic || !commentInput.trim()) return;
     onAddComment(activeTopic.id, commentInput.trim());
@@ -438,26 +460,8 @@ export function CoursePlayer({ curriculum, completedTasks, toggleTask, activeTop
               <div className="text-gray-700 leading-relaxed space-y-6">
                 <div className="prose prose-gray max-w-none break-words overflow-x-hidden prose-headings:text-gray-900 prose-strong:text-gray-900 prose-code:text-accent prose-code:bg-accent/5 prose-code:px-1 prose-code:rounded prose-a:text-accent">
                   {activeTopic.content ? (() => {
-                    const rawContent = activeTopic.content!;
-                    const checkpointSegments = parseCheckpoints(rawContent);
-                    const allSegments: ContentSegment[] = [];
-                    for (const seg of checkpointSegments) {
-                      if (seg.type === 'checkpoint' || seg.type === 'info' || seg.type === 'warning' || seg.type === 'tip' || seg.type === 'danger' || seg.type === 'success' || seg.type === 'objectives' || seg.type === 'concept' || seg.type === 'steps' || seg.type === 'summary') {
-                        allSegments.push(seg);
-                      } else {
-                        const classworkParts = parseClassworks(seg.value);
-                        allSegments.push(...classworkParts);
-                      }
-                    }
-                    const classworks = getClassworks();
-                    const extraClassworks = classworks?.[activeTopic.id];
-                    if (extraClassworks) {
-                      for (const cw of extraClassworks) {
-                        allSegments.push({ type: 'classwork', value: '', classwork: cw });
-                      }
-                    }
                     let checkpointCounter = 0;
-                    return allSegments.map((seg, i) => {
+                    return (parsedContent ?? []).map((seg, i) => {
                       if (seg.type === 'checkpoint' && seg.checkpoint) {
                         const cIdx = checkpointCounter++;
                         return <CheckpointCard key={`cp-${i}`} checkpoint={seg.checkpoint} checkpointIndex={cIdx} onAnswer={(idx, correct) => handleCheckpointAnswer(activeTopic.id, cIdx, correct)} />;

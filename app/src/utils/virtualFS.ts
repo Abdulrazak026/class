@@ -119,7 +119,10 @@ export class VirtualFS {
     return parts;
   }
 
-  parsePath(input: string): string[] {
+  parsePath(input: string | string[]): string[] {
+    if (Array.isArray(input)) {
+      return this.normalizePath(input);
+    }
     if (!input || input === '~') return ['home', this.currentUser];
     if (input.startsWith('~/') || input === '~') return ['home', this.currentUser, ...input.slice(2).split('/').filter(Boolean)];
     if (input.startsWith('/')) return input.split('/').filter(Boolean);
