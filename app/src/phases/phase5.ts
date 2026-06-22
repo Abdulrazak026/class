@@ -135,7 +135,7 @@ Try running these scans against a local VM and compare the output formats. Which
           },
           {
             question: 'What privilege is required to run an Nmap SYN scan on Linux?',
-            options: ['None — any user can run it', 'Root or sudo privileges', 'Only the admin group', 'CAP_NET_RAW capability only'],
+            options: ['None - any user can run it', 'Root or sudo privileges', 'Only the admin group', 'CAP_NET_RAW capability only'],
             correctAnswerIndex: 1,
             difficulty: 'beginner',
             explanation: 'SYN scan uses raw sockets to craft packets, which requires root privileges on Linux.',
@@ -1194,7 +1194,7 @@ Crack a set of sample MD5 and NTLM hashes using both John and Hashcat. Compare t
           },
           {
             question: 'What is a practical way to determine if a hash is NTLM vs MD5?',
-            options: ['They always look the same — you cannot tell', 'Check context: NTLM is 32 hex chars from Windows systems, MD5 is 32 hex chars from Linux/web apps', 'NTLM is always longer than MD5', 'MD5 always starts with a specific character'],
+            options: ['They always look the same - you cannot tell', 'Check context: NTLM is 32 hex chars from Windows systems, MD5 is 32 hex chars from Linux/web apps', 'NTLM is always longer than MD5', 'MD5 always starts with a specific character'],
             correctAnswerIndex: 1,
             difficulty: 'intermediate',
             explanation: 'Both are 32 hex characters. Context (target OS, source of hash) and tools like hashid help distinguish them.',
@@ -1457,7 +1457,7 @@ Set up a local SSH server and brute-force it with Hydra using rockyou.txt. Time 
           },
           {
             question: 'What is the difference between -l and -L in Hydra?',
-            options: ['-l is for passwords, -L is for usernames', '-l specifies a single username, -L specifies a file of usernames', '-l is for login, -L is for logout', '-l is lowercase, -L is uppercase — same function'],
+            options: ['-l is for passwords, -L is for usernames', '-l specifies a single username, -L specifies a file of usernames', '-l is for login, -L is for logout', '-l is lowercase, -L is uppercase - same function'],
             correctAnswerIndex: 1,
             difficulty: 'beginner',
             explanation: '-l takes a single username string, while -L takes a file path containing multiple usernames.',
@@ -1670,7 +1670,7 @@ Use LinPEAS on a local vulnerable VM. Identify at least 3 potential privilege es
           },
           {
             question: 'If a cron job runs a script that you can write to, what can you do?',
-            options: ['Nothing — cron jobs run as root regardless', 'Modify the script to execute a reverse shell or other malicious command', 'Delete the cron job', 'Change the cron schedule'],
+            options: ['Nothing - cron jobs run as root regardless', 'Modify the script to execute a reverse shell or other malicious command', 'Delete the cron job', 'Change the cron schedule'],
             correctAnswerIndex: 1,
             difficulty: 'intermediate',
             explanation: 'If the cron script runs as root and you can modify it, you can inject commands that execute with root privileges.',
@@ -2113,8 +2113,8 @@ Kerberos uses tickets instead of passwords for authentication. The flow involves
 ### Key Kerberos Terms
 | Term    | Description                                    |
 |--------|------------------------------------------------|
-| TGT    | Ticket Granting Ticket — proves identity        |
-| SPN    | Service Principal Name — identifies a service   |
+| TGT    | Ticket Granting Ticket - proves identity        |
+| SPN    | Service Principal Name - identifies a service   |
 | KRBTGT | Service account for the KDC itself              |
 | AS     | Authentication Service                         |
 | TGS    | Ticket Granting Service                         |
@@ -2178,7 +2178,7 @@ Map out the Kerberos authentication flow from memory. Which tickets are involved
           },
           {
             question: 'In Kerberos, what is a TGT?',
-            options: ['Ticket Granting Ticket — proves identity to the KDC', 'Target Group Token — identifies group membership', 'Temporary Grant Token — allows limited access', 'Transport Gateway Tunnel — encrypted connection'],
+            options: ['Ticket Granting Ticket - proves identity to the KDC', 'Target Group Token - identifies group membership', 'Temporary Grant Token - allows limited access', 'Transport Gateway Tunnel - encrypted connection'],
             correctAnswerIndex: 0,
             difficulty: 'beginner',
             explanation: 'A TGT is issued by the KDC after successful authentication and is used to request service tickets without re-authenticating.',
@@ -2210,7 +2210,7 @@ Map out the Kerberos authentication flow from memory. Which tickets are involved
           },
           {
             question: 'What is an SPN in Kerberos?',
-            options: ['Security Principal Name — identifies a user', 'Service Principal Name — identifies a service', 'Server Protocol Number — port number', 'Shared Private Network — subnet'],
+            options: ['Security Principal Name - identifies a user', 'Service Principal Name - identifies a service', 'Server Protocol Number - port number', 'Shared Private Network - subnet'],
             correctAnswerIndex: 1,
             difficulty: 'intermediate',
             explanation: 'An SPN uniquely identifies a service instance in a domain, allowing clients to request tickets for specific services.',
@@ -2347,7 +2347,7 @@ An attacker forges TGTs using the KRBTGT account hash, granting unlimited access
 4. Cannot be detected by normal authentication logs
 
 ### Detection Strategy
-- Protect the KRBTGT account — change the password twice annually
+- Protect the KRBTGT account - change the password twice annually
 - Monitor for KRBTGT hash access
 - Detect TGTs with anomalous characteristics (unusual lifetime, modified fields)
 - Regular password rotation limits the window of exploitation
@@ -2382,7 +2382,7 @@ An attacker simulates a Domain Controller and requests password data replication
 ### Hardware Requirements
 | RAM   | Capability                              |
 |------|------------------------------------------|
-| 4GB  | Theory only — too limited for AD VMs     |
+| 4GB  | Theory only - too limited for AD VMs     |
 | 8GB  | WSL2-based lab possible                  |
 | 16GB | Full AD lab feasible                     |
 | 32GB | Comfortable multi-VM lab environment     |
@@ -2479,7 +2479,7 @@ Explain the Kerberos authentication flow and identify where Kerberoasting attack
           },
           {
             question: 'How often should the KRBTGT account password be changed to limit Golden Ticket exposure?',
-            options: ['Monthly', 'Every 6 months (twice in succession)', 'Yearly', 'Never — it should remain static'],
+            options: ['Monthly', 'Every 6 months (twice in succession)', 'Yearly', 'Never - it should remain static'],
             correctAnswerIndex: 1,
             difficulty: 'advanced',
             explanation: 'Microsoft recommends changing the KRBTGT password twice in succession to invalidate any existing Golden Tickets.',
@@ -3011,7 +3011,7 @@ Write a brief executive summary and one detailed finding entry.
             options: [
               'Description → Evidence → Impact → Remediation → Steps to Reproduce',
               'Description → Affected System → Steps to Reproduce → Evidence → Impact → Remediation → References',
-              'Evidence only — no text needed',
+              'Evidence only - no text needed',
               'Just a screenshot and CVE number'
             ],
             correctAnswerIndex: 1,
@@ -3094,7 +3094,7 @@ Write a brief executive summary and one detailed finding entry.
             ],
             correctAnswerIndex: 1,
             difficulty: 'intermediate',
-            explanation: 'Methodology documentation establishes what was tested, how, and the limitations — important for context and legal purposes.',
+            explanation: 'Methodology documentation establishes what was tested, how, and the limitations - important for context and legal purposes.',
             certTags: ['OSCP', 'CEH']
           },
           {
@@ -3123,7 +3123,7 @@ Write a brief executive summary and one detailed finding entry.
             options: ['5 pages', '1 page', '10 pages', 'No limit'],
             correctAnswerIndex: 1,
             difficulty: 'beginner',
-            explanation: 'An executive summary should be concise — typically one page — focusing on key findings and recommendations.',
+            explanation: 'An executive summary should be concise - typically one page - focusing on key findings and recommendations.',
             certTags: ['CEH']
           },
           {

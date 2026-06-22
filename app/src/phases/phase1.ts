@@ -2,7 +2,7 @@ export const phase1: Module[] = [
   {
     id: "week05",
     title: "Environment Setup",
-    durationText: "Week 5 — 5 Days",
+    durationText: "Week 5 - 5 Days",
     focus: "Installing WSL2, Ubuntu, security tools, and organizing your lab workspace",
     output: "Fully configured WSL2 Ubuntu environment with all security tools installed and a GitHub repo for write-ups",
     topics: [
@@ -71,7 +71,7 @@ Type your desired username (all lowercase, no spaces):
 username: cyberlab
 \`\`\`
 
-Then enter a password when prompted (typing will not show characters — this is normal Linux behavior):
+Then enter a password when prompted (typing will not show characters - this is normal Linux behavior):
 
 \`\`\`
 password:
@@ -109,7 +109,7 @@ Reading package lists... Done
 \`\`\`
 
 :::info
-\`sudo\` = "superuser do" — runs the command with administrator privileges. You'll be prompted for your password the first time.
+\`sudo\` = "superuser do" - runs the command with administrator privileges. You'll be prompted for your password the first time.
 :::
 
 Now upgrade all installed packages to their latest versions:
@@ -151,7 +151,7 @@ ls /mnt/c/Users/
 echo "Hello from WSL2" > /mnt/c/Users/cyberlab/Desktop/wsl-test.txt
 \`\`\`
 
-Now check your Windows Desktop — you should see \`wsl-test.txt\`.
+Now check your Windows Desktop - you should see \`wsl-test.txt\`.
 
 :::checkpoint
 1. What command enables WSL2 on Windows?
@@ -164,7 +164,7 @@ Now check your Windows Desktop — you should see \`wsl-test.txt\`.
 
 1. Open **Windows Terminal** from the Start menu
 2. Click the **down arrow** (▼) in the tab bar
-3. You should see **Ubuntu** listed — click it to open a new Ubuntu tab
+3. You should see **Ubuntu** listed - click it to open a new Ubuntu tab
 4. To make Ubuntu the default: press **Ctrl+,** to open Settings
 5. Set **Default profile** to **Ubuntu**
 
@@ -205,7 +205,7 @@ You can also pin Windows Terminal to your taskbar for quick access. Right-click 
             options: ["/c/", "/windows/c/", "/mnt/c/", "/drive/c/"],
             correctAnswerIndex: 2,
             difficulty: "beginner",
-            explanation: "WSL2 mounts Windows drives under /mnt/ — C: becomes /mnt/c/, D: becomes /mnt/d/, etc."
+            explanation: "WSL2 mounts Windows drives under /mnt/ - C: becomes /mnt/c/, D: becomes /mnt/d/, etc."
           },
           {
             question: "What does the -y flag do in 'sudo apt upgrade -y'?",
@@ -239,7 +239,7 @@ You can also pin Windows Terminal to your taskbar for quick access. Right-click 
               "Only in the WSL2 filesystem",
               "On your Windows Desktop",
               "In the Windows Recycle Bin",
-              "Nowhere — it's a virtual path"
+              "Nowhere - it's a virtual path"
             ],
             correctAnswerIndex: 1,
             difficulty: "beginner",
@@ -298,7 +298,7 @@ You can also pin Windows Terminal to your taskbar for quick access. Right-click 
             ],
             correctAnswerIndex: 1,
             difficulty: "intermediate",
-            explanation: "The && operator is a logical AND — it only runs the next command if the previous one returned exit code 0 (success)."
+            explanation: "The && operator is a logical AND - it only runs the next command if the previous one returned exit code 0 (success)."
           }
         ]
       },
@@ -356,7 +356,7 @@ When you run \`code .\` from WSL2, VS Code opens with full Linux filesystem acce
 
 1. Go to https://portswigger.net/burp/communitydownload
 2. Download **Burp Suite Community Edition** for Windows
-3. Run the installer — accept all defaults
+3. Run the installer - accept all defaults
 4. Launch Burp Suite and select **Temporary Project** → **Use Burp defaults**
 
 :::tip
@@ -371,7 +371,7 @@ Burp Suite Community is free and sufficient for this course. The Professional ed
 
 1. Go to https://www.wireshark.org/download.html
 2. Download the **Windows Installer (64-bit)**
-3. Run the installer — accept defaults
+3. Run the installer - accept defaults
 4. When prompted, **check ✅ Install Npcap** (required for packet capture)
 5. In the Npcap installer, check **✅ Install in WinPcap API-compatible Mode**
 
@@ -387,7 +387,7 @@ Open your Ubuntu terminal and run these commands:
 ### Network Scanning
 
 \`\`\`bash
-# Nmap — network scanner
+# Nmap - network scanner
 sudo apt install nmap -y
 nmap --version
 \`\`\`
@@ -401,7 +401,7 @@ Platform: x86_64-pc-linux-gnu
 ### Web Directory Brute-Forcing
 
 \`\`\`bash
-# Gobuster — directory/file/DNS brute-forcer
+# Gobuster - directory/file/DNS brute-forcer
 sudo apt install gobuster -y
 gobuster version
 \`\`\`
@@ -409,7 +409,7 @@ gobuster version
 ### Web Vulnerability Scanning
 
 \`\`\`bash
-# Nikto — web server scanner
+# Nikto - web server scanner
 sudo apt install nikto -y
 nikto -Version
 \`\`\`
@@ -417,7 +417,7 @@ nikto -Version
 ### SQL Injection Testing
 
 \`\`\`bash
-# SQLMap — automated SQL injection tool
+# SQLMap - automated SQL injection tool
 sudo apt install sqlmap -y
 sqlmap --version
 \`\`\`
@@ -425,11 +425,11 @@ sqlmap --version
 ### Password Cracking
 
 \`\`\`bash
-# John the Ripper — password cracker
+# John the Ripper - password cracker
 sudo apt install john -y
 john --version
 
-# Hashcat — GPU-accelerated password cracker
+# Hashcat - GPU-accelerated password cracker
 sudo apt install hashcat -y
 hashcat --version
 \`\`\`
@@ -441,19 +441,19 @@ Hashcat requires a GPU for full functionality. In WSL2 without GPU passthrough, 
 ### Utility Packages
 
 \`\`\`bash
-# curl — HTTP requests from command line
+# curl - HTTP requests from command line
 sudo apt install curl -y
 curl --version
 
-# wget — file downloader
+# wget - file downloader
 sudo apt install wget -y
 wget --version
 
-# netcat — TCP/UDP connections (Swiss army knife of networking)
+# netcat - TCP/UDP connections (Swiss army knife of networking)
 sudo apt install netcat-openbsd -y
 nc -h
 
-# git — version control
+# git - version control
 sudo apt install git -y
 git --version
 \`\`\`
@@ -684,7 +684,7 @@ ls -R ~/labs
 \`\`\`
 
 :::info
-The \`{web,network,crypto,malware}\` syntax is brace expansion — Bash creates all four directories at once.
+The \`{web,network,crypto,malware}\` syntax is brace expansion - Bash creates all four directories at once.
 :::
 
 ## Step 2: Download Wordlists
@@ -874,7 +874,7 @@ Every tool should report a version number. If any shows "NOT INSTALLED", go back
 Test nmap against your own machine (safe practice):
 
 \`\`\`bash
-# Scan yourself — always safe to scan localhost
+# Scan yourself - always safe to scan localhost
 nmap 127.0.0.1
 
 # Scan with version detection
@@ -1275,7 +1275,7 @@ chmod -t ~/shared/
 The \`t\` in the execute position means the sticky bit is set. Without the sticky bit, it would be \`x\`.
 :::
 
-### SUID — Set User ID (\`chmod u+s\`)
+### SUID - Set User ID (\`chmod u+s\`)
 
 When SUID is set on an executable, it runs with the file owner's permissions (usually root), not the user who ran it.
 
@@ -1299,15 +1299,15 @@ chmod u-s ~/suid_script.sh
 SUID is a security risk. A SUID root program with a vulnerability can give an attacker full root access. Always audit SUID files.
 :::
 
-### SGID — Set Group ID (\`chmod g+s\`)
+### SGID - Set Group ID (\`chmod g+s\`)
 
 \`\`\`bash
-# Set SGID on a directory — new files inherit the group
+# Set SGID on a directory - new files inherit the group
 chmod g+s ~/shared/
 ls -ld ~/shared/
 # Output: drwxrwsr-x 2 cyberlab cyberlab 4096 Jun 22 10:00 shared/
 
-# Set SGID on a file — runs with group permissions
+# Set SGID on a file - runs with group permissions
 chmod g+s ~/sgid_script.sh
 ls -la ~/sgid_script.sh
 # Output: -rwxr-sr-x 1 cyberlab cyberlab 38 Jun 22 10:00 sgid_script.sh
@@ -1390,7 +1390,7 @@ cyberlab:$6$abc...:19000:0:99999:7:::
 
 ## Step 7: Finding Files
 
-### find — The Power Tool
+### find - The Power Tool
 
 \`\`\`bash
 # Find files by name
@@ -1418,7 +1418,7 @@ find /home/cyberlab -empty -type f
 find /home/cyberlab -user cyberlab
 \`\`\`
 
-### locate — Fast Search (uses a database)
+### locate - Fast Search (uses a database)
 
 \`\`\`bash
 # Update the database (run periodically)
@@ -1429,7 +1429,7 @@ locate passwd
 locate httpd.conf
 \`\`\`
 
-### which — Find Executable Paths
+### which - Find Executable Paths
 
 \`\`\`bash
 which python3
@@ -1630,11 +1630,11 @@ cyberlab  1300  0.0  0.1  37364  3360 pts/0    R+   10:05   0:00 ps aux
 \`\`\`
 
 **Key columns:**
-- \`USER\` — who owns the process
-- \`PID\` — process ID
-- \`%CPU\` / \`%MEM\` — resource usage
-- \`STAT\` — process state (S=sleeping, R=running, T=stopped, Z=zombie, s=session leader)
-- \`COMMAND\` — the command that started it
+- \`USER\` - who owns the process
+- \`PID\` - process ID
+- \`%CPU\` / \`%MEM\` - resource usage
+- \`STAT\` - process state (S=sleeping, R=running, T=stopped, Z=zombie, s=session leader)
+- \`COMMAND\` - the command that started it
 
 \`\`\`bash
 # Filter for specific processes
@@ -1650,21 +1650,21 @@ ps -eo pid,ppid,user,comm --sort=-%mem | head -10
 
 ## Step 3: top and htop
 
-### top — Built-in Process Monitor
+### top - Built-in Process Monitor
 
 \`\`\`bash
 top
 \`\`\`
 
 **Key shortcuts in top:**
-- \`q\` — quit
-- \`1\` — show individual CPU cores
-- \`M\` — sort by memory usage
-- \`P\` — sort by CPU usage
-- \`k\` — kill a process (enter PID)
-- \`r\` — renice a process
+- \`q\` - quit
+- \`1\` - show individual CPU cores
+- \`M\` - sort by memory usage
+- \`P\` - sort by CPU usage
+- \`k\` - kill a process (enter PID)
+- \`r\` - renice a process
 
-### htop — Better Process Monitor (if installed)
+### htop - Better Process Monitor (if installed)
 
 \`\`\`bash
 sudo apt install htop -y
@@ -1689,10 +1689,10 @@ Use \`top -bn1 | head -20\` for a one-shot snapshot (useful in scripts).
 ps aux | grep firefox
 # Example output: cyberlab 5678 5.2 2.1 ... /usr/lib/firefox/firefox
 
-# Send SIGTERM (graceful shutdown — default)
+# Send SIGTERM (graceful shutdown - default)
 kill 5678
 
-# Send SIGKILL (force kill — use when SIGTERM fails)
+# Send SIGKILL (force kill - use when SIGTERM fails)
 kill -9 5678
 kill -SIGKILL 5678
 
@@ -1986,7 +1986,7 @@ netstat -tlnp
             ],
             correctAnswerIndex: 1,
             difficulty: "intermediate",
-            explanation: "S means sleeping — the process is waiting for an event, I/O, or a signal. This is normal for most idle processes."
+            explanation: "S means sleeping - the process is waiting for an event, I/O, or a signal. This is normal for most idle processes."
           },
           {
             question: "How do you run a command in the background?",
@@ -2066,13 +2066,13 @@ netstat -tlnp
             question: "A process shows 'Z' in the STAT column. What is it?",
             options: [
               "Running at high priority",
-              "A zombie — terminated but parent hasn't collected its exit status",
+              "A zombie - terminated but parent hasn't collected its exit status",
               "Stopped by a signal",
               "A session leader"
             ],
             correctAnswerIndex: 1,
             difficulty: "advanced",
-            explanation: "Z means zombie — the process has exited but its parent hasn't called wait() to collect its exit status. It's not using resources but its PID entry remains."
+            explanation: "Z means zombie - the process has exited but its parent hasn't called wait() to collect its exit status. It's not using resources but its PID entry remains."
           },
           {
             question: "What does 'pkill' do differently from 'kill'?",
@@ -2093,7 +2093,7 @@ netstat -tlnp
   {
     id: "week06",
     title: "Python for Security Automation",
-    durationText: "Week 6 — 5 Days",
+    durationText: "Week 6 - 5 Days",
     focus: "Python fundamentals, security libraries, and building custom scanning tools",
     output: "Working Python scripts for port scanning, directory brute-forcing, log parsing, and security header analysis",
     topics: [
@@ -2262,20 +2262,20 @@ Warning: API key too short
 ## Step 5: Loops
 
 \`\`\`python
-# For loop — iterate over a list of targets
+# For loop - iterate over a list of targets
 targets = ["192.168.1.1", "192.168.1.2", "192.168.1.3"]
 
 for target in targets:
     print(f"Scanning {target}...")
 
-# For loop with range — scan ports
+# For loop with range - scan ports
 common_ports = [21, 22, 25, 53, 80, 443, 445, 3389]
 
 print("\\nCommon ports to scan:")
 for i, port in enumerate(common_ports):
     print(f"  {i+1}. Port {port}")
 
-# While loop — keep trying until successful
+# While loop - keep trying until successful
 attempts = 0
 max_attempts = 3
 
@@ -2291,7 +2291,7 @@ while attempts < max_attempts:
 
 print(f"Total attempts: {attempts}")
 
-# List comprehension — quick way to generate port ranges
+# List comprehension - quick way to generate port ranges
 web_ports = [80, 443, 8000, 8080, 8443, 8888]
 filtered_ports = [p for p in web_ports if p > 8000]
 print(f"High ports: {filtered_ports}")
@@ -2326,15 +2326,15 @@ port = 443
 service = "https"
 
 if port == 22:
-    print("SSH — possible brute-force target")
+    print("SSH - possible brute-force target")
 elif port == 80 or port == 443:
-    print(f"Web server on {service} — check for web vulnerabilities")
+    print(f"Web server on {service} - check for web vulnerabilities")
 elif port == 3306:
-    print("MySQL — check for SQL injection")
+    print("MySQL - check for SQL injection")
 elif port == 445:
-    print("SMB — check for EternalBlue or null session")
+    print("SMB - check for EternalBlue or null session")
 else:
-    print(f"Port {port} ({service}) — investigate further")
+    print(f"Port {port} ({service}) - investigate further")
 
 # Check HTTP status code
 status_code = 403
@@ -2342,13 +2342,13 @@ status_code = 403
 if status_code == 200:
     print("Resource accessible")
 elif status_code == 301 or status_code == 302:
-    print("Redirect — follow the redirect")
+    print("Redirect - follow the redirect")
 elif status_code == 403:
-    print("Forbidden — might need authentication bypass")
+    print("Forbidden - might need authentication bypass")
 elif status_code == 404:
-    print("Not found — path doesn't exist")
+    print("Not found - path doesn't exist")
 elif status_code >= 500:
-    print("Server error — potential for input-based attacks")
+    print("Server error - potential for input-based attacks")
 
 # Multiple conditions
 is_admin = True
@@ -2359,13 +2359,13 @@ if is_admin and is_authenticated:
 elif is_authenticated and not is_admin:
     print("Standard user access")
 else:
-    print("Access denied — login required")
+    print("Access denied - login required")
 \`\`\`
 
 **Output:**
 \`\`\`
-Web server on https — check for web vulnerabilities
-Forbidden — might need authentication bypass
+Web server on https - check for web vulnerabilities
+Forbidden - might need authentication bypass
 Full access granted
 \`\`\`
 
@@ -2476,7 +2476,7 @@ with open(targets_file, "r") as src, open(backup_file, "w") as dst:
 print("Backup created")
 \`\`\`
 
-## Step 9: Security-Focused Example — Log Parser
+## Step 9: Security-Focused Example - Log Parser
 
 \`\`\`python
 import os
@@ -2621,7 +2621,7 @@ for user in success_logins:
               "Only syntax errors",
               "Only file not found errors",
               "Any exception and stores it in variable e",
-              "No exceptions — it's a pass statement"
+              "No exceptions - it's a pass statement"
             ],
             correctAnswerIndex: 2,
             difficulty: "intermediate",
@@ -2744,7 +2744,7 @@ try:
     response = requests.get("http://nonexistent.invalid", timeout=5)
     print(f"Status: {response.status_code}")
 except requests.exceptions.ConnectionError:
-    print("Connection failed — host unreachable")
+    print("Connection failed - host unreachable")
 except requests.exceptions.Timeout:
     print("Request timed out")
 except requests.exceptions.RequestException as e:
@@ -2798,7 +2798,7 @@ import hashlib
 # Hash a string
 message = "password123"
 
-# MD5 (weak — don't use for security, but you'll see it in CTFs)
+# MD5 (weak - don't use for security, but you'll see it in CTFs)
 md5_hash = hashlib.md5(message.encode()).hexdigest()
 print(f"MD5:    {md5_hash}")
 
@@ -2912,7 +2912,7 @@ Save this as \`~/labs/web/log_parser.py\`:
 \`\`\`python
 #!/usr/bin/env python3
 """
-Security Log Parser — extracts failed logins, suspicious IPs, and status codes.
+Security Log Parser - extracts failed logins, suspicious IPs, and status codes.
 Usage: python3 log_parser.py /path/to/auth.log
 """
 
@@ -3004,7 +3004,7 @@ Save this as \`~/labs/web/header_checker.py\`:
 \`\`\`python
 #!/usr/bin/env python3
 """
-HTTP Security Header Checker — checks for recommended security headers.
+HTTP Security Header Checker - checks for recommended security headers.
 Usage: python3 header_checker.py <url>
 """
 
@@ -3116,7 +3116,7 @@ python3 header_checker.py https://google.com
         labUrl: "",
         labTitle: "",
         interviewQuestion: "Explain the difference between a GET and a POST request, and when you'd use each in security testing.",
-        interviewAnswer: "GET requests retrieve data and append parameters in the URL, making them visible in logs and browser history — useful for testing for parameter manipulation. POST requests send data in the request body, which is better for submitting forms, login credentials, and file uploads. In security testing, you test GET for URL-based injection and POST for form-based vulnerabilities like SQL injection.",
+        interviewAnswer: "GET requests retrieve data and append parameters in the URL, making them visible in logs and browser history - useful for testing for parameter manipulation. POST requests send data in the request body, which is better for submitting forms, login credentials, and file uploads. In security testing, you test GET for URL-based injection and POST for form-based vulnerabilities like SQL injection.",
         quiz: [
           {
             question: "What does requests.get().status_code return?",
@@ -3141,13 +3141,13 @@ python3 header_checker.py https://google.com
             question: "Why is MD5 considered weak for security purposes?",
             options: [
               "It's too slow to compute",
-              "It's vulnerable to collision attacks — different inputs can produce the same hash",
+              "It's vulnerable to collision attacks - different inputs can produce the same hash",
               "It only works on Windows",
               "It requires a GPU to compute"
             ],
             correctAnswerIndex: 1,
             difficulty: "intermediate",
-            explanation: "MD5 is cryptographically broken — attackers can easily create two different inputs that produce the same hash."
+            explanation: "MD5 is cryptographically broken - attackers can easily create two different inputs that produce the same hash."
           },
           {
             question: "What does socket.connect_ex() return when a port is closed?",
@@ -3437,7 +3437,7 @@ Save this as \`~/tools/dir_brute.py\`:
 \`\`\`python
 #!/usr/bin/env python3
 """
-Directory Brute-Forcer — discovers hidden directories and files on web servers.
+Directory Brute-Forcer - discovers hidden directories and files on web servers.
 Usage: python3 dir_brute.py <url> <wordlist> [threads]
 Example: python3 dir_brute.py http://192.168.1.1 /usr/share/wordlists/dirb/common.txt
 """
@@ -3602,7 +3602,7 @@ Save this as \`~/tools/security_toolkit.py\`:
 \`\`\`python
 #!/usr/bin/env python3
 """
-Mini Security Toolkit — combines port scanning, directory brute-forcing, and header checking.
+Mini Security Toolkit - combines port scanning, directory brute-forcing, and header checking.
 Usage: python3 security_toolkit.py <target_ip> <target_url>
 """
 
@@ -3690,7 +3690,7 @@ def main():
     target_url = sys.argv[2]
     
     print("=" * 50)
-    print("SECURITY TOOLKIT — Quick Assessment")
+    print("SECURITY TOOLKIT - Quick Assessment")
     print("=" * 50)
     
     # 1. Port scan
@@ -3806,7 +3806,7 @@ With 100 threads, the same scan takes ~10 seconds.
             question: "Why does the directory brute-forcer check for status code 403 (Forbidden)?",
             options: [
               "403 means the directory doesn't exist",
-              "403 means the directory exists but access is denied — worth noting",
+              "403 means the directory exists but access is denied - worth noting",
               "403 is always an error",
               "We skip 403 responses"
             ],
@@ -3820,7 +3820,7 @@ With 100 threads, the same scan takes ~10 seconds.
               "It scans faster",
               "It may overwhelm the target and miss open ports",
               "Python automatically reduces the thread count",
-              "Nothing — more threads is always better"
+              "Nothing - more threads is always better"
             ],
             correctAnswerIndex: 1,
             difficulty: "advanced",
@@ -4000,7 +4000,7 @@ Jun 22 10:02:15 server sshd[1238]: Failed password for root from 192.168.1.100 p
 Jun 22 10:03:00 server sshd[1239]: Failed password for root from 10.0.0.99 port 22 ssh2
 \`\`\`
 
-## Part 2: sed — Stream Editor
+## Part 2: sed - Stream Editor
 
 sed performs find-and-replace and text transformations on streams.
 
@@ -4041,7 +4041,7 @@ sed '/Failed password/a\\ALERT: Failed login attempt detected' ~/labs/web/sample
 cat /etc/passwd | sed 's/:/ /g' | awk '{print \$1, \$7}'
 \`\`\`
 
-## Part 3: awk — Pattern Processing
+## Part 3: awk - Pattern Processing
 
 awk processes text column-by-column. It's ideal for structured data.
 
@@ -4383,11 +4383,11 @@ ip -4 addr show
 \`\`\`
 
 **Key info:**
-- \`127.0.0.1\` — loopback (your own machine)
-- \`192.168.1.50/24\` — your IP with subnet mask (/24 = 255.255.255.0)
-- \`fe80::...\` — link-local IPv6 address
+- \`127.0.0.1\` - loopback (your own machine)
+- \`192.168.1.50/24\` - your IP with subnet mask (/24 = 255.255.255.0)
+- \`fe80::...\` - link-local IPv6 address
 
-### ip route — Show Routing Table
+### ip route - Show Routing Table
 
 \`\`\`bash
 ip route
@@ -4475,7 +4475,7 @@ Some hops show \`*\` because routers don't always respond to traceroute probes. 
 
 ## Step 3: DNS Lookups
 
-### dig — Detailed DNS Queries
+### dig - Detailed DNS Queries
 
 \`\`\`bash
 # Basic lookup
@@ -4508,7 +4508,7 @@ dig @8.8.8.8 google.com
 dig +trace google.com
 \`\`\`
 
-### nslookup — Simpler DNS Tool
+### nslookup - Simpler DNS Tool
 
 \`\`\`bash
 # Basic lookup
@@ -4537,7 +4537,7 @@ dig is preferred over nslookup for security professionals because it provides mo
 
 ## Step 4: HTTP Testing with curl and wget
 
-### curl — Transfer Data with URLs
+### curl - Transfer Data with URLs
 
 \`\`\`bash
 # GET request
@@ -4582,7 +4582,7 @@ for path in admin login dashboard api config backup; do
 done
 \`\`\`
 
-### wget — Download Files
+### wget - Download Files
 
 \`\`\`bash
 # Download a file
@@ -4638,7 +4638,7 @@ ss -tlnp | grep -q ":80" && echo "Port 80 OPEN" || echo "Port 80 CLOSED"
 ss -tlnp | awk 'NR>1 {print \$4}' | grep -oE ':[0-9]+' | sort -t: -k2 -n | uniq
 \`\`\`
 
-## Step 6: iptables — Linux Firewall
+## Step 6: iptables - Linux Firewall
 
 iptables is the traditional Linux firewall. It processes packets through a chain of rules.
 
@@ -4725,7 +4725,7 @@ sudo iptables-save > ~/iptables-rules.txt
 # Restore rules from file
 sudo iptables-restore < ~/iptables-rules.txt
 
-# Flush all rules (reset to default — be careful!)
+# Flush all rules (reset to default - be careful!)
 sudo iptables -F
 \`\`\`
 
@@ -4806,7 +4806,7 @@ The troubleshooting order is: physical layer → IP layer → DNS → applicatio
         labUrl: "",
         labTitle: "",
         interviewQuestion: "Explain the difference between DROP and REJECT in iptables. When would you use each?",
-        interviewAnswer: "DROP silently discards the packet — the sender gets no response and eventually times out. REJECT sends an ICMP port unreachable error back to the sender. Use DROP for stealth (attacker can't tell if the host is alive) and for blocking known malicious IPs. Use REJECT for internal troubleshooting where you want the sender to know the connection was refused, or when you need to comply with network policies that require responding to connections.",
+        interviewAnswer: "DROP silently discards the packet - the sender gets no response and eventually times out. REJECT sends an ICMP port unreachable error back to the sender. Use DROP for stealth (attacker can't tell if the host is alive) and for blocking known malicious IPs. Use REJECT for internal troubleshooting where you want the sender to know the connection was refused, or when you need to comply with network policies that require responding to connections.",
         quiz: [
           {
             question: "What does 'ip addr show' display?",

@@ -486,10 +486,10 @@ add_header X-Content-Type-Options "nosniff" always;
 # XSS protection (legacy browsers)
 add_header X-XSS-Protection "1; mode=block" always;
 
-# HSTS — force HTTPS for 1 year, include subdomains
+# HSTS - force HTTPS for 1 year, include subdomains
 add_header Strict-Transport-Security "max-age=31536000; includeSubDomains; preload" always;
 
-# Content Security Policy — restrict resource loading
+# Content Security Policy - restrict resource loading
 add_header Content-Security-Policy "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self'; frame-ancestors 'none'" always;
 
 # Referrer policy
@@ -569,7 +569,7 @@ ssl_key_file = '/etc/postgresql/14/main/server.key'
 ssl_min_protocol_version = 'TLSv1.2'
 \`\`\`
 
-### pg_hba.conf — Restrict Access
+### pg_hba.conf - Restrict Access
 
 \`\`\`conf
 # TYPE  DATABASE    USER        ADDRESS         METHOD
@@ -927,7 +927,7 @@ Lab exercise: Deploy all three platforms, complete 5 Juice Shop challenges, solv
             ],
             correctAnswerIndex: 2,
             difficulty: 'beginner',
-            explanation: 'The endpoint has no authentication check — anyone can change anyone\'s password by calling it directly.'
+            explanation: 'The endpoint has no authentication check - anyone can change anyone\'s password by calling it directly.'
           },
           {
             question: "What does the SQL payload ' OR '1'='1 do in a login form?",
@@ -987,7 +987,7 @@ Lab exercise: Deploy all three platforms, complete 5 Juice Shop challenges, solv
             ],
             correctAnswerIndex: 1,
             difficulty: 'intermediate',
-            explanation: 'The Impossible level shows the proper fix for each vulnerability — parameterized queries, CSRF tokens, etc.'
+            explanation: 'The Impossible level shows the proper fix for each vulnerability - parameterized queries, CSRF tokens, etc.'
           },
           {
             question: 'Why use Burp Suite for DVWA Medium SQL injection?',
@@ -1162,7 +1162,7 @@ def delete_account():
 ### 72-Hour GDPR Notification Template
 
 \`\`\`markdown
-# Data Breach Notification — [Authority Name]
+# Data Breach Notification - [Authority Name]
 
 ## 1. Contact Details
 - Organization: [Company Name]
@@ -1191,7 +1191,7 @@ def delete_account():
 ## 6. Timeline
 - Breach occurred: [date]
 - Breach discovered: [date]
-- Authority notified: [date — must be within 72 hours]
+- Authority notified: [date - must be within 72 hours]
 - Affected individuals notified: [date]
 \`\`\`
 
@@ -1400,7 +1400,7 @@ Week 7: Exam day
 \`\`\`
 
 :::tip
-ISC2 CC is free — the exam fee is waived. It is a low-risk first certification that tests fundamentals. Consider it alongside Security+.
+ISC2 CC is free - the exam fee is waived. It is a low-risk first certification that tests fundamentals. Consider it alongside Security+.
 :::
 
 :::checkpoint
@@ -1437,7 +1437,7 @@ Based on your career goals, which certification path makes the most sense? Write
             question: 'What is Zero Trust architecture?',
             options: [
               'A firewall that blocks all traffic',
-              'Never trust, always verify — authenticate and authorize every request',
+              'Never trust, always verify - authenticate and authorize every request',
               'A VPN that encrypts all traffic',
               'A backup strategy for disaster recovery'
             ],
@@ -1511,7 +1511,7 @@ Based on your career goals, which certification path makes the most sense? Write
               'SC-900',
               'ISC2 CC',
               'CompTIA Security+',
-              'None — they are lifetime certifications'
+              'None - they are lifetime certifications'
             ],
             correctAnswerIndex: 2,
             difficulty: 'beginner',
@@ -1797,7 +1797,7 @@ Exercise: Create all four repos, write README files, take screenshots of your wo
             ],
             correctAnswerIndex: 1,
             difficulty: 'beginner',
-            explanation: 'Screenshots demonstrate real work — tool output, dashboards, and exploit proof-of-concepts.'
+            explanation: 'Screenshots demonstrate real work - tool output, dashboards, and exploit proof-of-concepts.'
           },
           {
             question: 'What file format is recommended for sharing a penetration test report?',
@@ -1821,7 +1821,7 @@ Exercise: Create all four repos, write README files, take screenshots of your wo
             ],
             correctAnswerIndex: 1,
             difficulty: 'intermediate',
-            explanation: 'Separate repos show breadth — web security, SIEM, scripting, and CTF problem-solving each demonstrate different skills.'
+            explanation: 'Separate repos show breadth - web security, SIEM, scripting, and CTF problem-solving each demonstrate different skills.'
           },
           {
             question: 'What is the minimum a GitHub Pages portfolio site needs?',
@@ -1841,7 +1841,7 @@ Exercise: Create all four repos, write README files, take screenshots of your wo
               'Only the source code',
               'Usage examples, requirements, and sample output',
               'A full biography',
-              'Nothing — scripts speak for themselves'
+              'Nothing - scripts speak for themselves'
             ],
             correctAnswerIndex: 1,
             difficulty: 'intermediate',
@@ -1902,7 +1902,7 @@ Choose a topic you have personally worked on:
 ### 1. Title (SEO-optimized)
 
 \`\`\`
-How I [Did Specific Thing] — A Step-by-Step Guide with [Tool/Technology]
+How I [Did Specific Thing] - A Step-by-Step Guide with [Tool/Technology]
 \`\`\`
 
 ### 2. Introduction (200 words)
@@ -1983,7 +1983,7 @@ Write what you built, not what you read. Posts about hands-on projects perform 3
 Exercise: Write and publish a technical blog post about one of your portfolio projects. Include at least 3 code blocks, 2 screenshots, and proper SEO tags. Share the link on LinkedIn.
 :::`,
         interviewQuestion: 'How does technical writing demonstrate your communication skills to employers?',
-        interviewAnswer: 'Technical writing shows you can document complex processes clearly — a critical SOC skill. Analysts must write incident reports, runbooks, and documentation that non-technical stakeholders understand. A published blog post is evidence of this ability and demonstrates initiative and passion for the field.',
+        interviewAnswer: 'Technical writing shows you can document complex processes clearly - a critical SOC skill. Analysts must write incident reports, runbooks, and documentation that non-technical stakeholders understand. A published blog post is evidence of this ability and demonstrates initiative and passion for the field.',
         quiz: [
           {
             question: 'Why are hands-on project posts more effective than theoretical summaries?',
@@ -2001,7 +2001,7 @@ Exercise: Write and publish a technical blog post about one of your portfolio pr
             question: 'What is the ideal title format for a technical blog post?',
             options: [
               '"Security is Important"',
-              '"How I [Did Specific Thing] — A Step-by-Step Guide with [Tool]"',
+              '"How I [Did Specific Thing] - A Step-by-Step Guide with [Tool]"',
               '"Blog Post #1"',
               '"Interesting Topic"'
             ],
@@ -2039,7 +2039,7 @@ Exercise: Write and publish a technical blog post about one of your portfolio pr
               'Repeating the entire post',
               'Key takeaways, challenges faced, and links to resources',
               'A request for likes and subscribes',
-              'Nothing — end after the technical content'
+              'Nothing - end after the technical content'
             ],
             correctAnswerIndex: 1,
             difficulty: 'intermediate',
@@ -2099,7 +2099,7 @@ Exercise: Write and publish a technical blog post about one of your portfolio pr
               'Long paragraphs about your background',
               'Specific problem, what you will learn, and prerequisites',
               'A list of every tool you have ever used',
-              'Nothing — jump straight into commands'
+              'Nothing - jump straight into commands'
             ],
             correctAnswerIndex: 1,
             difficulty: 'intermediate',
@@ -2311,7 +2311,7 @@ Exercise: Pull 3 job descriptions for SOC Analyst roles. Extract the top 10 keyw
               '1',
               '5-10',
               '50+',
-              'None — use your intuition'
+              'None - use your intuition'
             ],
             correctAnswerIndex: 1,
             difficulty: 'beginner',
@@ -2551,7 +2551,7 @@ Exercise: Update your LinkedIn headline, About section, and Featured section. Co
               'Random articles you liked',
               'Your blog posts, best GitHub repos, and documentation',
               'Memes and motivational quotes',
-              'Nothing — leave it empty'
+              'Nothing - leave it empty'
             ],
             correctAnswerIndex: 1,
             difficulty: 'beginner',
@@ -2658,7 +2658,7 @@ I also completed PortSwigger labs focusing on web application security, and I am
 Mock interview practice: Record yourself answering these questions. Review the recording for filler words, clarity, and completeness. Practice until you can answer each confidently in under 2 minutes.
 :::`,
         interviewQuestion: 'How do you prioritize multiple security alerts during a high-volume shift?',
-        interviewAnswer: 'I prioritize based on severity and business impact. Critical alerts affecting production systems or sensitive data get immediate attention. I use SIEM dashboards to identify correlated alerts — 5 related medium alerts might indicate a single attack chain that is more important than an isolated high alert. If overwhelmed, I escalate to the team lead.',
+        interviewAnswer: 'I prioritize based on severity and business impact. Critical alerts affecting production systems or sensitive data get immediate attention. I use SIEM dashboards to identify correlated alerts - 5 related medium alerts might indicate a single attack chain that is more important than an isolated high alert. If overwhelmed, I escalate to the team lead.',
         quiz: [
           {
             question: 'What is the first step in triaging a SIEM alert?',
@@ -2675,7 +2675,7 @@ Mock interview practice: Record yourself answering these questions. Review the r
           {
             question: 'What should you do AFTER containing a phishing incident?',
             options: [
-              'Do nothing — the threat is contained',
+              'Do nothing - the threat is contained',
               'Eradicate IOCs, document the incident, and recommend controls',
               'Delete all email from the sender',
               'Change all passwords company-wide'
@@ -2761,7 +2761,7 @@ Mock interview practice: Record yourself answering these questions. Review the r
             options: [
               'Only when the CISO asks',
               'When the incident exceeds your authority or involves sensitive data',
-              'Never — handle everything yourself',
+              'Never - handle everything yourself',
               'After the incident is fully resolved'
             ],
             correctAnswerIndex: 1,
@@ -2822,16 +2822,16 @@ Mock interview practice: Record yourself answering these questions. Review the r
 ### 1. PortSwigger Re-solve (Top 10 Hard Labs)
 
 \`\`\`markdown
-1. SQL injection — blind, conditional responses
-2. SQL injection — blind, conditional errors
-3. SSRF — filter bypass via DNS rebinding
-4. Authentication — broken brute-force protection
-5. Path traversal — traversal sequences with non-self directories
-6. OS command injection — out-of-band data exfiltration
-7. Stored XSS — into onclick event with angle brackets blocked
-8. Insecure deserialization — Java objects
-9. SSRF — filter bypass
-10. JWT attacks — JWT authentication bypass via flawed signature verification
+1. SQL injection - blind, conditional responses
+2. SQL injection - blind, conditional errors
+3. SSRF - filter bypass via DNS rebinding
+4. Authentication - broken brute-force protection
+5. Path traversal - traversal sequences with non-self directories
+6. OS command injection - out-of-band data exfiltration
+7. Stored XSS - into onclick event with angle brackets blocked
+8. Insecure deserialization - Java objects
+9. SSRF - filter bypass
+10. JWT attacks - JWT authentication bypass via flawed signature verification
 \`\`\`
 
 ### 2. Cheat Sheet Updates
@@ -2919,7 +2919,7 @@ Exercise: Complete the gap analysis, re-solve 5 PortSwigger labs you previously 
             options: [
               'Everything from every textbook',
               'Only the commands, payloads, and techniques you frequently use',
-              'Nothing — just use the documentation',
+              'Nothing - just use the documentation',
               'Only theory, no commands'
             ],
             correctAnswerIndex: 1,
@@ -2941,7 +2941,7 @@ Exercise: Complete the gap analysis, re-solve 5 PortSwigger labs you previously 
           {
             question: 'How often should you update GitHub write-ups?',
             options: [
-              'Never — first version is final',
+              'Never - first version is final',
               'Whenever you re-solve a lab and learn something new',
               'Only when someone asks',
               'Every day regardless of changes'
@@ -3100,7 +3100,7 @@ pe = pefile.PE("suspicious.exe")
 print(f"Entry point: 0x{pe.OPTIONAL_HEADER.AddressOfEntryPoint:x}")
 print(f"Image base: 0x{pe.OPTIONAL_HEADER.ImageBase:x}")
 
-# Imports — look for suspicious APIs
+# Imports - look for suspicious APIs
 for entry in pe.DIRECTORY_ENTRY_IMPORT:
     print(f"\\nDLL: {entry.dll.decode()}")
     for imp in entry.imports:
@@ -3446,7 +3446,7 @@ Attacker → User Input → AI Model → Output → Tool/Action
 Exercise: Research one AI security incident from 2023-2024. Write a brief analysis of the attack vector, impact, and what defensive controls could have prevented it.
 :::`,
         interviewQuestion: 'What is prompt injection and why is it a security concern?',
-        interviewAnswer: 'Prompt injection is when an attacker manipulates the input to an AI system to override its system prompt or safety controls. It is a security concern because AI systems are being integrated into production applications — code assistants, customer support bots, document processors. A successful injection could leak sensitive data, bypass access controls, or cause the AI to perform unauthorized actions.',
+        interviewAnswer: 'Prompt injection is when an attacker manipulates the input to an AI system to override its system prompt or safety controls. It is a security concern because AI systems are being integrated into production applications - code assistants, customer support bots, document processors. A successful injection could leak sensitive data, bypass access controls, or cause the AI to perform unauthorized actions.',
         quiz: [
           {
             question: 'What is direct prompt injection?',
@@ -3624,7 +3624,7 @@ Exercise: Research one AI security incident from 2023-2024. Write a brief analys
 ### Example: Phishing Incident
 
 \`\`\`markdown
-# Executive Summary: Phishing Campaign — January 2024
+# Executive Summary: Phishing Campaign - January 2024
 
 ## Situation
 On January 15, 2024, the SOC detected a phishing campaign targeting
@@ -3657,7 +3657,7 @@ in the email gateway. Add DMARC policy to reject unauthenticated email.
 |---------------|---------------------|
 | SQL injection vulnerability | Attacker can steal customer data including names and payment info |
 | Unpatched server | System is vulnerable to known attacks with public exploit code |
-| Missing MFA | Account takeover risk — one stolen password gives full access |
+| Missing MFA | Account takeover risk - one stolen password gives full access |
 | DDoS attack | Website goes offline, customers cannot place orders |
 | Ransomware | All company files become inaccessible until ransom is paid |
 
@@ -3690,7 +3690,7 @@ in the email gateway. Add DMARC policy to reject unauthenticated email.
 1. **Research**: Use Glassdoor, Levels.fyi, Payscale for the role and location
 2. **Range**: Provide a range, not a single number (e.g., "$65,000 - $75,000")
 3. **Justify**: Reference your certifications, skills, and market data
-4. **Benefits**: Consider total compensation — training budget, certification reimbursement, remote work
+4. **Benefits**: Consider total compensation - training budget, certification reimbursement, remote work
 5. **Timing**: Negotiate after receiving the offer, not during initial interviews
 
 :::classwork
@@ -3741,7 +3741,7 @@ Exercise: Write an executive summary for a fictional phishing incident. Record y
               'During the first phone screen',
               'After receiving the written offer',
               'Before applying',
-              'Never — accept the first offer'
+              'Never - accept the first offer'
             ],
             correctAnswerIndex: 1,
             difficulty: 'beginner',
@@ -3800,7 +3800,7 @@ Exercise: Write an executive summary for a fictional phishing incident. Record y
             options: [
               'Only the signing bonus',
               'Training budget, certification reimbursement, remote work, PTO, total compensation',
-              'Nothing — only salary matters',
+              'Nothing - only salary matters',
               'The office snack quality'
             ],
             correctAnswerIndex: 1,
@@ -3982,7 +3982,7 @@ Pentester (Entry)
               '1-2',
               '10-15',
               '50+',
-              'None — wait for recruiters'
+              'None - wait for recruiters'
             ],
             correctAnswerIndex: 1,
             difficulty: 'beginner',
@@ -4015,7 +4015,7 @@ Pentester (Entry)
           {
             question: 'What should you do after landing your first security role?',
             options: [
-              'Stop learning — you made it',
+              'Stop learning - you made it',
               'Continue certifications, specialize, and contribute to the community',
               'Switch careers immediately',
               'Only do what is required at work'
@@ -4066,7 +4066,7 @@ Pentester (Entry)
               'Specialize immediately in week 1',
               'Months 1-3: generalist; Months 4-6: choose a focus area',
               'Wait 5 years before specializing',
-              'Never specialize — be good at everything'
+              'Never specialize - be good at everything'
             ],
             correctAnswerIndex: 1,
             difficulty: 'intermediate',

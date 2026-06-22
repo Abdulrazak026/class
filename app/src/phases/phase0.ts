@@ -2,7 +2,7 @@ export const phase0: Module[] = [
   {
     id: "week00",
     title: "What a Computer Is",
-    durationText: "Week 0 — Days 1–3",
+    durationText: "Week 0 - Days 1–3",
     focus: "Understand how computers work at a fundamental level",
     output: "Identify hardware components, explain the input-process-output cycle, and compare operating systems",
     topics: [
@@ -68,15 +68,15 @@ This happens billions of times per second. Each component in the chain is a pote
         labUrl: "",
         labTitle: "",
         interviewQuestion: "If a user clicks a malicious link and their computer starts behaving strangely, which part of the computing cycle is the malicious code first entering?",
-        interviewAnswer: "Input — the malicious URL is data entering the system through the network card (an input device). The browser processes it, stores malicious files (storage), and the malware executes its payload (output).",
+        interviewAnswer: "Input - the malicious URL is data entering the system through the network card (an input device). The browser processes it, stores malicious files (storage), and the malware executes its payload (output).",
         quiz: [
           {
             question: "Which component of the computing cycle performs arithmetic and logic operations?",
             options: [
-              "Input — receives data from devices",
-              "Processing — the CPU executes operations",
-              "Storage — saves data to disk",
-              "Output — displays results on screen"
+              "Input - receives data from devices",
+              "Processing - the CPU executes operations",
+              "Storage - saves data to disk",
+              "Output - displays results on screen"
             ],
             correctAnswerIndex: 1,
             difficulty: "beginner",
@@ -92,7 +92,7 @@ This happens billions of times per second. Each component in the chain is a pote
             ],
             correctAnswerIndex: 2,
             difficulty: "beginner",
-            explanation: "RAM is volatile memory — it requires continuous power to maintain stored data. When power is cut, all contents are lost."
+            explanation: "RAM is volatile memory - it requires continuous power to maintain stored data. When power is cut, all contents are lost."
           },
           {
             question: "A user types a command into a terminal. Trace the correct sequence through the computing cycle.",
@@ -140,15 +140,15 @@ This happens billions of times per second. Each component in the chain is a pote
             ],
             correctAnswerIndex: 2,
             difficulty: "intermediate",
-            explanation: "A keylogger intercepts data at the input stage — it captures keystrokes before they reach their intended destination."
+            explanation: "A keylogger intercepts data at the input stage - it captures keystrokes before they reach their intended destination."
           },
           {
             question: "How many bytes are needed to store the ASCII values for the word 'CYBER'?",
             options: [
-              "4 bytes — one less than the character count",
-              "5 bytes — one byte per character",
-              "10 bytes — two bytes per character",
-              "8 bytes — ASCII uses 8-bit encoding"
+              "4 bytes - one less than the character count",
+              "5 bytes - one byte per character",
+              "10 bytes - two bytes per character",
+              "8 bytes - ASCII uses 8-bit encoding"
             ],
             correctAnswerIndex: 1,
             difficulty: "intermediate",
@@ -157,10 +157,10 @@ This happens billions of times per second. Each component in the chain is a pote
           {
             question: "A ransomware attack encrypts a user's files. Which part of the cycle is the encryption occurring in?",
             options: [
-              "Input — the malware enters through a phishing email",
-              "Processing — the CPU performs the encryption algorithm",
-              "Storage — the encrypted files are written to disk",
-              "Output — the ransom note is displayed to the user"
+              "Input - the malware enters through a phishing email",
+              "Processing - the CPU performs the encryption algorithm",
+              "Storage - the encrypted files are written to disk",
+              "Output - the ransom note is displayed to the user"
             ],
             correctAnswerIndex: 3,
             difficulty: "advanced",
@@ -188,19 +188,19 @@ This happens billions of times per second. Each component in the chain is a pote
             ],
             correctAnswerIndex: 2,
             difficulty: "beginner",
-            explanation: "The GPU specializes in rendering visual output — drawing pixels, text, and graphics on the monitor."
+            explanation: "The GPU specializes in rendering visual output - drawing pixels, text, and graphics on the monitor."
           },
           {
             question: "A network interface card receiving a data packet is an example of which cycle stage?",
             options: [
-              "Processing — the NIC computes checksums",
-              "Input — data enters the computer from an external source",
-              "Storage — the packet is buffered in NIC memory",
-              "Output — the NIC sends acknowledgments back"
+              "Processing - the NIC computes checksums",
+              "Input - data enters the computer from an external source",
+              "Storage - the packet is buffered in NIC memory",
+              "Output - the NIC sends acknowledgments back"
             ],
             correctAnswerIndex: 1,
             difficulty: "intermediate",
-            explanation: "Receiving data from the network is input — external data is entering the system through the network interface card."
+            explanation: "Receiving data from the network is input - external data is entering the system through the network interface card."
           },
           {
             question: "Which component acts as the primary intermediary between input devices and storage?",
@@ -329,10 +329,10 @@ Converts AC wall power to DC power for components.
           {
             question: "A user reports slow performance with many programs open. Which component is most likely the bottleneck?",
             options: [
-              "The GPU — insufficient video memory",
-              "The RAM — not enough capacity for all active programs",
-              "The PSU — not providing enough wattage",
-              "The case — insufficient airflow"
+              "The GPU - insufficient video memory",
+              "The RAM - not enough capacity for all active programs",
+              "The PSU - not providing enough wattage",
+              "The case - insufficient airflow"
             ],
             correctAnswerIndex: 1,
             difficulty: "beginner",
@@ -438,7 +438,7 @@ Converts AC wall power to DC power for components.
       },
       {
         id: "we00d03",
-        title: "Operating Systems — Windows, Linux, macOS",
+        title: "Operating Systems - Windows, Linux, macOS",
         description: "An operating system manages hardware resources and provides an interface for users and applications. Compare the three major desktop operating systems.",
         type: "learn",
         duration: "45 min",
@@ -575,7 +575,7 @@ An OS is the layer between hardware and applications:
             ],
             correctAnswerIndex: 1,
             difficulty: "beginner",
-            explanation: "The kernel is the core of the OS — it manages CPU scheduling, memory, device drivers, and system calls."
+            explanation: "The kernel is the core of the OS - it manages CPU scheduling, memory, device drivers, and system calls."
           },
           {
             question: "A cybersecurity analyst needs to analyze a Windows hard drive image. Which file system structure should they examine?",
@@ -587,7 +587,7 @@ An OS is the layer between hardware and applications:
             ],
             correctAnswerIndex: 2,
             difficulty: "advanced",
-            explanation: "NTFS stores file metadata in the MFT, and the $LogFile journal records changes — both critical for forensic analysis."
+            explanation: "NTFS stores file metadata in the MFT, and the $LogFile journal records changes - both critical for forensic analysis."
           },
           {
             question: "What is the default shell on macOS since Catalina?",
@@ -644,7 +644,7 @@ An OS is the layer between hardware and applications:
   {
     id: "week01",
     title: "Daily Computer Use",
-    durationText: "Week 1 — Days 1–3",
+    durationText: "Week 1 - Days 1–3",
     focus: "Master essential everyday computer skills and file management",
     output: "Navigate operating systems efficiently, manage files and folders, and handle basic software and browser tasks",
     topics: [
@@ -873,7 +873,7 @@ An OS is the layer between hardware and applications:
       },
       {
         id: "we01d02",
-        title: "File Management — Folders, Copy, Paste, Search",
+        title: "File Management - Folders, Copy, Paste, Search",
         description: "Effective file organization saves time and prevents data loss. Learn to create, move, rename, and search for files using GUI and command line methods.",
         type: "learn",
         duration: "45 min",
@@ -1006,7 +1006,7 @@ grep -r "search term" ~/Documents/         # Search inside file contents
             ],
             correctAnswerIndex: 1,
             difficulty: "beginner",
-            explanation: "Ctrl+X cuts (marks for moving), and Ctrl+V pastes — this moves the file."
+            explanation: "Ctrl+X cuts (marks for moving), and Ctrl+V pastes - this moves the file."
           },
           {
             question: "Which command recursively copies an entire directory in Linux?",
@@ -1209,7 +1209,7 @@ top
 htop
 \`\`\`
 
-**3. Check error messages** — Google the exact error text
+**3. Check error messages** - Google the exact error text
 **4. Check network connectivity**
 \`\`\`bash
 ping 8.8.8.8              # Test internet connectivity
@@ -1226,9 +1226,9 @@ df -h                     # Linux disk usage
 
 :::checkpoint
 **Practice**: Open a terminal and run:
-1. \`whoami\` — shows your username
-2. \`hostname\` — shows your computer's name
-3. \`date\` — shows current date and time
+1. \`whoami\` - shows your username
+2. \`hostname\` - shows your computer's name
+3. \`date\` - shows current date and time
 :::`,
         aiPrompt: "",
         labUrl: "",
@@ -1387,13 +1387,13 @@ df -h                     # Linux disk usage
   {
     id: "week02",
     title: "Internet & Online Safety",
-    durationText: "Week 2 — Days 1–3",
+    durationText: "Week 2 - Days 1–3",
     focus: "Understand how the internet works and stay safe online",
     output: "Explain networking basics, practice email security, and implement strong authentication habits",
     topics: [
       {
         id: "we02d01",
-        title: "How the Internet Works — URLs, HTTP, DNS",
+        title: "How the Internet Works - URLs, HTTP, DNS",
         description: "Every time you visit a website, a complex chain of events happens in milliseconds. Understand URLs, protocols, and DNS.",
         type: "learn",
         duration: "45 min",
@@ -1588,7 +1588,7 @@ dig example.com           # More detailed (Linux/macOS)
             ],
             correctAnswerIndex: 1,
             difficulty: "intermediate",
-            explanation: "This is typosquatting — registering a domain similar to a legitimate one using '1' instead of 'l'."
+            explanation: "This is typosquatting - registering a domain similar to a legitimate one using '1' instead of 'l'."
           },
           {
             question: "What does 'dig example.com' do on Linux?",
@@ -1721,7 +1721,7 @@ dig example.com           # More detailed (Linux/macOS)
             question: "A phishing email shows 'Amazon Support' but the email is 'support@amaz0n-security.net'. What should you notice?",
             options: [
               "The display name matches, so it is legitimate",
-              "The actual email domain is not amazon.com — this is spoofed",
+              "The actual email domain is not amazon.com - this is spoofed",
               "The .net extension means it is safe",
               "Amazon uses multiple domains"
             ],
@@ -1794,7 +1794,7 @@ dig example.com           # More detailed (Linux/macOS)
             options: [
               "Install it immediately",
               "Forward to colleagues for awareness",
-              "Do not open — verify with IT through a separate channel",
+              "Do not open - verify with IT through a separate channel",
               "Reply asking for more info"
             ],
             correctAnswerIndex: 2,
@@ -1831,7 +1831,7 @@ dig example.com           # More detailed (Linux/macOS)
               "Close the browser immediately",
               "Enter credentials if the page looks correct",
               "Disconnect from network, run antivirus, change passwords from a clean device",
-              "Nothing — it was probably harmless"
+              "Nothing - it was probably harmless"
             ],
             correctAnswerIndex: 2,
             difficulty: "intermediate",
@@ -1925,7 +1925,7 @@ MFA requires two or more verification factors:
 ## Safe Browsing Habits
 
 1. **Verify HTTPS** before entering sensitive information
-2. **Don't click ads** — type the URL directly
+2. **Don't click ads** - type the URL directly
 3. **Use ad blockers** (uBlock Origin) to prevent malvertising
 4. **Keep browsers updated**
 5. **Use privacy-focused search engines**: DuckDuckGo, Brave Search
@@ -1944,7 +1944,7 @@ MFA requires two or more verification factors:
         labUrl: "",
         labTitle: "",
         interviewQuestion: "What makes a password manager more secure than using the same complex password everywhere?",
-        interviewAnswer: "A password manager generates unique, random passwords for every site. If one site is breached, attackers can't use those credentials elsewhere. It also prevents phishing — it won't auto-fill on fake domains. The only password to remember is the master password.",
+        interviewAnswer: "A password manager generates unique, random passwords for every site. If one site is breached, attackers can't use those credentials elsewhere. It also prevents phishing - it won't auto-fill on fake domains. The only password to remember is the master password.",
         quiz: [
           {
             question: "What makes a passphrase stronger than a complex password?",
@@ -2097,14 +2097,14 @@ MFA requires two or more verification factors:
   {
     id: "week03",
     title: "Operating System Basics",
-    durationText: "Week 3 — Days 1–3",
+    durationText: "Week 3 - Days 1–3",
     focus: "Navigate and manage Windows and Linux operating systems",
     output: "Use Windows system tools, understand Linux basics, and manage system resources",
     topics: [
       {
         id: "we03d01",
         title: "Windows Desktop, Settings, and File Explorer",
-        description: "Master the Windows interface — navigate settings, customize the desktop, and use File Explorer efficiently.",
+        description: "Master the Windows interface - navigate settings, customize the desktop, and use File Explorer efficiently.",
         type: "learn",
         duration: "40 min",
         content: `## Windows Desktop Essentials
@@ -2146,13 +2146,13 @@ control                         # Open Control Panel
 | \`Shift + Delete\` | Permanently delete (skip Recycle Bin) |
 
 **Address bar tricks**:
-- Type \`C:\\\` — goes to C: drive
-- Type \`\\\\server\\share\` — access network shares
-- Type \`%temp%\` — opens the Temp folder
-- Type \`shell:startup\` — opens the Startup folder
+- Type \`C:\\\` - goes to C: drive
+- Type \`\\\\server\\share\` - access network shares
+- Type \`%temp%\` - opens the Temp folder
+- Type \`shell:startup\` - opens the Startup folder
 
 :::warning
-**Security**: Windows hides known file extensions by default. This lets malware disguise itself — 'document.pdf.exe' appears as 'document.pdf'. Always enable file extension visibility!
+**Security**: Windows hides known file extensions by default. This lets malware disguise itself - 'document.pdf.exe' appears as 'document.pdf'. Always enable file extension visibility!
 :::
 
 ### System Information Commands
@@ -2402,7 +2402,7 @@ regedit
         labUrl: "",
         labTitle: "",
         interviewQuestion: "You notice 'svchost.exe' using 100% CPU. How would you determine if it's legitimate or malware?",
-        interviewAnswer: "svchost.exe is a legitimate Windows host process. Check: Task Manager → Details → right-click → Go to details → check command line (shows which service DLL it's hosting). Check file location — legitimate runs from C:\\Windows\\System32. Check digital signature in Properties.",
+        interviewAnswer: "svchost.exe is a legitimate Windows host process. Check: Task Manager → Details → right-click → Go to details → check command line (shows which service DLL it's hosting). Check file location - legitimate runs from C:\\Windows\\System32. Check digital signature in Properties.",
         quiz: [
           {
             question: "What does a yellow triangle in Device Manager indicate?",
@@ -2540,7 +2540,7 @@ regedit
       },
       {
         id: "we03d03",
-        title: "Linux Introduction — Terminal, Commands, Directory Structure",
+        title: "Linux Introduction - Terminal, Commands, Directory Structure",
         description: "Get comfortable with the Linux terminal. Learn essential commands, understand the filesystem hierarchy, and navigate with confidence.",
         type: "learn",
         duration: "50 min",
@@ -2833,13 +2833,13 @@ ss -tuln                         # Show listening ports
   {
     id: "week04",
     title: "First Command Line Skills",
-    durationText: "Week 4 — Days 1–3",
+    durationText: "Week 4 - Days 1–3",
     focus: "Build practical command line proficiency through hands-on exercises",
     output: "Navigate filesystems, manipulate files, write simple scripts, and combine commands from the terminal",
     topics: [
       {
         id: "we04d01",
-        title: "Navigation Commands — cd, ls, pwd, mkdir, touch",
+        title: "Navigation Commands - cd, ls, pwd, mkdir, touch",
         description: "Master filesystem navigation in the terminal. Create directories, generate files, and build muscle memory with path manipulation.",
         type: "practice",
         duration: "50 min",
@@ -2937,7 +2937,7 @@ Target: under 30 seconds.
         labUrl: "",
         labTitle: "",
         interviewQuestion: "What is the difference between an absolute path and a relative path?",
-        interviewAnswer: "An absolute path starts from root (/) and specifies the full location — like /home/user/documents. A relative path starts from the current working directory — like ../documents. Absolute paths always work regardless of where you are.",
+        interviewAnswer: "An absolute path starts from root (/) and specifies the full location - like /home/user/documents. A relative path starts from the current working directory - like ../documents. Absolute paths always work regardless of where you are.",
         quiz: [
           {
             question: "What does 'mkdir -p a/b/c' do?",
@@ -3053,7 +3053,7 @@ Target: under 30 seconds.
               "One directory named 'src,tests,docs'",
               "Three directories: project/src, project/tests, project/docs",
               "One directory named 'project' with curly brace files",
-              "An error — curly braces aren't valid"
+              "An error - curly braces aren't valid"
             ],
             correctAnswerIndex: 1,
             difficulty: "intermediate",
@@ -3065,7 +3065,7 @@ Target: under 30 seconds.
               "One file named 'file{1..5}.txt'",
               "Five files: file1.txt through file5.txt",
               "A directory named file{1..5}.txt",
-              "An error — brace expansion doesn't work in bash"
+              "An error - brace expansion doesn't work in bash"
             ],
             correctAnswerIndex: 1,
             difficulty: "intermediate",
@@ -3087,7 +3087,7 @@ Target: under 30 seconds.
       },
       {
         id: "we04d02",
-        title: "File Operations — cp, mv, rm, cat, less, head, tail",
+        title: "File Operations - cp, mv, rm, cat, less, head, tail",
         description: "Practice copying, moving, deleting, and viewing files from the command line with real-world exercises.",
         type: "practice",
         duration: "50 min",
@@ -3159,7 +3159,7 @@ rmdir ~/filelab/empty_dir
 \`\`\`
 
 :::warning
-**Never run \`rm -rf /\`** — this deletes your entire filesystem. Always double-check paths before recursive deletes.
+**Never run \`rm -rf /\`** - this deletes your entire filesystem. Always double-check paths before recursive deletes.
 :::
 
 ### Exercise 4: Viewing Files
@@ -3216,7 +3216,7 @@ sort ~/filelab/backup/syslog.txt | uniq
         labUrl: "",
         labTitle: "",
         interviewQuestion: "What is the difference between 'cp' and 'mv' when the source and destination are on the same filesystem?",
-        interviewAnswer: "On the same filesystem, 'mv' is essentially instant — it just changes the file's directory entry (inode pointer). 'cp' must read and write the entire file contents, which takes time proportional to file size. On different filesystems, 'mv' also copies the data, making it similar to 'cp' + 'rm'.",
+        interviewAnswer: "On the same filesystem, 'mv' is essentially instant - it just changes the file's directory entry (inode pointer). 'cp' must read and write the entire file contents, which takes time proportional to file size. On different filesystems, 'mv' also copies the data, making it similar to 'cp' + 'rm'.",
         quiz: [
           {
             question: "What does 'cp -r' do?",
