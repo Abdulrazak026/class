@@ -2,10 +2,227 @@ export const phase0: Module[] = [
   {
     id: "week00",
     title: "What a Computer Is",
-    durationText: "Week 0 - Days 1–3",
-    focus: "Understand how computers work at a fundamental level",
-    output: "Identify hardware components, explain the input-process-output cycle, and compare operating systems",
+    durationText: "Week 0 - Days 0-3",
+    focus: "Set up your lab environment and understand how computers work at a fundamental level",
+    output: "Fully configured WSL2 Ubuntu environment with all security tools installed, and understand the input-process-output cycle",
     topics: [
+      {
+        id: "we00d00",
+        title: "Your Toolkit Setup (Do This First)",
+        description: "Install WSL2, Ubuntu, and all security tools before starting Day 1. This is your lab environment.",
+        type: "learn",
+        duration: "1-2 hours",
+        content: `:::objectives
+- Install WSL2 and Ubuntu on Windows
+- Install Windows-native security tools (Burp Suite, Wireshark, Nmap, VS Code)
+- Install Linux security tools in Ubuntu (nmap, sqlmap, metasploit, etc.)
+- Verify everything works before proceeding to Day 1
+:::
+
+## Why Set Up First?
+
+You will use these tools every single day for the next 60 weeks. Getting them installed now means you can focus on learning instead of troubleshooting installations mid-lesson.
+
+:::warning
+Complete this setup BEFORE moving to Day 1. Every subsequent lesson assumes these tools are ready.
+:::
+
+## Step 1: WSL2 + Ubuntu (10 minutes)
+
+Open **PowerShell as Administrator** (right-click Start button, select "Windows Terminal (Admin)"):
+
+\`\`\`powershell
+wsl --install
+\`\`\`
+
+**Restart your PC** when prompted. After restart:
+
+1. Open the **Start Menu**
+2. Click **Ubuntu** (it will open a terminal)
+3. Wait for the first-time setup to complete
+4. Enter a **username** (lowercase, no spaces)
+5. Enter a **password** (typing will not show characters - this is normal Linux behavior)
+
+You should see something like:
+
+\`\`\`
+Welcome to Ubuntu 24.04 LTS (GNU/Linux 5.15.0-91-generic x86_64)
+
+ * Documentation:  https://help.ubuntu.com
+ * Management:     https://landscape.canonical.com
+ * Support:        https://ubuntu.com/advantage
+
+Last login: Mon Jun 22 10:30:45 2026
+username@desktop:~$
+\`\`\`
+
+:::checkpoint
+If you see the \`$\` prompt with your username, WSL2 is working. Type \`exit\` to close Ubuntu.
+:::
+
+## Step 2: Windows Native Tools
+
+Install these on **Windows** (not inside Ubuntu):
+
+| Tool | Purpose | Download |
+|------|---------|----------|
+| **Burp Suite Community** | Web application testing proxy | https://portswigger.net/burp/communitydownload |
+| **Wireshark** | Packet capture and analysis | https://www.wireshark.org/download.html |
+| **Nmap** | Network port scanner | https://nmap.org/download.html |
+| **VS Code** | Code editor with terminal | https://code.visualstudio.com |
+
+:::info
+Burp Suite is the industry-standard tool for web application security testing. You will use it extensively in Weeks 21-29.
+:::
+
+## Step 3: WSL2 Ubuntu Tools
+
+Open **Ubuntu** from the Start Menu and paste these commands one at a time:
+
+\`\`\`bash
+# Update package lists and upgrade existing packages
+sudo apt update && sudo apt upgrade -y
+\`\`\`
+
+Then install all security tools:
+
+\`\`\`bash
+sudo apt install -y nmap metasploit-framework sqlmap hashcat john \
+  nikto hydra gobuster dirb netcat curl wget python3 python3-pip \
+  git wireshark net-tools dnsutils traceroute whois
+\`\`\`
+
+This installs:
+
+| Tool | What It Does |
+|------|-------------|
+| **nmap** | Network port scanner |
+| **metasploit-framework** | Exploitation framework |
+| **sqlmap** | Automated SQL injection |
+| **hashcat** | GPU password cracker |
+| **john** | Password cracker |
+| **nikto** | Web server scanner |
+| **hydra** | Brute-force login tool |
+| **gobuster** | Directory brute-forcer |
+| **dirb** | Directory scanner |
+| **netcat** | TCP/UDP connections (Swiss army knife) |
+| **curl/wget** | HTTP requests from command line |
+| **python3** | Programming language for automation |
+| **git** | Version control |
+| **wireshark** | Packet analysis |
+| **dnsutils** | dig, nslookup (DNS tools) |
+| **traceroute** | Network path tracing |
+| **whois** | Domain registration lookup |
+
+## Step 4: Verify Installation
+
+Run these checks in Ubuntu:
+
+\`\`\`bash
+# Check each tool
+nmap --version
+msfconsole --version
+sqlmap --version
+python3 --version
+git --version
+\`\`\`
+
+:::checkpoint
+All commands should return version numbers. If any fail, re-run the apt install command for that specific tool.
+:::
+
+## Step 5: Access Windows Files from Ubuntu
+
+WSL2 automatically mounts your Windows drives:
+
+| Windows Path | Ubuntu Path |
+|-------------|-------------|
+| C:\\Users\\you\\Desktop | /mnt/c/Users/you/Desktop |
+| D:\\Projects | /mnt/d/Projects |
+
+Test it:
+
+\`\`\`bash
+# List your Windows Desktop contents
+ls /mnt/c/Users/*/Desktop
+\`\`\`
+
+## You Are Ready
+
+Your lab environment is now fully configured. Every tool you need for the next 60 weeks is installed. Proceed to Day 1 to start learning.
+`,
+        aiPrompt: "Explain the purpose of each security tool in the toolkit and what it will be used for in a cybersecurity career.",
+        labUrl: "",
+        labTitle: "",
+        interviewQuestion: "What is WSL2 and why do cybersecurity professionals use it?",
+        interviewAnswer: "WSL2 (Windows Subsystem for Linux 2) lets you run a full Linux kernel inside Windows without dual-booting or virtual machines. Cybersecurity professionals use it because most security tools (nmap, metasploit, sqlmap, hashcat) are native to Linux and run more reliably there. WSL2 also shares the Windows network stack, so you can scan Windows-hosted targets from Linux tools.",
+        quiz: [
+          {
+            question: "What does WSL2 stand for?",
+            options: ["Windows Security Layer 2", "Windows Subsystem for Linux 2", "Wireless Security Logger 2", "Web Server Linux 2"],
+            correctAnswerIndex: 1,
+            difficulty: "beginner",
+            explanation: "WSL2 stands for Windows Subsystem for Linux 2. It lets you run a full Linux environment inside Windows.",
+            certTags: ["Security+"]
+          },
+          {
+            question: "Which tool is used for web application proxy testing?",
+            options: ["Nmap", "Wireshark", "Burp Suite", "John the Ripper"],
+            correctAnswerIndex: 2,
+            difficulty: "beginner",
+            explanation: "Burp Suite is the industry-standard proxy tool for intercepting and testing web application traffic.",
+            certTags: ["Security+"]
+          },
+          {
+            question: "What does nmap scan?",
+            options: ["Hard drives for malware", "Network ports and services", "Windows Registry", "Email attachments"],
+            correctAnswerIndex: 1,
+            difficulty: "beginner",
+            explanation: "Nmap (Network Mapper) scans network ports to discover which services are running on a target machine.",
+            certTags: ["Security+"]
+          },
+          {
+            question: "How do you access Windows files from Ubuntu in WSL2?",
+            options: ["Copy them to Ubuntu manually", "Use the /mnt/ mount point", "They are not accessible", "Use a shared network folder"],
+            correctAnswerIndex: 1,
+            difficulty: "beginner",
+            explanation: "WSL2 automatically mounts Windows drives under /mnt/. C: becomes /mnt/c/, D: becomes /mnt/d/, etc.",
+            certTags: ["A+"]
+          },
+          {
+            question: "Which command updates all Ubuntu packages?",
+            options: ["sudo apt update && sudo apt upgrade -y", "sudo apt install all", "sudo update ubuntu", "sudo apt refresh"],
+            correctAnswerIndex: 0,
+            difficulty: "beginner",
+            explanation: "apt update refreshes package lists, apt upgrade -y installs all available updates without prompting.",
+            certTags: ["Linux+"]
+          },
+          {
+            question: "What is sqlmap used for?",
+            options: ["Network mapping", "SQL injection testing", "Password cracking", "Packet capture"],
+            correctAnswerIndex: 1,
+            difficulty: "beginner",
+            explanation: "sqlmap is an automated tool for detecting and exploiting SQL injection vulnerabilities in web applications.",
+            certTags: ["Security+"]
+          },
+          {
+            question: "Why do cybersecurity professionals prefer Linux tools?",
+            options: ["Linux is faster than Windows", "Most security tools are native to Linux and run more reliably there", "Linux has no viruses", "Windows does not support networking"],
+            correctAnswerIndex: 1,
+            difficulty: "beginner",
+            explanation: "Most security tools (nmap, metasploit, hashcat) were built for Linux first. Linux also gives more control over networking and system configurations.",
+            certTags: ["Security+"]
+          },
+          {
+            question: "What does Wireshark capture?",
+            options: ["Hard drive contents", "Network packets", "CPU usage", "Keyboard input"],
+            correctAnswerIndex: 1,
+            difficulty: "beginner",
+            explanation: "Wireshark captures and analyzes network packets, letting you inspect traffic at the protocol level.",
+            certTags: ["Network+"]
+          }
+        ]
+      },
       {
         id: "we00d01",
         title: "The Input-Processing-Storage-Output Cycle",
