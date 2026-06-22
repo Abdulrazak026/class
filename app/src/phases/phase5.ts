@@ -2503,7 +2503,7 @@ Explain the Kerberos authentication flow and identify where Kerberoasting attack
           },
           {
             question: 'Which attack requires Domain Admin privileges to execute?',
-            options: ['Kerberoasting', 'AS-REP Roasting', 'Golden Ticket', 'All of the above'],
+            options: ['Kerberoasting', 'AS-REP Roasting', 'Golden Ticket', 'Pass-the-Hash'],
             correctAnswerIndex: 2,
             difficulty: 'advanced',
             explanation: 'A Golden Ticket requires the KRBTGT hash, which is only obtainable with Domain Admin access or through DCSync.',

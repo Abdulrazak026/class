@@ -2,7 +2,7 @@ export const phase1: Module[] = [
   {
     id: "week05",
     title: "Environment Setup",
-    durationText: "Week 5 — 3 Days",
+    durationText: "Week 5 — 5 Days",
     focus: "Installing WSL2, Ubuntu, security tools, and organizing your lab workspace",
     output: "Fully configured WSL2 Ubuntu environment with all security tools installed and a GitHub repo for write-ups",
     topics: [
@@ -951,10 +951,10 @@ Always practice on your own systems first. Scanning systems you don't own withou
           },
           {
             question: "You want to scan your own machine for open ports. Which command is correct?",
-            options: ["nmap 192.168.1.1", "nmap 127.0.0.1", "nmap localhost", "Both B and C"],
-            correctAnswerIndex: 3,
+            options: ["nmap 192.168.1.1", "nmap 127.0.0.1", "nmap localhost", "nmap 0.0.0.0"],
+            correctAnswerIndex: 1,
             difficulty: "beginner",
-            explanation: "Both 127.0.0.1 and 'localhost' refer to your own machine (loopback address). Either works."
+            explanation: "127.0.0.1 is the loopback address that always refers to your own machine. 'localhost' resolves to it but may fail if DNS is misconfigured. 192.168.1.1 is typically the router, not your machine."
           },
           {
             question: "What does the -F flag do in nmap?",
@@ -1031,13 +1031,1069 @@ Always practice on your own systems first. Scanning systems you don't own withou
             explanation: "tree displays directories in a tree-like format. -L 2 limits the depth to 2 levels."
           }
         ]
+      },
+      {
+        id: "we05d04",
+        title: "Linux File System & Permissions",
+        description: "Navigate the Linux directory structure, understand file types, and master permissions with chmod, chown, chgrp, SUID, SGID, and the sticky bit.",
+        type: "learn",
+        duration: "3-4 hours",
+        content: `:::objectives
+- Understand the Linux directory hierarchy (/etc, /var, /tmp, /home, /usr)
+- Identify file types using ls -l output
+- Change permissions with chmod (octal and symbolic)
+- Change ownership with chown and chgrp
+- Understand special permissions: sticky bit, SUID, SGID
+- Read /etc/passwd and /etc/shadow
+- Find files with find, locate, and which
+:::
+
+## Step 1: The Linux Directory Hierarchy
+
+Every directory in Linux has a specific purpose:
+
+| Directory | Purpose | Example Files |
+|---|---|---|
+| \`/\` | Root of the entire filesystem | Everything starts here |
+| \`/home\` | User home directories | \`/home/cyberlab/\` |
+| \`/etc\` | System configuration files | \`/etc/passwd\`, \`/etc/ssh/\` |
+| \`/var\` | Variable data (logs, caches) | \`/var/log/syslog\` |
+| \`/tmp\` | Temporary files (cleared on reboot) | Session files, caches |
+| \`/usr\` | User programs and libraries | \`/usr/bin/\`, \`/usr/lib/\` |
+| \`/bin\` | Essential user commands | \`ls\`, \`cp\`, \`mv\` |
+| \`/sbin\` | System admin commands | \`iptables\`, \`fdisk\` |
+| \`/opt\` | Optional/third-party software | \`/opt/google/chrome/\` |
+| \`/proc\` | Virtual filesystem (process info) | \`/proc/cpuinfo\`, \`/proc/self/\` |
+| \`/dev\` | Device files | \`/dev/sda\`, \`/dev/null\` |
+| \`/boot\` | Boot loader files | \`vmlinuz\`, \`grub/\` |
+
+Explore the filesystem:
+
+\`\`\`bash
+# List root directory
+ls /
+
+# See what's in /etc
+ls /etc | head -20
+
+# Check system logs
+ls /var/log/
+
+# See running processes as files
+ls /proc/ | head -10
+
+# Check your home directory
+ls -la ~/
+\`\`\`
+
+**Expected output:**
+\`\`\`
+bin  boot  dev  etc  home  lib  lib64  media  mnt  opt  proc  root  run  sbin  srv  sys  tmp  usr  var
+\`\`\`
+
+:::info
+The Filesystem Hierarchy Standard (FHS) defines these directory purposes. Knowing this structure helps you find config files, logs, and programs quickly.
+:::
+
+## Step 2: File Types
+
+Every file in Linux has a type, shown as the first character in \`ls -l\` output:
+
+| Character | File Type | Description |
+|---|---|---|
+| \`-\` | Regular file | Text, binary, images, etc. |
+| \`d\` | Directory | A folder containing other files |
+| \`l\` | Symbolic link | A shortcut/pointer to another file |
+| \`c\` | Character device | Reads data character by character (keyboard) |
+| \`b\` | Block device | Reads data in blocks (hard drives) |
+
+\`\`\`bash
+# See file types in your home directory
+ls -la ~/
+
+# Look at /dev for device files
+ls -la /dev/sd*
+ls -la /dev/null
+
+# Check /proc for special files
+ls -la /proc/self
+\`\`\`
+
+**Expected output:**
+\`\`\`
+-rw-r--r-- 1 cyberlab cyberlab  220 Jun 22 10:00 .bash_logout
+-rw-r--r-- 1 cyberlab cyberlab 3771 Jun 22 10:00 .bashrc
+drwxr-xr-x 1 cyberlab cyberlab 4096 Jun 22 10:05 Desktop
+lrwxrwxrwx 1 root root       21 Jun 22 10:00 sh -> /usr/bin/dash
+\`\`\`
+
+**Parse the first column:**
+\`\`\`
+d rwxr-xr-x
+│ └────────── permissions
+└──────────── file type
+\`\`\`
+
+## Step 3: File Permissions (chmod)
+
+Permissions control who can read, write, and execute a file. The \`ls -l\` output shows:
+
+\`\`\`
+-rwxr-xr-- 1 cyberlab cyberlab 4096 Jun 22 10:00 script.sh
+│ │││ │││ │  │        │
+│ │││ │││ │  owner    group
+│ └┘└─┘└─┘  user     group   others
+│  W R X   W R X     R X
+└── u      g         o
+\`\`\`
+
+| Permission | File Effect | Directory Effect |
+|---|---|---|
+| \`r\` (read) | View file contents | List directory contents |
+| \`w\` (write) | Modify file contents | Create/delete files inside |
+| \`x\` (execute) | Run as a program | Enter the directory |
+
+### Octal Permissions
+
+Each permission maps to a number:
+
+| Symbol | Octal | Binary |
+|---|---|---|
+| \`r\` | 4 | 100 |
+| \`w\` | 2 | 010 |
+| \`x\` | 1 | 001 |
+| \`-\` | 0 | 000 |
+
+Combine them by adding:
+
+| Permission | Octal | Meaning |
+|---|---|---|
+| \`rwx\` | 4+2+1 = 7 | Full access |
+| \`r-x\` | 4+0+1 = 5 | Read + execute |
+| \`r--\` | 4+0+0 = 4 | Read only |
+| \`rw-\` | 4+2+0 = 6 | Read + write |
+| \`---\` | 0+0+0 = 0 | No access |
+
+\`\`\`bash
+# Create a test file
+echo "#!/bin/bash" > ~/testfile.sh
+echo "echo Hello" >> ~/testfile.sh
+ls -la ~/testfile.sh
+
+# Set permissions: owner=rwx, group=r-x, others=---
+chmod 750 ~/testfile.sh
+ls -la ~/testfile.sh
+
+# Set permissions: owner=rw, group=r, others=r
+chmod 644 ~/testfile.sh
+ls -la ~/testfile.sh
+
+# Set permissions: owner=rwx, group=rwx, others=rwx
+chmod 777 ~/testfile.sh
+ls -la ~/testfile.sh
+
+# Remove all permissions for others
+chmod o= ~/testfile.sh
+ls -la ~/testfile.sh
+\`\`\`
+
+**Expected output after chmod 750:**
+\`\`\`
+-rwxr-x--- 1 cyberlab cyberlab 38 Jun 22 10:00 /home/cyberlab/testfile.sh
+\`\`\`
+
+### Symbolic Permissions
+
+\`\`\`bash
+# Add execute for owner
+chmod u+x ~/testfile.sh
+
+# Remove write for group
+chmod g-w ~/testfile.sh
+
+# Add read for others
+chmod o+r ~/testfile.sh
+
+# Remove all permissions for others
+chmod o= ~/testfile.sh
+
+# Multiple changes at once
+chmod u+rwx,g+rx,o= ~/testfile.sh
+\`\`\`
+
+## Step 4: Ownership (chown, chgrp)
+
+\`\`\`bash
+# Check current ownership
+ls -la ~/testfile.sh
+
+# Change owner (requires root)
+sudo chown root:root ~/testfile.sh
+ls -la ~/testfile.sh
+
+# Change only the group
+sudo chgrp cyberlab ~/testfile.sh
+ls -la ~/testfile.sh
+
+# Change recursively (for directories)
+sudo chown -R cyberlab:cyberlab ~/labs/
+
+# Change ownership of a file you created back to yourself
+chown cyberlab:cyberlab ~/testfile.sh
+\`\`\`
+
+**Expected output after sudo chown root:root:**
+\`\`\`
+-rwxr-x--- 1 root root 38 Jun 22 10:00 /home/cyberlab/testfile.sh
+\`\`\`
+
+:::warning
+Only use \`chown\` with \`sudo\`. Regular users can only change ownership of files they own, and only the group to one they belong to.
+:::
+
+## Step 5: Special Permissions
+
+### Sticky Bit (\`chmod +t\`)
+
+The sticky bit on a directory means only the file owner (or root) can delete files inside it, regardless of directory permissions.
+
+\`\`\`bash
+# /tmp has the sticky bit set
+ls -ld /tmp
+# Output: drwxrwxrwt 10 root root 4096 Jun 22 10:00 /tmp
+
+# Set sticky bit on your own directory
+chmod +t ~/shared/
+ls -ld ~/shared/
+# Output: drwxr-xr-t 2 cyberlab cyberlab 4096 Jun 22 10:00 /home/cyberlab/shared/
+
+# Remove sticky bit
+chmod -t ~/shared/
+\`\`\`
+
+:::info
+The \`t\` in the execute position means the sticky bit is set. Without the sticky bit, it would be \`x\`.
+:::
+
+### SUID — Set User ID (\`chmod u+s\`)
+
+When SUID is set on an executable, it runs with the file owner's permissions (usually root), not the user who ran it.
+
+\`\`\`bash
+# /usr/bin/passwd has SUID set (allows regular users to change their password)
+ls -la /usr/bin/passwd
+# Output: -rwsr-xr-x 1 root root 68208 Jun 22 10:00 /usr/bin/passwd
+
+# The 's' in the owner execute position = SUID
+
+# Set SUID on a file
+chmod u+s ~/suid_script.sh
+ls -la ~/suid_script.sh
+# Output: -rwsr-xr-- 1 cyberlab cyberlab 38 Jun 22 10:00 /home/cyberlab/suid_script.sh
+
+# Remove SUID
+chmod u-s ~/suid_script.sh
+\`\`\`
+
+:::warning
+SUID is a security risk. A SUID root program with a vulnerability can give an attacker full root access. Always audit SUID files.
+:::
+
+### SGID — Set Group ID (\`chmod g+s\`)
+
+\`\`\`bash
+# Set SGID on a directory — new files inherit the group
+chmod g+s ~/shared/
+ls -ld ~/shared/
+# Output: drwxrwsr-x 2 cyberlab cyberlab 4096 Jun 22 10:00 shared/
+
+# Set SGID on a file — runs with group permissions
+chmod g+s ~/sgid_script.sh
+ls -la ~/sgid_script.sh
+# Output: -rwxr-sr-x 1 cyberlab cyberlab 38 Jun 22 10:00 sgid_script.sh
+\`\`\`
+
+### Finding Special Permissions
+
+\`\`\`bash
+# Find all SUID files on the system
+find / -perm -4000 -type f 2>/dev/null
+
+# Find all SGID files
+find / -perm -2000 -type f 2>/dev/null
+
+# Find all files with sticky bit
+find / -perm -1000 -type d 2>/dev/null
+\`\`\`
+
+**Expected SUID output (partial):**
+\`\`\`
+/usr/bin/passwd
+/usr/bin/sudo
+/usr/bin/newgrp
+/usr/bin/chsh
+/usr/bin/chfn
+/usr/bin/gpasswd
+/usr/bin/mount
+/usr/bin/umount
+/usr/lib/openssh/ssh-keysign
+\`\`\`
+
+## Step 6: /etc/passwd and /etc/shadow
+
+These two files are critical for user management:
+
+### /etc/passwd
+
+\`\`\`bash
+cat /etc/passwd | head -10
+\`\`\`
+
+**Expected output:**
+\`\`\`
+root:x:0:0:root:/root:/bin/bash
+daemon:x:1:1:daemon:/usr/sbin:/usr/sbin/nologin
+sys:x:3:3:sys:/dev:/usr/sbin/nologin
+cyberlab:x:1000:1000:cyberlab:/home/cyberlab:/bin/bash
+\`\`\`
+
+**Format:** \`username:password:UID:GID:comment:home:shell\`
+
+| Field | Meaning |
+|---|---|
+| \`username\` | Login name |
+| \`x\` | Password stored in /etc/shadow (not here) |
+| \`0\` | UID (0 = root, 1-999 = system, 1000+ = regular users) |
+| \`0\` | GID (group ID) |
+| \`root\` | GECOS comment field |
+| \`/root\` | Home directory |
+| \`/bin/bash\` | Default shell |
+
+### /etc/shadow
+
+\`\`\`bash
+# Requires root to read
+sudo cat /etc/shadow | head -5
+\`\`\`
+
+**Expected output:**
+\`\`\`
+root:$6$xKz...:19000:0:99999:7:::
+cyberlab:$6$abc...:19000:0:99999:7:::
+\`\`\`
+
+**Format:** \`username:encrypted_password:last_changed:min:max:warn:inactive:expire:reserved\`
+
+:::warning
+/etc/shadow is only readable by root. The password hashes are salted and hashed (usually SHA-512). Never attempt to crack passwords without explicit authorization.
+:::
+
+## Step 7: Finding Files
+
+### find — The Power Tool
+
+\`\`\`bash
+# Find files by name
+find /home/cyberlab -name "*.txt"
+
+# Find directories named "logs"
+find / -type d -name "logs" 2>/dev/null
+
+# Find files modified in the last 24 hours
+find /var/log -mtime -1
+
+# Find files larger than 100MB
+find / -size +100M -type f 2>/dev/null
+
+# Find files with specific permissions
+find /home/cyberlab -perm 777
+
+# Find and execute a command on results
+find /home/cyberlab -name "*.log" -exec grep -l "error" {} \\;
+
+# Find all empty files
+find /home/cyberlab -empty -type f
+
+# Find files owned by a specific user
+find /home/cyberlab -user cyberlab
+\`\`\`
+
+### locate — Fast Search (uses a database)
+
+\`\`\`bash
+# Update the database (run periodically)
+sudo updatedb
+
+# Search for files by name (much faster than find)
+locate passwd
+locate httpd.conf
+\`\`\`
+
+### which — Find Executable Paths
+
+\`\`\`bash
+which python3
+which nmap
+which curl
+\`\`\`
+
+**Expected output:**
+\`\`\`
+/usr/bin/python3
+/usr/bin/nmap
+/usr/bin/curl
+\`\`\`
+
+## Quick Reference
+
+| Task | Command |
+|---|---|
+| List all files with details | \`ls -la\` |
+| Change permissions | \`chmod 755 file\` |
+| Change ownership | \`sudo chown user:group file\` |
+| Find SUID files | \`find / -perm -4000 -type f 2>/dev/null\` |
+| Find files by name | \`find / -name "filename" 2>/dev/null\` |
+| Check file type | \`file filename\` |
+
+:::checkpoint
+1. What does the first character in \`ls -l\` output tell you?
+2. What octal value represents read + write for owner, read for group, nothing for others?
+3. What is the sticky bit and where is it commonly used?
+4. What does SUID do on an executable file?
+5. What is the difference between /etc/passwd and /etc/shadow?
+:::
+`,
+        aiPrompt: "",
+        labUrl: "",
+        labTitle: "",
+        interviewQuestion: "You discover a file with SUID root permissions. What security risks does this present and how would you investigate?",
+        interviewAnswer: "A SUID root file runs with root privileges regardless of who executes it. If that file has a vulnerability (buffer overflow, command injection), an attacker can escalate to root. I would first find all SUID files using 'find / -perm -4000 -type f', then research each one for known vulnerabilities. I'd check if any SUID binaries are unnecessary and remove them, and verify that the ones that remain are from trusted packages with no known CVEs.",
+        quiz: [
+          {
+            question: "What does the 'd' prefix in 'drwxr-xr-x' indicate?",
+            options: ["A regular file", "A directory", "A symbolic link", "A device file"],
+            correctAnswerIndex: 1,
+            difficulty: "beginner",
+            explanation: "The first character of ls -l output indicates file type. 'd' means directory, '-' means regular file, 'l' means symlink."
+          },
+          {
+            question: "What octal permission value gives read + write to owner, read to group, and no access to others?",
+            options: ["755", "644", "640", "750"],
+            correctAnswerIndex: 2,
+            difficulty: "intermediate",
+            explanation: "Owner: 6 (rw-), Group: 4 (r--), Others: 0 (---) = 640."
+          },
+          {
+            question: "What does 'chmod o= file' do?",
+            options: [
+              "Sets owner permissions to nothing",
+              "Sets others permissions to nothing",
+              "Removes all permissions for everyone",
+              "Opens the file for editing"
+            ],
+            correctAnswerIndex: 1,
+            difficulty: "beginner",
+            explanation: "'o=' with no value after the equals sign sets others permissions to nothing (---)."
+          },
+          {
+            question: "Where are user password hashes stored on a Linux system?",
+            options: ["/etc/passwd", "/etc/shadow", "/etc/passwords", "/var/auth"],
+            correctAnswerIndex: 1,
+            difficulty: "beginner",
+            explanation: "/etc/shadow stores hashed passwords. /etc/passwd only contains an 'x' placeholder indicating the password is in shadow."
+          },
+          {
+            question: "What does the 's' in '-rwsr-xr-x' indicate?",
+            options: [
+              "The file is a shared library",
+              "The sticky bit is set",
+              "SUID (Set User ID) is set",
+              "The file is a socket"
+            ],
+            correctAnswerIndex: 2,
+            difficulty: "intermediate",
+            explanation: "The 's' in the owner execute position means SUID is set. The file will execute with the owner's permissions."
+          },
+          {
+            question: "What is the purpose of the sticky bit on a directory?",
+            options: [
+              "Prevents anyone from writing to it",
+              "Only the file owner can delete files inside it",
+              "Makes all files executable",
+              "Hides the directory from listings"
+            ],
+            correctAnswerIndex: 1,
+            difficulty: "intermediate",
+            explanation: "The sticky bit on a directory means only the file's owner (or root) can delete or rename files, regardless of directory write permissions."
+          },
+          {
+            question: "Which command finds all SUID files on a system?",
+            options: [
+              "find / -perm -4000 -type f 2>/dev/null",
+              "ls -la /usr/bin/*",
+              "grep -r 's' /etc/passwd",
+              "find / -name 'suid' 2>/dev/null"
+            ],
+            correctAnswerIndex: 0,
+            difficulty: "intermediate",
+            explanation: "-perm -4000 matches files with the SUID bit (octal 4000) set. -type f limits to regular files."
+          },
+          {
+            question: "What UID does the root user always have?",
+            options: ["1", "1000", "0", "65535"],
+            correctAnswerIndex: 2,
+            difficulty: "beginner",
+            explanation: "UID 0 is always root. UID 1-999 are system accounts. UID 1000+ are regular user accounts."
+          },
+          {
+            question: "What does 'chown -R user:group /path' do?",
+            options: [
+              "Changes ownership of only the top-level directory",
+              "Recursively changes ownership of all files and subdirectories",
+              "Changes the permissions of all files",
+              "Creates a backup of the directory"
+            ],
+            correctAnswerIndex: 1,
+            difficulty: "beginner",
+            explanation: "The -R flag makes chown recursive, changing ownership of the directory and everything inside it."
+          },
+          {
+            question: "Which command is faster for searching filenames: find or locate?",
+            options: [
+              "find is always faster",
+              "locate is faster because it uses a pre-built database",
+              "They are the same speed",
+              "locate only works on files smaller than 1MB"
+            ],
+            correctAnswerIndex: 1,
+            difficulty: "beginner",
+            explanation: "locate searches a database built by updatedb, making it much faster than find's real-time filesystem traversal."
+          }
+        ]
+      },
+      {
+        id: "we05d05",
+        title: "Linux Process Management & Services",
+        description: "View, manage, and control running processes using ps, top, kill, jobs, crontab, and systemd systemctl commands.",
+        type: "learn",
+        duration: "3-4 hours",
+        content: `:::objectives
+- Understand the difference between processes and programs
+- View processes with ps, top, and htop
+- Send signals to processes with kill
+- Manage background jobs with jobs, bg, and fg
+- Schedule tasks with crontab
+- Understand systemd units and systemctl
+- Check listening services with ss and netstat
+:::
+
+## Step 1: Processes vs Programs
+
+A **program** is a static file on disk (like /usr/bin/nmap). A **process** is a running instance of a program. Each process has:
+
+| Attribute | Description |
+|---|---|
+| **PID** | Process ID (unique number) |
+| **PPID** | Parent Process ID (the process that spawned it) |
+| **UID** | User ID (who owns it) |
+| **State** | Running, sleeping, stopped, zombie |
+| **Priority** | Scheduling priority |
+
+\`\`\`bash
+# See your own PID
+echo $$
+
+# See your shell's PID and its parent
+ps -o pid,ppid,comm
+\`\`\`
+
+**Expected output:**
+\`\`\`
+  PID  PPID COMM
+ 1234  1230 bash
+\`\`\`
+
+## Step 2: Viewing Processes with ps
+
+\`\`\`bash
+# Show all processes for current user
+ps aux
+\`\`\`
+
+**Expected output (truncated):**
+\`\`\`
+USER       PID %CPU %MEM    VSZ   RSS TTY      STAT START   TIME COMMAND
+root         1  0.0  0.1 169324 11804 ?        Ss   10:00   0:02 /sbin/init
+root         2  0.0  0.0      0     0 ?        S    10:00   0:00 [kthreadd]
+cyberlab  1234  0.0  0.1  21472  5280 pts/0    Ss   10:01   0:00 -bash
+cyberlab  1300  0.0  0.1  37364  3360 pts/0    R+   10:05   0:00 ps aux
+\`\`\`
+
+**Key columns:**
+- \`USER\` — who owns the process
+- \`PID\` — process ID
+- \`%CPU\` / \`%MEM\` — resource usage
+- \`STAT\` — process state (S=sleeping, R=running, T=stopped, Z=zombie, s=session leader)
+- \`COMMAND\` — the command that started it
+
+\`\`\`bash
+# Filter for specific processes
+ps aux | grep sshd
+ps aux | grep -v grep  # exclude the grep itself
+
+# Show process tree
+ps auxf
+
+# Show specific columns
+ps -eo pid,ppid,user,comm --sort=-%mem | head -10
+\`\`\`
+
+## Step 3: top and htop
+
+### top — Built-in Process Monitor
+
+\`\`\`bash
+top
+\`\`\`
+
+**Key shortcuts in top:**
+- \`q\` — quit
+- \`1\` — show individual CPU cores
+- \`M\` — sort by memory usage
+- \`P\` — sort by CPU usage
+- \`k\` — kill a process (enter PID)
+- \`r\` — renice a process
+
+### htop — Better Process Monitor (if installed)
+
+\`\`\`bash
+sudo apt install htop -y
+htop
+\`\`\`
+
+htop adds:
+- Color-coded output
+- Mouse support
+- Tree view toggle (F5)
+- Search (F3)
+- Kill process (F9)
+
+:::tip
+Use \`top -bn1 | head -20\` for a one-shot snapshot (useful in scripts).
+:::
+
+## Step 4: Killing Processes with kill
+
+\`\`\`bash
+# Find the PID of a process
+ps aux | grep firefox
+# Example output: cyberlab 5678 5.2 2.1 ... /usr/lib/firefox/firefox
+
+# Send SIGTERM (graceful shutdown — default)
+kill 5678
+
+# Send SIGKILL (force kill — use when SIGTERM fails)
+kill -9 5678
+kill -SIGKILL 5678
+
+# Kill by name (all instances)
+pkill firefox
+killall firefox
+\`\`\`
+
+### Common Signals
+
+| Signal | Number | Action | When to Use |
+|---|---|---|---|
+| \`SIGHUP\` | 1 | Reload configuration | Reload config without restarting |
+| \`SIGINT\` | 2 | Interrupt (Ctrl+C) | Stop a running process |
+| \`SIGQUIT\` | 3 | Quit with core dump | Debugging |
+| \`SIGTERM\` | 15 | Graceful termination | Default kill signal |
+| \`SIGKILL\` | 9 | Force kill (unblockable) | Last resort when process won't die |
+| \`SIGSTOP\` | 19 | Pause (can't be caught) | Freeze a process |
+| \`SIGCONT\` | 18 | Continue a stopped process | Resume after SIGSTOP |
+
+\`\`\`bash
+# SIGHUP is used to reload configs
+# Example: reload nginx config
+sudo kill -HUP $(cat /var/run/nginx.pid)
+
+# Stop a process (Ctrl+C sends SIGINT)
+# Press Ctrl+C in terminal
+
+# Pause a running process
+kill -STOP 5678
+
+# Resume it
+kill -CONT 5678
+\`\`\`
+
+:::warning
+SIGKILL (kill -9) cannot be caught or ignored. Use it only when SIGTERM doesn't work. The process won't get a chance to clean up.
+:::
+
+## Step 5: Background Jobs
+
+\`\`\`bash
+# Run a command in the background
+sleep 100 &
+# Output: [1] 7890  (job number 1, PID 7890)
+
+# List background jobs
+jobs
+# Output: [1]+  Running    sleep 100 &
+
+# Bring job to foreground
+fg %1
+
+# Send to background (after pressing Ctrl+Z)
+# Ctrl+Z pauses the process
+# Then type:
+bg %1
+
+# Kill a background job
+kill %1
+\`\`\`
+
+**Workflow:**
+\`\`\`bash
+# Start a long scan in background
+nmap -sV 192.168.1.0/24 > scan_results.txt &
+
+# Check it's running
+jobs
+
+# Check output
+cat scan_results.txt
+
+# When done, remove from job list
+wait
+\`\`\`
+
+## Step 6: Scheduling with crontab
+
+Cron runs commands on a schedule. Edit your crontab with:
+
+\`\`\`bash
+crontab -e
+\`\`\`
+
+### Crontab Syntax
+
+\`\`\`
+┌───── minute (0-59)
+│ ┌───── hour (0-23)
+│ │ ┌───── day of month (1-31)
+│ │ │ ┌───── month (1-12)
+│ │ │ │ ┌───── day of week (0-7, 0 and 7 = Sunday)
+│ │ │ │ │
+* * * * * command_to_run
+\`\`\`
+
+**Examples:**
+
+| Schedule | Crontab Line |
+|---|---|
+| Every day at 3 AM | \`0 3 * * * /home/cyberlab/backup.sh\` |
+| Every 15 minutes | \`*/15 * * * * /home/cyberlab/check.sh\` |
+| Monday at 9 AM | \`0 9 * * 1 /home/cyberlab/report.sh\` |
+| First day of month | \`0 0 1 * * /home/cyberlab/monthly.sh\` |
+| Every 5 minutes | \`*/5 * * * * /home/cyberlab/monitor.sh\` |
+
+\`\`\`bash
+# View current crontab
+crontab -l
+
+# Create a simple scheduled task
+(crontab -l 2>/dev/null; echo "0 * * * * echo 'Hourly check' >> /tmp/cron_test.log") | crontab -
+
+# Verify
+crontab -l
+\`\`\`
+
+**Expected output:**
+\`\`\`
+0 * * * * echo 'Hourly check' >> /tmp/cron_test.log
+\`\`\`
+
+:::tip
+Use \`crontab -l\` to list, \`crontab -e\` to edit. System-wide cron jobs are in \`/etc/crontab\` and \`/etc/cron.d/\`.
+:::
+
+## Step 7: systemd and systemctl
+
+Most modern Linux distributions use **systemd** to manage services.
+
+\`\`\`bash
+# List all running services
+systemctl list-units --type=service --state=running
+
+# Check if a service is running
+systemctl status sshd
+systemctl status apache2
+systemctl status nginx
+
+# Start a service
+sudo systemctl start nginx
+
+# Stop a service
+sudo systemctl stop nginx
+
+# Restart a service
+sudo systemctl restart nginx
+
+# Reload configuration (without downtime)
+sudo systemctl reload nginx
+
+# Enable a service to start on boot
+sudo systemctl enable nginx
+
+# Disable a service from starting on boot
+sudo systemctl disable nginx
+\`\`\`
+
+**Expected output of systemctl status sshd:**
+\`\`\`
+● sshd.service - OpenBSD Secure Shell server
+     Loaded: loaded (/lib/systemd/system/sshd.service; enabled; vendor preset: enabled)
+     Active: active (running) since Mon 2026-06-22 10:00:05 UTC; 2h ago
+   Main PID: 567 (sshd)
+      Tasks: 1 (limit: 4617)
+     Memory: 6.2M
+        CPU: 125ms
+     CGroup: /system.slice/sshd.service
+             └─567 sshd: /usr/sbin/sshd -D [listener] 10 of 10-100 startups
+\`\`\`
+
+### Key systemd Concepts
+
+| Concept | Description |
+|---|---|
+| **Unit** | A resource systemd manages (service, mount, socket, timer) |
+| **Target** | A group of units (like runlevels: multi-user.target, graphical.target) |
+| **Unit file** | Configuration at \`/lib/systemd/system/\` or \`/etc/systemd/system/\` |
+| **Journal** | systemd's logging system (replaces syslog) |
+
+\`\`\`bash
+# View logs for a service
+journalctl -u sshd --since "1 hour ago"
+
+# View system logs
+journalctl -xe
+
+# List all failed services
+systemctl --failed
+
+# List available services
+systemctl list-unit-files --type=service
+\`\`\`
+
+## Step 8: Checking Listening Ports with ss and netstat
+
+\`\`\`bash
+# Show all listening TCP/UDP ports
+ss -tlnu
+\`\`\`
+
+**Expected output:**
+\`\`\`
+Netid  State   Recv-Q  Send-Q   Local Address:Port    Peer Address:Port  Process
+udp    UNCONN  0       0          127.0.0.53%lo:53           0.0.0.0:*
+tcp    LISTEN  0       128          0.0.0.0:22           0.0.0.0:*    users:(("sshd",pid=567,fd=3))
+tcp    LISTEN  0       4096         0.0.0.0:80           0.0.0.0:*    users:(("nginx",pid=890,fd=6))
+tcp    LISTEN  0       128             [::]:22              [::]:*    users:(("sshd",pid=567,fd=4))
+\`\`\`
+
+**Useful ss flags:**
+
+| Flag | Meaning |
+|---|---|
+| \`-t\` | TCP sockets |
+| \`-u\` | UDP sockets |
+| \`-l\` | Listening sockets only |
+| \`-n\` | Don't resolve service names |
+| \`-p\` | Show process using the socket |
+
+\`\`\`bash
+# Show listening ports with process names
+sudo ss -tlnp
+
+# Show established connections
+ss -tnp
+
+# Find what's using a specific port
+ss -tlnp | grep :80
+
+# Traditional netstat (if installed)
+netstat -tlnp
+\`\`\`
+
+## Quick Reference
+
+| Task | Command |
+|---|---|
+| List all processes | \`ps aux\` |
+| Interactive process viewer | \`top\` or \`htop\` |
+| Kill a process | \`kill PID\` or \`kill -9 PID\` |
+| Kill by name | \`pkill name\` or \`killall name\` |
+| Background job | \`command &\` |
+| List jobs | \`jobs\` |
+| Edit crontab | \`crontab -e\` |
+| Check service status | \`systemctl status service\` |
+| Start/stop service | \`sudo systemctl start/stop service\` |
+| Show listening ports | \`ss -tlnp\` |
+
+:::checkpoint
+1. What is the difference between SIGTERM and SIGKILL?
+2. What does 'kill -9' do that 'kill' alone doesn't?
+3. How do you schedule a script to run every day at midnight?
+4. What is the PID of the init/systemd process?
+5. What does 'ss -tlnp' show you?
+:::
+`,
+        aiPrompt: "",
+        labUrl: "",
+        labTitle: "",
+        interviewQuestion: "A service on a Linux server is not responding. Walk me through your process management approach to diagnose and resolve the issue.",
+        interviewAnswer: "I would start by checking if the service is running with 'systemctl status'. If it's down, I'd check logs with 'journalctl -u service --since 10 min ago' for errors. I'd check if it's listening on the expected port with 'ss -tlnp | grep :port'. If the process is running but unresponsive, I'd check resource usage with 'top' to see if it's CPU or memory bound, then check 'dmesg' for kernel-level issues like OOM kills. If the service needs restarting, I'd try 'systemctl reload' first for graceful restart, then 'systemctl restart' if needed.",
+        quiz: [
+          {
+            question: "What is the difference between a program and a process?",
+            options: [
+              "They are the same thing",
+              "A program is a file on disk; a process is a running instance of it",
+              "A process is always faster than a program",
+              "A program requires root to run"
+            ],
+            correctAnswerIndex: 1,
+            difficulty: "beginner",
+            explanation: "A program is a static executable file. A process is created when the program is executed, with its own PID, memory, and state."
+          },
+          {
+            question: "What does 'kill -9' send to a process?",
+            options: ["SIGHUP", "SIGTERM", "SIGKILL", "SIGINT"],
+            correctAnswerIndex: 2,
+            difficulty: "beginner",
+            explanation: "kill -9 sends SIGKILL, which forcefully terminates the process. It cannot be caught or ignored."
+          },
+          {
+            question: "What does the STAT column 'S' mean in ps aux output?",
+            options: [
+              "The process is stopped",
+              "The process is sleeping (waiting for an event)",
+              "The process is a session leader",
+              "The process is a zombie"
+            ],
+            correctAnswerIndex: 1,
+            difficulty: "intermediate",
+            explanation: "S means sleeping — the process is waiting for an event, I/O, or a signal. This is normal for most idle processes."
+          },
+          {
+            question: "How do you run a command in the background?",
+            options: ["Run it with sudo", "Append & to the command", "Press Ctrl+B", "Use the --bg flag"],
+            correctAnswerIndex: 1,
+            difficulty: "beginner",
+            explanation: "Appending & to a command runs it as a background job, freeing your terminal for other commands."
+          },
+          {
+            question: "What crontab entry runs a script every 15 minutes?",
+            options: [
+              "15 * * * * script.sh",
+              "*/15 * * * * script.sh",
+              "0,15,30,45 * * * * script.sh",
+              "* */15 * * * script.sh"
+            ],
+            correctAnswerIndex: 1,
+            difficulty: "intermediate",
+            explanation: "*/15 in the minute field means every 15 minutes (0, 15, 30, 45). Both options B and C work, but B is the canonical syntax."
+          },
+          {
+            question: "What does 'systemctl status sshd' show?",
+            options: [
+              "Only the PID of sshd",
+              "Whether sshd is running, its PID, memory usage, and recent logs",
+              "The sshd configuration file",
+              "Network connections to sshd"
+            ],
+            correctAnswerIndex: 1,
+            difficulty: "beginner",
+            explanation: "systemctl status shows the service state, main PID, resource usage, and the last few log lines."
+          },
+          {
+            question: "What is the difference between SIGTERM and SIGKILL?",
+            options: [
+              "They are the same thing",
+              "SIGTERM allows graceful shutdown; SIGKILL forces immediate termination",
+              "SIGTERM is faster than SIGKILL",
+              "SIGKILL can be caught, SIGTERM cannot"
+            ],
+            correctAnswerIndex: 1,
+            difficulty: "intermediate",
+            explanation: "SIGTERM lets the process clean up and shut down gracefully. SIGKILL is immediate and cannot be caught."
+          },
+          {
+            question: "Which command shows all listening TCP and UDP ports with process names?",
+            options: ["ps aux", "top", "ss -tlnp", "crontab -l"],
+            correctAnswerIndex: 2,
+            difficulty: "beginner",
+            explanation: "ss -tlnp shows TCP (-t) listening (-l) ports with numeric addresses (-n) and process info (-p)."
+          },
+          {
+            question: "What does 'fg %1' do?",
+            options: [
+              "Forces a background job to exit",
+              "Brings job number 1 from background to foreground",
+              "Creates a new foreground job",
+              "Sends job 1 to the background"
+            ],
+            correctAnswerIndex: 1,
+            difficulty: "beginner",
+            explanation: "fg %1 brings the background job numbered 1 to the foreground so you can interact with it."
+          },
+          {
+            question: "Where are systemd service unit files stored?",
+            options: [
+              "/etc/init.d/",
+              "/lib/systemd/system/",
+              "/etc/systemd.conf",
+              "/usr/services/"
+            ],
+            correctAnswerIndex: 1,
+            difficulty: "intermediate",
+            explanation: "Default unit files are in /lib/systemd/system/. Custom overrides go in /etc/systemd/system/."
+          },
+          {
+            question: "A process shows 'Z' in the STAT column. What is it?",
+            options: [
+              "Running at high priority",
+              "A zombie — terminated but parent hasn't collected its exit status",
+              "Stopped by a signal",
+              "A session leader"
+            ],
+            correctAnswerIndex: 1,
+            difficulty: "advanced",
+            explanation: "Z means zombie — the process has exited but its parent hasn't called wait() to collect its exit status. It's not using resources but its PID entry remains."
+          },
+          {
+            question: "What does 'pkill' do differently from 'kill'?",
+            options: [
+              "pkill only works on zombie processes",
+              "pkill kills by process name, not by PID",
+              "pkill is always safe to use",
+              "pkill sends SIGKILL only"
+            ],
+            correctAnswerIndex: 1,
+            difficulty: "beginner",
+            explanation: "pkill matches processes by name (or other attributes) and sends a signal to all matching processes. kill requires a specific PID."
+          }
+        ]
       }
     ]
   },
   {
     id: "week06",
     title: "Python for Security Automation",
-    durationText: "Week 6 — 3 Days",
+    durationText: "Week 6 — 5 Days",
     focus: "Python fundamentals, security libraries, and building custom scanning tools",
     output: "Working Python scripts for port scanning, directory brute-forcing, log parsing, and security header analysis",
     topics: [
@@ -2733,11 +3789,11 @@ With 100 threads, the same scan takes ~10 seconds.
               "socket.connect_ex() requires an IP address",
               "It's faster to connect with IPs",
               "DNS resolution might fail and we want to catch that early",
-              "All of the above"
+              "IP addresses are always more accurate than hostnames"
             ],
-            correctAnswerIndex: 3,
+            correctAnswerIndex: 2,
             difficulty: "intermediate",
-            explanation: "connect_ex works with hostnames but resolving first catches DNS failures early and provides cleaner output."
+            explanation: "Resolving the hostname first lets us handle DNS failures gracefully before attempting any connections, providing cleaner error messages."
           },
           {
             question: "What is the default timeout set in the port scanner's scan_port function?",
@@ -2836,11 +3892,1041 @@ With 100 threads, the same scan takes ~10 seconds.
               "Change the print statements to json.dumps()",
               "Use the json module to serialize the open_ports list",
               "Redirect output to a .json file",
-              "Both A and B"
+              "Write the data as XML instead"
+            ],
+            correctAnswerIndex: 1,
+            difficulty: "advanced",
+            explanation: "The json module's json.dumps() serializes Python objects (like lists and dicts) into JSON strings. You'd serialize the results and either print or write them to a file."
+          }
+        ]
+      },
+      {
+        id: "we06d04",
+        title: "Text Processing for Security",
+        description: "Master grep, sed, and awk for log analysis, parsing /etc/passwd, extracting failed SSH attempts, and building security analysis pipelines.",
+        type: "practice",
+        duration: "3-4 hours",
+        content: `:::objectives
+- Use grep with regular expressions to search logs
+- Use sed for find-and-replace operations
+- Use awk for column-based text processing
+- Analyze auth.log for failed SSH attempts
+- Parse /etc/passwd with text tools
+- Build piping techniques for security analysis
+:::
+
+## Part 1: grep with Regular Expressions
+
+grep searches file contents for patterns. It's the most-used text processing tool in security.
+
+### Basic grep
+
+\`\`\`bash
+# Search for a string in a file
+grep "Failed" /var/log/auth.log
+
+# Case-insensitive search
+grep -i "failed" /var/log/auth.log
+
+# Show line numbers
+grep -n "Failed" /var/log/auth.log
+
+# Count matches
+grep -c "Failed password" /var/log/auth.log
+
+# Invert match (lines that don't contain the pattern)
+grep -v "^#" /etc/ssh/sshd_config
+
+# Search recursively in a directory
+grep -r "password" /etc/ --include="*.conf" 2>/dev/null
+\`\`\`
+
+### grep Regular Expressions
+
+\`\`\`bash
+# Create a sample log file to work with
+cat > ~/labs/web/sample_auth.log << 'EOF'
+Jun 22 10:01:23 server sshd[1234]: Failed password for root from 192.168.1.100 port 22 ssh2
+Jun 22 10:01:25 server sshd[1235]: Failed password for admin from 192.168.1.100 port 22 ssh2
+Jun 22 10:01:27 server sshd[1236]: Failed password for root from 192.168.1.100 port 22 ssh2
+Jun 22 10:02:01 server sshd[1237]: Accepted publickey for user1 from 10.0.0.5 port 22 ssh2
+Jun 22 10:02:15 server sshd[1238]: Failed password for root from 192.168.1.100 port 22 ssh2
+Jun 22 10:03:00 server sshd[1239]: Failed password for root from 10.0.0.99 port 22 ssh2
+Jun 22 10:03:05 server sshd[1240]: Connection closed by authenticating user root 192.168.1.100 port 22 [preauth]
+Jun 22 10:04:00 server sshd[1241]: Accepted password for test from 192.168.1.50 port 22 ssh2
+Jun 22 10:05:00 server nginx[1300]: 200 GET /index.html from 192.168.1.1
+Jun 22 10:05:30 server nginx[1301]: 403 GET /admin from 192.168.1.100
+Jun 22 10:06:00 server kernel: [UFW BLOCK] IN=eth0 SRC=203.0.113.42 DST=192.168.1.1
+EOF
+\`\`\`
+
+| Pattern | Meaning | Example |
+|---|---|---|
+| \`.\` | Any single character | \`grep "r.o" file\` matches "root", "r oot" |
+| \`*\` | Zero or more of the previous | \`grep "ro*t" file\` matches "rt", "rot", "root" |
+| \`+\` | One or more of the previous (ERE) | \`grep -E "ro+t" file\` matches "rot", "root" |
+| \`?\` | Zero or one of the previous (ERE) | \`grep -E "ro?t" file\` matches "rt", "rot" |
+| \`[]\` | Character class | \`grep "[0-9]" file\` matches any digit |
+| \`^\` | Start of line | \`grep "^Jun" file\` matches lines starting with Jun |
+| \`$\` | End of line | \`grep "ssh2$" file\` matches lines ending with ssh2 |
+| \`\\b\` | Word boundary | \`grep "\\broot\\b" file\` matches "root" as whole word |
+| \`\\d\` | Digit (with -P flag) | \`grep -P "\\d{1,3}" file\` matches 1-3 digit numbers |
+
+\`\`\`bash
+# Find all failed password attempts
+grep "Failed password" ~/labs/web/sample_auth.log
+
+# Find attempts from a specific IP
+grep "192.168.1.100" ~/labs/web/sample_auth.log
+
+# Find all IP addresses (using extended regex)
+grep -oE "\\b[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}\\b" ~/labs/web/sample_auth.log
+
+# Find lines with "Failed" or "Connection closed"
+grep -E "Failed|Connection closed" ~/labs/web/sample_auth.log
+
+# Find failed logins for root specifically
+grep "Failed password for root" ~/labs/web/sample_auth.log
+
+# Show 2 lines before and after each match
+grep -B2 -A2 "403" ~/labs/web/sample_auth.log
+\`\`\`
+
+**Expected output for failed root logins:**
+\`\`\`
+Jun 22 10:01:23 server sshd[1234]: Failed password for root from 192.168.1.100 port 22 ssh2
+Jun 22 10:01:27 server sshd[1236]: Failed password for root from 192.168.1.100 port 22 ssh2
+Jun 22 10:02:15 server sshd[1238]: Failed password for root from 192.168.1.100 port 22 ssh2
+Jun 22 10:03:00 server sshd[1239]: Failed password for root from 10.0.0.99 port 22 ssh2
+\`\`\`
+
+## Part 2: sed — Stream Editor
+
+sed performs find-and-replace and text transformations on streams.
+
+\`\`\`bash
+# Basic substitution (replace first occurrence per line)
+sed 's/old/new/' file.txt
+
+# Replace ALL occurrences per line
+sed 's/old/new/g' file.txt
+
+# In-place editing (modifies the file)
+sed -i 's/old/new/g' file.txt
+
+# Delete lines matching a pattern
+sed '/pattern/d' file.txt
+
+# Print only matching lines (like grep)
+sed -n '/Failed/p' ~/labs/web/sample_auth.log
+
+# Delete comments and blank lines
+sed '/^#/d; /^$/d' /etc/ssh/sshd_config
+
+# Mask IP addresses in logs (anonymize)
+sed -E 's/([0-9]+\\.[0-9]+\\.[0-9]+)\\.[0-9]+/\\1.XXX/g' ~/labs/web/sample_auth.log
+\`\`\`
+
+**Expected output for IP masking:**
+\`\`\`
+Jun 22 10:01:23 server sshd[1234]: Failed password for root from 192.168.1.XXX port 22 ssh2
+Jun 22 10:01:25 server sshd[1235]: Failed password for admin from 192.168.1.XXX port 22 ssh2
+\`\`\`
+
+\`\`\`bash
+# Insert a line after every match
+sed '/Failed password/a\\ALERT: Failed login attempt detected' ~/labs/web/sample_auth.log | head -10
+
+# Extract specific fields
+cat /etc/passwd | sed 's/:/ /g' | awk '{print \$1, \$7}'
+\`\`\`
+
+## Part 3: awk — Pattern Processing
+
+awk processes text column-by-column. It's ideal for structured data.
+
+\`\`\`bash
+# Print specific columns (space-separated)
+awk '{print \$1, \$3}' ~/labs/web/sample_auth.log
+
+# Print first column only
+awk '{print \$1}' ~/labs/web/sample_auth.log
+
+# Print with custom delimiter
+awk -F: '{print \$1, \$6, \$7}' /etc/passwd
+
+# Filter rows based on column value
+awk '\$3 == "Failed" {print \$0}' ~/labs/web/sample_auth.log
+
+# Count lines (like wc -l)
+awk 'END {print NR}' ~/labs/web/sample_auth.log
+
+# Sum a column
+awk '{sum += \$NF} END {print "Total:", sum}' file.txt
+\`\`\`
+
+**Parse /etc/passwd:**
+\`\`\`bash
+# List all users with their shells
+awk -F: '{print \$1 " -> " \$7}' /etc/passwd
+
+# List users with /bin/bash (real users)
+awk -F: '\$7 == "/bin/bash" {print \$1}' /etc/passwd
+
+# List users with UID >= 1000 (regular users)
+awk -F: '\$3 >= 1000 {print \$1 " (UID: " \$3 ")"}' /etc/passwd
+
+# Show home directories
+awk -F: '\$3 >= 1000 {print \$1 " home: " \$6}' /etc/passwd
+\`\`\`
+
+**Expected output:**
+\`\`\`
+cyberlab home: /home/cyberlab
+\`\`\`
+
+## Part 4: Analyzing auth.log for Failed SSH Attempts
+
+\`\`\`bash
+# Count total failed attempts
+grep -c "Failed password" ~/labs/web/sample_auth.log
+
+# Count failed attempts per IP
+grep "Failed password" ~/labs/web/sample_auth.log | \\
+  grep -oE "\\b[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}\\b" | \\
+  sort | uniq -c | sort -rn
+
+# Same result using awk
+awk '/Failed password/ {for(i=1;i<=NF;i++) if(\$i=="from") print \$(i+1)}' ~/labs/web/sample_auth.log | \\
+  sort | uniq -c | sort -rn
+
+# Find unique usernames targeted
+grep "Failed password" ~/labs/web/sample_auth.log | \\
+  awk '{for(i=1;i<=NF;i++) if(\$i=="for") print \$(i+1)}' | sort -u
+
+# Show timeline of failed attempts
+grep "Failed password" ~/labs/web/sample_auth.log | \\
+  awk '{print \$1, \$2}' | sort | uniq -c
+
+# Find successful logins
+grep "Accepted" ~/labs/web/sample_auth.log
+
+# Show all unique IPs in the log
+grep -oE "\\b[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}\\b" ~/labs/web/sample_auth.log | sort -u
+\`\`\`
+
+**Expected output for failed attempts per IP:**
+\`\`\`
+      4 192.168.1.100
+      1 10.0.0.99
+\`\`\`
+
+**Expected output for unique usernames:**
+\`\`\`
+admin
+root
+test
+\`\`\`
+
+## Part 5: Building a Security Analysis Pipeline
+
+Combine grep, sed, awk, and pipes for powerful analysis:
+
+\`\`\`bash
+# Full security analysis of the sample log
+echo "=== SECURITY LOG ANALYSIS ==="
+echo ""
+
+echo "--- Failed Login Summary ---"
+grep "Failed password" ~/labs/web/sample_auth.log | \\
+  awk '/Failed password/ {for(i=1;i<=NF;i++) if(\$i=="from") print \$(i+1)}' | \\
+  sort | uniq -c | sort -rn | \\
+  while read count ip; do
+    if [ "\$count" -ge 3 ]; then
+      echo "  [BLOCK] \$ip: \$count attempts"
+    else
+      echo "  [WATCH] \$ip: \$count attempts"
+    fi
+  done
+
+echo ""
+echo "--- Targeted Usernames ---"
+grep "Failed password" ~/labs/web/sample_auth.log | \\
+  awk '{for(i=1;i<=NF;i++) if(\$i=="for") print \$(i+1)}' | sort -u
+
+echo ""
+echo "--- Successful Logins ---"
+grep "Accepted" ~/labs/web/sample_auth.log | \\
+  awk '{print \$9, \$11, \$14}'
+
+echo ""
+echo "--- Non-SSH Activity ---"
+grep -v "sshd" ~/labs/web/sample_auth.log
+\`\`\`
+
+**Expected output:**
+\`\`\`
+=== SECURITY LOG ANALYSIS ===
+
+--- Failed Login Summary ---
+  [BLOCK] 192.168.1.100: 4 attempts
+  [WATCH] 10.0.0.99: 1 attempts
+
+--- Targeted Usernames ---
+admin
+root
+test
+
+--- Successful Logins ---
+publickey user1 10.0.0.5
+password test 192.168.1.50
+
+--- Non-SSH Activity ---
+Jun 22 10:05:00 server nginx[1300]: 200 GET /index.html from 192.168.1.1
+Jun 22 10:05:30 server nginx[1301]: 403 GET /admin from 192.168.1.100
+Jun 22 10:06:00 server kernel: [UFW BLOCK] IN=eth0 SRC=203.0.113.42 DST=192.168.1.1
+\`\`\`
+
+:::tip
+Piping techniques: \`grep | awk | sort | uniq -c | sort -rn\` is the standard pattern for counting occurrences in security log analysis.
+:::
+
+## Quick Reference
+
+| Task | Command |
+|---|---|
+| Search for pattern | \`grep "pattern" file\` |
+| Case-insensitive search | \`grep -i "pattern" file\` |
+| Count matches | \`grep -c "pattern" file\` |
+| Replace text | \`sed 's/old/new/g' file\` |
+| Delete matching lines | \`sed '/pattern/d' file\` |
+| Print columns | \`awk '{print \$1, \$2}' file\` |
+| Filter by column value | \`awk '\$3 == "value" {print \$0}' file\` |
+| Count occurrences | \`sort | uniq -c | sort -rn\` |
+
+:::checkpoint
+1. What is the difference between grep and sed?
+2. How do you make grep case-insensitive?
+3. What does 'sed -i' do?
+4. How would you extract the 3rd column from a file using awk?
+5. What pipe pattern counts occurrences of something in a log file?
+:::
+`,
+        aiPrompt: "",
+        labUrl: "",
+        labTitle: "",
+        interviewQuestion: "You're given a 10GB auth.log file. How would you find the top 10 source IPs of failed SSH attempts without loading the entire file into memory?",
+        interviewAnswer: "I would pipe grep to extract only the failed login lines, then use awk to extract the IP address field after 'from', pipe to sort, then uniq -c to count, and sort -rn for descending order, limiting to the top 10 with head. The command would be: grep 'Failed password' auth.log | awk '{for(i=1;i<=NF;i++) if($i==\"from\") print $(i+1)}' | sort | uniq -c | sort -rn | head -10. This streams through the file line by line without loading it entirely into memory.",
+        quiz: [
+          {
+            question: "What does grep -i do?",
+            options: [
+              "Searches for IP addresses",
+              "Makes the search case-insensitive",
+              "Shows line numbers",
+              "Inverts the match"
+            ],
+            correctAnswerIndex: 1,
+            difficulty: "beginner",
+            explanation: "The -i flag makes grep ignore case, so 'failed' matches 'Failed', 'FAILED', etc."
+          },
+          {
+            question: "What does sed 's/old/new/g' do?",
+            options: [
+              "Deletes lines containing 'old'",
+              "Replaces all occurrences of 'old' with 'new' on each line",
+              "Inserts 'old' before 'new' on each line",
+              "Moves 'old' to the end of each line"
+            ],
+            correctAnswerIndex: 1,
+            difficulty: "beginner",
+            explanation: "s is the substitute command, and g means global (all occurrences per line, not just the first)."
+          },
+          {
+            question: "In awk, what does '{print $1, $3}' do?",
+            options: [
+              "Prints lines 1 and 3",
+              "Prints the 1st and 3rd columns",
+              "Prints the first and third words",
+              "Prints the file twice"
+            ],
+            correctAnswerIndex: 1,
+            difficulty: "beginner",
+            explanation: "$1 and $3 refer to the first and third fields (columns) of each line, separated by whitespace."
+          },
+          {
+            question: "How do you count the number of lines matching a pattern?",
+            options: [
+              "grep pattern file | wc -l",
+              "grep -c pattern file",
+              "grep --count pattern file",
+              "All of these work"
             ],
             correctAnswerIndex: 3,
-            difficulty: "advanced",
-            explanation: "You'd serialize the results using json.dumps() and either print or write the JSON string to a file."
+            difficulty: "intermediate",
+            explanation: "All three approaches work. grep -c is the most direct, while grep | wc -l is also common."
+          },
+          {
+            question: "What does 'sort | uniq -c | sort -rn' do?",
+            options: [
+              "Sorts alphabetically",
+              "Counts unique occurrences and sorts by count descending",
+              "Removes duplicate lines",
+              "Sorts by line length"
+            ],
+            correctAnswerIndex: 1,
+            difficulty: "intermediate",
+            explanation: "uniq -c counts adjacent duplicates, sort -rn sorts numerically in reverse (highest first)."
+          },
+          {
+            question: "What does sed -i do?",
+            options: [
+              "Shows line numbers for matches",
+              "Edits the file in-place (modifies the original)",
+              "Ignores case",
+              "Inverts the match"
+            ],
+            correctAnswerIndex: 1,
+            difficulty: "intermediate",
+            explanation: "The -i flag tells sed to modify the file directly instead of just outputting to stdout."
+          },
+          {
+            question: "How would you extract all IP addresses from a log file?",
+            options: [
+              "grep [0-9] file",
+              "grep -oE '\\b[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}\\b' file",
+              "awk '{print $1}' file",
+              "sed 's/:/ /g' file"
+            ],
+            correctAnswerIndex: 1,
+            difficulty: "intermediate",
+            explanation: "The -o flag outputs only the matched parts, and the regex matches the IP address pattern."
+          },
+          {
+            question: "What does awk -F: '{print $1}' /etc/passwd do?",
+            options: [
+              "Prints the first line of /etc/passwd",
+              "Prints the username (first field) from each line",
+              "Prints the file permissions",
+              "Prints the line count"
+            ],
+            correctAnswerIndex: 1,
+            difficulty: "beginner",
+            explanation: "-F: sets the field separator to colon, so $1 is the username in /etc/passwd's colon-delimited format."
+          },
+          {
+            question: "What is the purpose of grep -v?",
+            options: [
+              "Verbose output",
+              "Inverts the match (shows lines NOT matching the pattern)",
+              "Shows version information",
+              "Validates the pattern"
+            ],
+            correctAnswerIndex: 1,
+            difficulty: "beginner",
+            explanation: "grep -v inverts the match, printing only lines that do NOT contain the pattern."
+          },
+          {
+            question: "Why is piping preferred over loading large files into memory?",
+            options: [
+              "It's always faster",
+              "It processes data line by line, using minimal memory",
+              "It's required by Unix",
+              "It compresses the data"
+            ],
+            correctAnswerIndex: 1,
+            difficulty: "intermediate",
+            explanation: "Piping streams data through processes one line at a time, keeping memory usage constant regardless of file size."
+          }
+        ]
+      },
+      {
+        id: "we06d05",
+        title: "Network Fundamentals with Linux Tools",
+        description: "Use ip, ping, traceroute, dig, nslookup, curl, wget, ss, and iptables to understand and manage Linux networking.",
+        type: "learn",
+        duration: "3-4 hours",
+        content: `:::objectives
+- Check IP addresses and routes with ip addr and ip route
+- Test connectivity with ping and traceroute
+- Perform DNS lookups with dig and nslookup
+- Test HTTP with curl and wget
+- View listening ports with ss
+- Understand iptables basics (ACCEPT, DROP, REJECT)
+- Read and interpret firewall rules
+:::
+
+## Step 1: IP Addresses and Routes
+
+### ip addr — Show Network Interfaces
+
+\`\`\`bash
+# Show all interfaces
+ip addr
+
+# Show specific interface
+ip addr show eth0
+ip addr show lo
+
+# Show only IP addresses
+ip -4 addr show
+\`\`\`
+
+**Expected output:**
+\`\`\`
+1: lo: <LOOPBACK,UP,LOWER_UP> mtu 65536 qdisc noqueue state UNKNOWN group default qlen 1000
+    inet 127.0.0.1/8 scope host lo
+    inet6 ::1/128 scope host
+2: eth0: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc fq_codel state UP group default qlen 1000
+    inet 192.168.1.50/24 brd 192.168.1.255 scope global eth0
+    inet6 fe80::a00:27ff:fe4e:66a1/64 scope link
+\`\`\`
+
+**Key info:**
+- \`127.0.0.1\` — loopback (your own machine)
+- \`192.168.1.50/24\` — your IP with subnet mask (/24 = 255.255.255.0)
+- \`fe80::...\` — link-local IPv6 address
+
+### ip route — Show Routing Table
+
+\`\`\`bash
+ip route
+\`\`\`
+
+**Expected output:**
+\`\`\`
+default via 192.168.1.1 dev eth0 proto dhcp metric 100
+192.168.1.0/24 dev eth0 proto kernel scope link src 192.168.1.50 metric 100
+\`\`\`
+
+This tells you:
+- **Default gateway** (router): 192.168.1.1
+- **Local network**: 192.168.1.0/24
+- **Your IP on that network**: 192.168.1.50
+
+\`\`\`bash
+# Show the default route
+ip route show default
+
+# Add a static route (temporary)
+# sudo ip route add 10.0.0.0/8 via 192.168.1.254
+
+# Show the IP of a specific interface
+ip route get 8.8.8.8
+\`\`\`
+
+## Step 2: Connectivity Testing
+
+### ping
+
+\`\`\`bash
+# Ping a host (sends ICMP packets)
+ping -c 4 google.com
+\`\`\`
+
+**Expected output:**
+\`\`\`
+PING google.com (142.250.80.46) 56(84) bytes of data.
+64 bytes from iad23s58-in-f14.1e100.net (142.250.80.46): icmp_seq=1 ttl=116 time=12.3 ms
+64 bytes from iad23s58-in-f14.1e100.net (142.250.80.46): icmp_seq=2 ttl=116 time=11.8 ms
+64 bytes from iad23s58-in-f14.1e100.net (142.250.80.46): icmp_seq=3 ttl=116 time=12.1 ms
+64 bytes from iad23s58-in-f14.1e100.net (142.250.80.46): icmp_seq=4 ttl=116 time=11.9 ms
+
+--- google.com ping statistics ---
+4 packets transmitted, 4 received, 0% packet loss, time 3005ms
+rtt min/avg/max/mdev = 11.812/12.025/12.327/0.198 ms
+\`\`\`
+
+\`\`\`bash
+# Ping with count
+ping -c 4 192.168.1.1
+
+# Ping with interval (1 second between pings)
+ping -i 1 -c 10 192.168.1.1
+
+# Ping flood (requires root, for stress testing)
+# sudo ping -f 192.168.1.1
+\`\`\`
+
+### traceroute / tracepath
+
+\`\`\`bash
+# Install traceroute if not available
+sudo apt install traceroute -y
+
+# Trace route to destination
+traceroute google.com
+
+# Trace route with DNS resolution
+traceroute -n google.com
+\`\`\`
+
+**Expected output (truncated):**
+\`\`\`
+traceroute to google.com (142.250.80.46), 30 hops max, 60 byte packets
+ 1  192.168.1.1 (192.168.1.1)  1.234 ms  1.102 ms  1.023 ms
+ 2  10.0.0.1 (10.0.0.1)  5.678 ms  5.543 ms  5.432 ms
+ 3  72.14.236.201 (72.14.236.201)  8.901 ms  8.765 ms  8.654 ms
+\`\`\`
+
+:::info
+Some hops show \`*\` because routers don't always respond to traceroute probes. This is normal.
+:::
+
+## Step 3: DNS Lookups
+
+### dig — Detailed DNS Queries
+
+\`\`\`bash
+# Basic lookup
+dig google.com
+\`\`\`
+
+**Expected output (simplified):**
+\`\`\`
+;; ANSWER SECTION:
+google.com.         300     IN      A       142.250.80.46
+\`\`\`
+
+\`\`\`bash
+# Short answer only
+dig +short google.com
+
+# Lookup specific record type
+dig google.com MX      # mail servers
+dig google.com NS      # name servers
+dig google.com TXT     # text records (SPF, etc.)
+dig google.com AAAA    # IPv6 address
+
+# Reverse DNS lookup
+dig -x 142.250.80.46
+
+# Query specific DNS server
+dig @8.8.8.8 google.com
+
+# Trace the full DNS resolution path
+dig +trace google.com
+\`\`\`
+
+### nslookup — Simpler DNS Tool
+
+\`\`\`bash
+# Basic lookup
+nslookup google.com
+
+# Reverse lookup
+nslookup 142.250.80.46
+
+# Query specific DNS server
+nslookup google.com 8.8.8.8
+\`\`\`
+
+**Expected output:**
+\`\`\`
+Server:         127.0.0.53
+Address:        127.0.0.53#53
+
+Non-authoritative answer:
+Name:   google.com
+Address: 142.250.80.46
+\`\`\`
+
+:::tip
+dig is preferred over nslookup for security professionals because it provides more detail and supports all record types. nslookup is simpler but less informative.
+:::
+
+## Step 4: HTTP Testing with curl and wget
+
+### curl — Transfer Data with URLs
+
+\`\`\`bash
+# GET request
+curl http://example.com
+
+# Show headers only (HEAD request)
+curl -I http://example.com
+
+# Show response headers and body
+curl -i http://example.com
+
+# Follow redirects
+curl -L http://example.com
+
+# POST request with data
+curl -X POST -d "username=admin&password=test" http://target/login
+
+# POST with JSON
+curl -X POST -H "Content-Type: application/json" \\
+  -d '{"username":"admin","password":"test"}' \\
+  http://target/api/login
+
+# Send cookies
+curl -b "session=abc123" http://target/dashboard
+
+# Save cookies to file
+curl -c cookies.txt http://target/login
+
+# Download a file
+curl -O http://target/file.zip
+
+# Silent mode (no progress)
+curl -s -o /dev/null -w "%{http_code}" http://target
+\`\`\`
+
+**HTTP status code check (useful for security scanning):**
+\`\`\`bash
+# Check if a page returns 200, 403, 404, etc.
+for path in admin login dashboard api config backup; do
+  code=$(curl -s -o /dev/null -w "%{http_code}" http://target/$path)
+  echo "  /$path -> $code"
+done
+\`\`\`
+
+### wget — Download Files
+
+\`\`\`bash
+# Download a file
+wget http://target/file.zip
+
+# Download with custom name
+wget -O custom_name.zip http://target/file.zip
+
+# Download entire site (mirror)
+wget -m -p -E -k http://target/
+
+# Resume a download
+wget -c http://target/large_file.iso
+
+# Download in background
+wget -b http://target/large_file.iso
+\`\`\`
+
+:::info
+curl is better for API testing and scripting. wget is better for downloading files and mirroring websites.
+:::
+
+## Step 5: Checking Listening Ports with ss
+
+\`\`\`bash
+# All listening TCP and UDP ports
+ss -tlnu
+
+# TCP listening ports with process info
+sudo ss -tlnp
+
+# Show established connections
+ss -tnp
+
+# Filter for specific port
+ss -tlnp | grep :80
+\`\`\`
+
+**Expected output of ss -tlnp:**
+\`\`\`
+State   Recv-Q  Send-Q   Local Address:Port    Peer Address:Port  Process
+LISTEN  0       128          0.0.0.0:22           0.0.0.0:*    users:(("sshd",pid=567,fd=3))
+LISTEN  0       4096         0.0.0.0:80           0.0.0.0:*    users:(("nginx",pid=890,fd=6))
+LISTEN  0       128             [::]:22              [::]:*    users:(("sshd",pid=567,fd=4))
+\`\`\`
+
+**Quick port check:**
+\`\`\`bash
+# Is port 80 open?
+ss -tlnp | grep -q ":80" && echo "Port 80 OPEN" || echo "Port 80 CLOSED"
+
+# List all open ports as a simple list
+ss -tlnp | awk 'NR>1 {print \$4}' | grep -oE ':[0-9]+' | sort -t: -k2 -n | uniq
+\`\`\`
+
+## Step 6: iptables — Linux Firewall
+
+iptables is the traditional Linux firewall. It processes packets through a chain of rules.
+
+### Understanding Chains
+
+| Chain | When It Processes Packets |
+|---|---|
+| **INPUT** | Incoming packets destined for this machine |
+| **OUTPUT** | Outgoing packets from this machine |
+| **FORWARD** | Packets being routed through this machine |
+
+### Common iptables Commands
+
+\`\`\`bash
+# View current rules
+sudo iptables -L -n -v
+
+# View rules with line numbers
+sudo iptables -L -n -v --line-numbers
+\`\`\`
+
+**Expected output:**
+\`\`\`
+Chain INPUT (policy ACCEPT 0 packets, 0 bytes)
+ pkts bytes target     prot opt in     out     source               destination
+    0     0 ufw-before-iptables-user-  all  --  *      *       0.0.0.0/0            0.0.0.0/0
+
+Chain FORWARD (policy DROP 0 packets, 0 bytes)
+ pkts bytes target     prot opt in     out     source               destination
+
+Chain OUTPUT (policy ACCEPT 0 packets, 0 bytes)
+ pkts bytes target     prot opt in     out     source               destination
+\`\`\`
+
+### Basic iptables Rules
+
+\`\`\`bash
+# Allow SSH (don't lock yourself out!)
+sudo iptables -A INPUT -p tcp --dport 22 -j ACCEPT
+
+# Allow HTTP and HTTPS
+sudo iptables -A INPUT -p tcp --dport 80 -j ACCEPT
+sudo iptables -A INPUT -p tcp --dport 443 -j ACCEPT
+
+# Allow established connections
+sudo iptables -A INPUT -m state --state ESTABLISHED,RELATED -j ACCEPT
+
+# Allow loopback (local traffic)
+sudo iptables -A INPUT -i lo -j ACCEPT
+
+# Drop all other incoming traffic
+sudo iptables -P INPUT DROP
+
+# Reject with ICMP port unreachable (sends error back)
+sudo iptables -A INPUT -p tcp --dport 3306 -j REJECT
+
+# Block a specific IP
+sudo iptables -A INPUT -s 203.0.113.42 -j DROP
+
+# Log dropped packets
+sudo iptables -A INPUT -j LOG --log-prefix "DROPPED: "
+\`\`\`
+
+### Actions (Targets)
+
+| Target | Behavior |
+|---|---|
+| \`ACCEPT\` | Allow the packet through |
+| \`DROP\` | Silently discard the packet (no response) |
+| \`REJECT\` | Discard and send error response back |
+| \`LOG\` | Log the packet and continue processing |
+| \`MASQUERADE\` | NAT for outgoing traffic |
+
+:::warning
+Always allow SSH (port 22) before setting DROP as the default policy. Otherwise you'll lock yourself out of the server.
+:::
+
+### Saving and Restoring Rules
+
+\`\`\`bash
+# Save current rules
+sudo iptables-save > ~/iptables-rules.txt
+
+# Restore rules from file
+sudo iptables-restore < ~/iptables-rules.txt
+
+# Flush all rules (reset to default — be careful!)
+sudo iptables -F
+\`\`\`
+
+### Reading iptables Output
+
+The \`-v\` (verbose) output shows:
+
+| Column | Meaning |
+|---|---|
+| \`pkts\` | Number of packets matched |
+| \`bytes\` | Total bytes matched |
+| \`target\` | Action taken (ACCEPT, DROP, etc.) |
+| \`prot\` | Protocol (tcp, udp, icmp, all) |
+| \`opt\` | IP options |
+| \`in\` | Input interface |
+| \`out\` | Output interface |
+| \`source\` | Source IP/CIDR |
+| \`destination\` | Destination IP/CIDR |
+
+## Step 7: Network Troubleshooting Workflow
+
+\`\`\`bash
+# 1. Check your own IP
+ip addr show
+
+# 2. Check you can reach your gateway
+ip route show default
+ping -c 2 192.168.1.1
+
+# 3. Check external connectivity
+ping -c 2 8.8.8.8
+
+# 4. Check DNS resolution
+dig google.com +short
+nslookup google.com
+
+# 5. Check if a specific port is open on a target
+nc -zv target_ip 80
+
+# 6. Check what's listening locally
+sudo ss -tlnp
+
+# 7. Check firewall rules
+sudo iptables -L -n -v
+
+# 8. Check network interface errors
+ip -s link show eth0
+\`\`\`
+
+:::tip
+The troubleshooting order is: physical layer → IP layer → DNS → application layer. Always start from the bottom and work up.
+:::
+
+## Quick Reference
+
+| Task | Command |
+|---|---|
+| Show IP addresses | \`ip addr show\` |
+| Show routing table | \`ip route show\` |
+| Test connectivity | \`ping -c 4 target\` |
+| Trace route | \`traceroute target\` |
+| DNS lookup | \`dig domain\` or \`nslookup domain\` |
+| Check HTTP response | \`curl -I http://target\` |
+| Download file | \`wget url\` |
+| Show listening ports | \`ss -tlnp\` |
+| View firewall rules | \`sudo iptables -L -n -v\` |
+| Allow a port | \`sudo iptables -A INPUT -p tcp --dport PORT -j ACCEPT\` |
+
+:::checkpoint
+1. What is the difference between ip addr and ifconfig?
+2. What does ping -c 4 do?
+3. What is the difference between dig and nslookup?
+4. When would you use curl vs wget?
+5. What does 'sudo iptables -A INPUT -p tcp --dport 22 -j ACCEPT' do?
+:::
+`,
+        aiPrompt: "",
+        labUrl: "",
+        labTitle: "",
+        interviewQuestion: "Explain the difference between DROP and REJECT in iptables. When would you use each?",
+        interviewAnswer: "DROP silently discards the packet — the sender gets no response and eventually times out. REJECT sends an ICMP port unreachable error back to the sender. Use DROP for stealth (attacker can't tell if the host is alive) and for blocking known malicious IPs. Use REJECT for internal troubleshooting where you want the sender to know the connection was refused, or when you need to comply with network policies that require responding to connections.",
+        quiz: [
+          {
+            question: "What does 'ip addr show' display?",
+            options: [
+              "The routing table",
+              "All network interfaces and their IP addresses",
+              "Firewall rules",
+              "DNS resolver configuration"
+            ],
+            correctAnswerIndex: 1,
+            difficulty: "beginner",
+            explanation: "ip addr show displays all network interfaces with their IP addresses, MAC addresses, and status."
+          },
+          {
+            question: "What does the /24 in 192.168.1.50/24 represent?",
+            options: [
+              "The host number",
+              "The subnet mask (255.255.255.0)",
+              "The default gateway",
+              "The DNS server"
+            ],
+            correctAnswerIndex: 1,
+            difficulty: "intermediate",
+            explanation: "/24 means 24 bits are set in the subnet mask: 255.255.255.0. It defines the network portion of the address."
+          },
+          {
+            question: "What does 'ping -c 4 google.com' do?",
+            options: [
+              "Sends 4 TCP packets to google.com",
+              "Sends 4 ICMP echo requests and waits for replies",
+              "Downloads 4 files from google.com",
+              "Opens 4 browser tabs to google.com"
+            ],
+            correctAnswerIndex: 1,
+            difficulty: "beginner",
+            explanation: "ping uses ICMP echo requests. -c 4 limits it to 4 packets before stopping."
+          },
+          {
+            question: "What is the advantage of dig over nslookup?",
+            options: [
+              "dig is faster",
+              "dig provides more detailed output and supports all DNS record types",
+              "dig works on Windows, nslookup doesn't",
+              "nslookup is deprecated"
+            ],
+            correctAnswerIndex: 1,
+            difficulty: "intermediate",
+            explanation: "dig provides verbose output with TTL, record types, and supports advanced queries like +trace."
+          },
+          {
+            question: "When would you use curl -I instead of curl?",
+            options: [
+              "To download a file faster",
+              "To send only a HEAD request and see HTTP headers",
+              "To follow redirects",
+              "To send POST data"
+            ],
+            correctAnswerIndex: 1,
+            difficulty: "beginner",
+            explanation: "curl -I sends a HEAD request, which returns only the HTTP headers without the response body."
+          },
+          {
+            question: "What does 'sudo iptables -P INPUT DROP' do?",
+            options: [
+              "Drops all packets on all chains",
+              "Sets the default policy for incoming packets to DROP",
+              "Drops the iptables configuration",
+              "Drops all established connections"
+            ],
+            correctAnswerIndex: 1,
+            difficulty: "intermediate",
+            explanation: "It sets the INPUT chain's default policy to DROP. Any incoming packet not matching an explicit rule will be dropped."
+          },
+          {
+            question: "What is the difference between DROP and REJECT in iptables?",
+            options: [
+              "They are identical",
+              "DROP silently discards; REJECT sends an error response back",
+              "DROP is faster; REJECT is slower",
+              "REJECT is only for UDP"
+            ],
+            correctAnswerIndex: 1,
+            difficulty: "intermediate",
+            explanation: "DROP gives no feedback to the sender (they timeout). REJECT sends an ICMP error, letting the sender know the connection was refused."
+          },
+          {
+            question: "What does 'ss -tlnp' show?",
+            options: [
+              "All active TCP connections",
+              "TCP listening ports with process info",
+              "UDP port statistics",
+              "Network interface statistics"
+            ],
+            correctAnswerIndex: 1,
+            difficulty: "beginner",
+            explanation: "ss -t (TCP) -l (listening) -n (numeric) -p (process) shows all listening TCP ports with the process using each."
+          },
+          {
+            question: "What is the correct order for network troubleshooting?",
+            options: [
+              "DNS → IP → Physical → Application",
+              "Physical → IP → DNS → Application",
+              "Application → DNS → IP → Physical",
+              "It doesn't matter what order"
+            ],
+            correctAnswerIndex: 1,
+            difficulty: "intermediate",
+            explanation: "Always work from the bottom up: physical connectivity first, then IP, then DNS, then application-layer issues."
+          },
+          {
+            question: "What does curl -s -o /dev/null -w %{http_code} http://target do?",
+            options: [
+              "Downloads the page content",
+              "Silently fetches the page and prints only the HTTP status code",
+              "Saves the page to /dev/null",
+              "Checks if curl is installed"
+            ],
+            correctAnswerIndex: 1,
+            difficulty: "intermediate",
+            explanation: "-s silences progress, -o /dev/null discards the body, -w prints the format string (status code). Useful for scripting."
           }
         ]
       }

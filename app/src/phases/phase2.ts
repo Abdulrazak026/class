@@ -2608,7 +2608,7 @@ Remove-NetFirewallRule -DisplayName "Block SMB"
               "Packet filtering firewall",
               "Stateful firewall",
               "Application layer firewall / WAF",
-              "All of the above"
+              "Circuit-level gateway"
             ],
             correctAnswerIndex: 2,
             difficulty: "intermediate",

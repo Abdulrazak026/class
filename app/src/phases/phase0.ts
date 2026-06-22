@@ -160,11 +160,11 @@ This happens billions of times per second. Each component in the chain is a pote
               "Input — the malware enters through a phishing email",
               "Processing — the CPU performs the encryption algorithm",
               "Storage — the encrypted files are written to disk",
-              "All of the above — it spans multiple stages"
+              "Output — the ransom note is displayed to the user"
             ],
             correctAnswerIndex: 3,
             difficulty: "advanced",
-            explanation: "Ransomware spans the full cycle: input (phishing email), processing (CPU encrypts files), storage (encrypted files written), and output (ransom note displayed)."
+            explanation: "While ransomware touches all stages, the final visible stage is output: the ransom note displayed to the victim after encryption completes."
           },
           {
             question: "Which statement about volatile memory is TRUE?",
@@ -1050,11 +1050,11 @@ grep -r "search term" ~/Documents/         # Search inside file contents
               "ren report.docx final-report.docx",
               "mv report.docx final-report.docx",
               "Move-Item report.docx final-report.docx",
-              "All of the above work"
+              "rename report.docx final-report.docx"
             ],
             correctAnswerIndex: 3,
             difficulty: "intermediate",
-            explanation: "ren, mv, and Move-Item all work in PowerShell for renaming files."
+            explanation: "ren, mv, Move-Item, and rename all work in PowerShell for renaming files. 'rename' is actually an alias for Move-Item."
           },
           {
             question: "Why is 'rm -rf' dangerous with a wildcard or typo?",
@@ -2771,12 +2771,12 @@ ss -tuln                         # Show listening ports
             options: [
               "chmod 644 script.sh",
               "chmod 755 script.sh",
-              "chmod +x script.sh",
-              "Both B and C"
+              "chmod 400 script.sh",
+              "chmod 200 script.sh"
             ],
-            correctAnswerIndex: 3,
+            correctAnswerIndex: 1,
             difficulty: "intermediate",
-            explanation: "Both chmod +x and chmod 755 make a script executable."
+            explanation: "chmod 755 grants read, write, and execute permissions to the owner, and read/execute to group and others. This is the standard way to make a script executable while maintaining reasonable security."
           },
           {
             question: "What does 'ps aux' display?",
@@ -3064,12 +3064,12 @@ Target: under 30 seconds.
             options: [
               "One file named 'file{1..5}.txt'",
               "Five files: file1.txt through file5.txt",
-              "Five files named file1.txt, file2.txt, file3.txt, file4.txt, file5.txt",
-              "Both B and C are correct"
+              "A directory named file{1..5}.txt",
+              "An error — brace expansion doesn't work in bash"
             ],
-            correctAnswerIndex: 3,
+            correctAnswerIndex: 1,
             difficulty: "intermediate",
-            explanation: "Brace expansion {1..5} generates the sequence, creating five separate files."
+            explanation: "Brace expansion {1..5} generates the sequence file1.txt file2.txt file3.txt file4.txt file5.txt, creating five separate files."
           },
           {
             question: "What does Ctrl+R do in the terminal?",
@@ -3332,11 +3332,11 @@ sort ~/filelab/backup/syslog.txt | uniq
               "grep 'Error' file.txt",
               "grep -r 'Error' file.txt",
               "grep -n 'Error' file.txt",
-              "Both A and C work"
+              "find 'Error' file.txt"
             ],
-            correctAnswerIndex: 3,
+            correctAnswerIndex: 2,
             difficulty: "intermediate",
-            explanation: "grep 'Error' file.txt searches for the pattern. grep -n adds line numbers. Both are valid."
+            explanation: "grep -n 'Error' file.txt searches for the pattern and displays line numbers with each match. The -r flag is for recursive directory search, not needed for a single file."
           },
           {
             question: "What does 'mv old.txt new.txt' do when old.txt and new.txt are in different directories?",
