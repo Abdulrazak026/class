@@ -115,11 +115,11 @@ export function QuizModal({ topicId, topicTitle, quiz, onClose, onPass }: QuizMo
       <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
         className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4" onClick={onClose}>
         <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}
-          className="bg-surface rounded-2xl p-8 max-w-lg w-full shadow-xl" onClick={e => e.stopPropagation()}>
-          <div className="flex items-center justify-between mb-6">
+          className="bg-surface rounded-2xl p-5 sm:p-8 max-w-lg w-full shadow-xl max-h-[90vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
+          <div className="flex items-center justify-between mb-4 sm:mb-6">
             <div>
               <h3 className="font-bold text-sm text-accent">Quiz</h3>
-              <p className="text-xs text-slate-500">{topicTitle}</p>
+              <p className="text-xs text-slate-500 truncate max-w-[200px] sm:max-w-none">{topicTitle}</p>
             </div>
             <button onClick={onClose} className="text-slate-400 hover:text-slate-600"><X className="w-5 h-5" /></button>
           </div>
@@ -142,7 +142,7 @@ export function QuizModal({ topicId, topicTitle, quiz, onClose, onPass }: QuizMo
               }`}>{q.difficulty}</span>
             )}
           </div>
-          <p className="text-lg font-bold text-slate-800 mb-6">{q.question}</p>
+          <p className="text-base sm:text-lg font-bold text-slate-800 mb-4 sm:mb-6">{q.question}</p>
 
           <div className="space-y-2 mb-6">
             {q.options.map((opt, i) => {

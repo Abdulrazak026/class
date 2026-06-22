@@ -162,21 +162,21 @@ const MarkdownComponents = {
       return <InlineCodeRunner language={lang === 'bash' ? 'bash' : lang} code={String(children).replace(/\n$/, '')} />;
     }
     return (
-      <div className="bg-gray-900 rounded-xl overflow-hidden my-4 border border-gray-800">
-        <div className="flex items-center gap-2 px-4 py-2 bg-gray-800/50 border-b border-gray-800">
+      <div className="bg-gray-900 rounded-lg sm:rounded-xl overflow-hidden my-4 border border-gray-800">
+        <div className="flex items-center gap-2 px-3 sm:px-4 py-1.5 sm:py-2 bg-gray-800/50 border-b border-gray-800">
           <Terminal className="w-3.5 h-3.5 text-gray-500" />
           <span className="text-[10px] text-gray-500 font-medium uppercase tracking-wider">Code</span>
         </div>
-        <pre className="p-4 overflow-x-auto text-sm font-mono text-gray-200 leading-relaxed">{children}</pre>
+        <pre className="p-3 sm:p-4 overflow-x-auto text-xs sm:text-sm font-mono text-gray-200 leading-relaxed">{children}</pre>
       </div>
     );
   },
   blockquote({ children, ...props }: any) {
     return (
-      <div className="bg-accent/5 border-l-4 border-accent rounded-r-xl px-5 py-4 my-4">
-        <div className="flex items-start gap-3">
-          <Lightbulb className="w-5 h-5 text-accent shrink-0 mt-0.5" />
-          <div className="text-gray-600 italic">{children}</div>
+      <div className="bg-accent/5 border-l-4 border-accent rounded-r-lg sm:rounded-r-xl px-4 sm:px-5 py-3 sm:py-4 my-4">
+        <div className="flex items-start gap-2 sm:gap-3">
+          <Lightbulb className="w-4 h-4 sm:w-5 sm:h-5 text-accent shrink-0 mt-0.5" />
+          <div className="text-sm sm:text-base text-gray-600 italic">{children}</div>
         </div>
       </div>
     );
@@ -185,10 +185,10 @@ const MarkdownComponents = {
     return <strong className="text-gray-900 font-extrabold bg-accent/5 px-1 rounded">{children}</strong>;
   },
   h2({ children, ...props }: any) {
-    return <h2 className="text-xl font-extrabold text-gray-900 mt-8 mb-4 pb-2 border-b border-gray-100 flex items-center gap-2"><BookOpen className="w-5 h-5 text-accent shrink-0" />{children}</h2>;
+    return <h2 className="text-lg sm:text-xl font-extrabold text-gray-900 mt-6 sm:mt-8 mb-3 sm:mb-4 pb-2 border-b border-gray-100 flex items-center gap-2"><BookOpen className="w-4 h-4 sm:w-5 sm:h-5 text-accent shrink-0" />{children}</h2>;
   },
   h3({ children, ...props }: any) {
-    return <h3 className="text-lg font-bold text-gray-900 mt-6 mb-3 flex items-center gap-2">{children}</h3>;
+    return <h3 className="text-base sm:text-lg font-bold text-gray-900 mt-4 sm:mt-6 mb-2 sm:mb-3 flex items-center gap-2">{children}</h3>;
   },
   ul({ children, ...props }: any) {
     return <ul className="space-y-1.5 my-3">{children}</ul>;
@@ -209,8 +209,8 @@ function CheckpointCard({ checkpoint, checkpointIndex, onAnswer }: { checkpoint:
   };
   const isCorrect = state.selected === checkpoint.correctIndex;
   return (
-    <div className="bg-accent/5 border border-accent/20 rounded-xl p-5 my-6">
-      <p className="font-semibold text-gray-900 mb-4 text-[15px]">{checkpoint.question}</p>
+    <div className="bg-accent/5 border border-accent/20 rounded-xl p-4 sm:p-5 my-4 sm:my-6">
+      <p className="font-semibold text-gray-900 mb-3 sm:mb-4 text-sm sm:text-[15px]">{checkpoint.question}</p>
       <div className="space-y-2">
         {checkpoint.options.map((opt, i) => {
           const selected = state.selected === i;
@@ -469,18 +469,18 @@ export function CoursePlayer({ curriculum, completedTasks, toggleTask, activeTop
       <div className="flex-1 flex flex-col h-full bg-gray-50 relative">
         <button onClick={() => setSidebarOpen(!sidebarOpen)} className="absolute top-4 left-4 z-20 bg-white border border-gray-200 text-gray-500 p-2 rounded-lg hover:bg-gray-100 shadow-sm"><Menu className="w-5 h-5" /></button>
 
-        <div ref={contentRef} className="flex-1 overflow-y-auto px-6 py-16 sm:px-16 custom-scrollbar">
+        <div ref={contentRef} className="flex-1 overflow-y-auto px-4 py-8 sm:px-10 md:px-16 sm:py-16 custom-scrollbar">
           <AnimatePresence mode="wait">
           {activeTopic ? (
             <motion.div key={activeTopic.id} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} transition={{ duration: 0.3 }} className="max-w-3xl mx-auto">
               
-              <div className="mb-8 space-y-4">
-                <div className="flex items-center gap-3 text-sm font-semibold text-accent tracking-wider uppercase">
-                  <span>{activeModule?.title}</span>
+              <div className="mb-6 sm:mb-8 space-y-3 sm:space-y-4">
+                <div className="flex items-center gap-2 sm:gap-3 text-xs sm:text-sm font-semibold text-accent tracking-wider uppercase">
+                  <span className="truncate max-w-[200px] sm:max-w-none">{activeModule?.title}</span>
                   <span className="text-gray-300">/</span>
-                  <span className="text-gray-400 font-mono">Topic {topicIndex + 1}</span>
+                  <span className="text-gray-400 font-mono shrink-0">Topic {topicIndex + 1}</span>
                 </div>
-                <h1 className="text-3xl sm:text-4xl font-extrabold text-gray-900 tracking-tight">{activeTopic.title}</h1>
+                <h1 className="text-2xl sm:text-3xl md:text-4xl font-extrabold text-gray-900 tracking-tight">{activeTopic.title}</h1>
               </div>
 
               {shouldShowSql(activeTopic) && <SqlPlayground topicTitle={activeTopic.title} content={activeTopic.content} />}
@@ -503,7 +503,7 @@ export function CoursePlayer({ curriculum, completedTasks, toggleTask, activeTop
               )}
 
               <div className="text-gray-700 leading-relaxed space-y-6">
-                <div className="prose prose-gray max-w-none break-words prose-headings:text-gray-900 prose-strong:text-gray-900 prose-code:text-accent prose-code:bg-accent/5 prose-code:px-1 prose-code:rounded prose-a:text-accent">
+                <div className="prose prose-sm sm:prose-base prose-gray max-w-none break-words prose-headings:text-gray-900 prose-strong:text-gray-900 prose-code:text-accent prose-code:bg-accent/5 prose-code:px-1 prose-code:rounded prose-a:text-accent">
                   {activeTopic.content ? (() => {
                     let checkpointCounter = 0;
                     return (parsedContent ?? []).map((seg, i) => {
@@ -561,7 +561,7 @@ export function CoursePlayer({ curriculum, completedTasks, toggleTask, activeTop
               </div>
 
               {/* Comment Section */}
-              <div className="mt-12 pt-8 border-t border-gray-200">
+              <div className="mt-8 sm:mt-12 pt-6 sm:pt-8 border-t border-gray-200">
                 <h3 className="text-sm font-bold text-gray-900 mb-4 flex items-center gap-2">
                   <MessageSquare className="w-4 h-4 text-accent" />
                   Discussion ({topicComments.length})
@@ -596,15 +596,15 @@ export function CoursePlayer({ curriculum, completedTasks, toggleTask, activeTop
               </div>
 
               {/* Navigation */}
-              <div className="mt-8 pt-6 border-t border-gray-200 flex items-center justify-between pb-12">
-                <button onClick={handlePrevTopic} className="flex items-center gap-2 px-5 py-3 rounded-lg font-bold transition-all text-gray-500 bg-white border border-gray-200 hover:text-gray-800 hover:border-gray-300 shadow-sm"><ChevronLeft className="w-5 h-5" /> Previous</button>
+              <div className="mt-8 pt-6 border-t border-gray-200 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 pb-12">
+                <button onClick={handlePrevTopic} className="flex items-center justify-center gap-2 px-4 py-3 rounded-lg font-bold transition-all text-gray-500 bg-white border border-gray-200 hover:text-gray-800 hover:border-gray-300 shadow-sm"><ChevronLeft className="w-5 h-5" /> Previous</button>
                 <button onClick={() => { if (isCompleted) toggleTask(activeTopic!.id); else setShowQuiz(true); }}
-                  className={`flex items-center gap-2 px-6 py-3 rounded-lg font-bold transition-all shadow-sm ${
+                  className={`flex items-center justify-center gap-2 px-5 py-3 rounded-lg font-bold transition-all shadow-sm ${
                     isCompleted ? 'bg-white border border-emerald-300 text-emerald-600 hover:bg-emerald-50' : 'bg-accent text-white hover:bg-accent-dark'
                   }`}>
                   {isCompleted ? <><CheckCircle2 className="w-5 h-5" /> Completed</> : 'Complete & Take Quiz'}
                 </button>
-                {hasNextTopic && <button onClick={handleNextTopic} className="flex items-center gap-2 px-5 py-3 rounded-lg font-bold transition-all text-gray-500 bg-white border border-gray-200 hover:text-gray-800 hover:border-gray-300 shadow-sm">Next <ChevronRight className="w-5 h-5" /></button>}
+                {hasNextTopic && <button onClick={handleNextTopic} className="flex items-center justify-center gap-2 px-4 py-3 rounded-lg font-bold transition-all text-gray-500 bg-white border border-gray-200 hover:text-gray-800 hover:border-gray-300 shadow-sm">Next <ChevronRight className="w-5 h-5" /></button>}
               </div>
 
               {showQuiz && <QuizModal topicId={activeTopic.id} topicTitle={activeTopic.title} quiz={activeTopic.quiz} onClose={() => setShowQuiz(false)} onPass={() => toggleTask(activeTopic!.id)} />}
