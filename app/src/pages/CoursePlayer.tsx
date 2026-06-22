@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { Module, Topic } from '../data';
-import { Menu, PlayCircle, BookOpen, Presentation, CheckCircle2, XCircle, RefreshCw, ListChecks, MessageSquare, Send, ChevronLeft, ChevronRight, Wifi, Lightbulb, AlertTriangle, Info, Terminal, Home, BarChart3, MessageSquare as MessageSquareIcon } from 'lucide-react';
+import { Menu, PlayCircle, BookOpen, Presentation, CheckCircle2, XCircle, RefreshCw, ListChecks, MessageSquare, Send, ChevronLeft, ChevronRight, Wifi, Lightbulb, AlertTriangle, Info, Terminal, Home, BarChart3, MessageSquare as MessageSquareIcon, Loader2 } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { motion, AnimatePresence } from 'motion/react';
@@ -16,7 +16,7 @@ import { InlineCodeRunner } from '../components/InlineCodeRunner';
 import { ClassworkCard, parseClassworks, ParsedClasswork } from '../components/ClassworkCard';
 import { TopicComment } from '../firebase/services';
 import { hasFirebaseConfig } from '../firebase/config';
-import { getClassworks } from '../utils/dataLoader';
+import { getClassworks, loadModuleContent } from '../utils/dataLoader';
 import { SearchBar } from '../components/SearchBar';
 import { InfoBox, WarningBox, TipBox, DangerBox, ConceptCard, LearningObjectives, StepGuide, SummaryCard, CodeBlock } from '../components/ContentComponents';
 import { parseContentDirectives, ParsedCheckpoint, ContentSegment } from '../utils/contentParser';
@@ -129,6 +129,28 @@ function DesktopSidebarContent(props: { curriculum: Module[]; completedTasks: st
 }
 
 const MarkdownComponents = {
+  table({ children, ...props }: any) {
+    return (
+      <div className="overflow-x-auto my-4">
+        <table className="w-full border-collapse" {...props}>{children}</table>
+      </div>
+    );
+  },
+  thead({ children, ...props }: any) {
+    return <thead className="border-b-2 border-gray-200" {...props}>{children}</thead>;
+  },
+  tbody({ children, ...props }: any) {
+    return <tbody {...props}>{children}</tbody>;
+  },
+  tr({ children, ...props }: any) {
+    return <tr className="border-b border-gray-100 hover:bg-gray-50/50" {...props}>{children}</tr>;
+  },
+  th({ children, ...props }: any) {
+    return <th className="text-left px-4 py-3 font-bold text-gray-900 bg-gray-50 text-sm" {...props}>{children}</th>;
+  },
+  td({ children, ...props }: any) {
+    return <td className="px-4 py-3 text-gray-700 text-sm" {...props}>{children}</td>;
+  },
   code({ className, children, ...props }: any) {
     const isInline = !className;
     if (isInline) {
@@ -174,15 +196,7 @@ const MarkdownComponents = {
   li({ children, ...props }: any) {
     return <li className="flex items-start gap-2 text-gray-600"><span className="w-1.5 h-1.5 rounded-full bg-accent/60 mt-2 shrink-0" />{children}</li>;
   },
-  table({ children, ...props }: any) {
-    return <div className="overflow-x-auto my-6 rounded-xl border border-gray-200 shadow-sm"><table className="w-full text-sm">{children}</table></div>;
-  },
-  th({ children, ...props }: any) {
-    return <th className="bg-gradient-to-r from-gray-50 to-gray-100/50 px-5 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider border-b-2 border-gray-200">{children}</th>;
-  },
-  td({ children, ...props }: any) {
-    return <td className="px-5 py-3 border-b border-gray-100 text-gray-600 even:bg-gray-50/50">{children}</td>;
-  },
+
 };
 
 function CheckpointCard({ checkpoint, checkpointIndex, onAnswer }: { checkpoint: ParsedCheckpoint; checkpointIndex: number; onAnswer: (idx: number, correct: boolean) => void }) {
@@ -229,6 +243,8 @@ export function CoursePlayer({ curriculum, completedTasks, toggleTask, activeTop
   const [checkpointResults, setCheckpointResults] = useState<Record<string, boolean>>({});
   const [commentInput, setCommentInput] = useState('');
   const [isMobile, setIsMobile] = useState(false);
+  const [fullModule, setFullModule] = useState<Module | null>(null);
+  const [loadingModule, setLoadingModule] = useState(false);
 
   useEffect(() => {
     const check = () => setIsMobile(window.innerWidth < 1024);
@@ -249,15 +265,44 @@ export function CoursePlayer({ curriculum, completedTasks, toggleTask, activeTop
     }
   }, [activeTopicId, curriculum, setActiveTopicId]);
 
+  // On-demand module content loading: index has metadata only, fetch full content when needed
+  useEffect(() => {
+    if (!activeTopicId || !activeModule) return;
+    // Already loaded full content for this module
+    if (fullModule?.id === activeModule.id) return;
+    // Check if content is already available in the prop curriculum
+    const curMod = curriculum.find(m => m.id === activeModule.id);
+    if (curMod?.topics.some(t => t.content !== undefined)) return;
+    setLoadingModule(true);
+    loadModuleContent(activeModule.id).then(mod => {
+      setFullModule(mod);
+      setLoadingModule(false);
+    }).catch(() => setLoadingModule(false));
+  }, [activeTopicId]);
+
   let activeModule: Module | undefined;
   let activeTopic: Topic | undefined;
   let topicIndex = -1;
   let moduleIndex = -1;
 
-  for (let mIdx = 0; mIdx < curriculum.length; mIdx++) {
-    const mod = curriculum[mIdx];
-    const tIdx = mod.topics.findIndex(t => t.id === activeTopicId);
-    if (tIdx !== -1) { moduleIndex = mIdx; activeModule = mod; activeTopic = mod.topics[tIdx]; topicIndex = tIdx; break; }
+  // Prefer fullModule (has content/quiz loaded on-demand) over curriculum prop (has metadata only)
+  if (fullModule && activeTopicId) {
+    const tIdx = fullModule.topics.findIndex(t => t.id === activeTopicId);
+    if (tIdx !== -1) {
+      moduleIndex = curriculum.findIndex(m => m.id === fullModule.id);
+      activeModule = fullModule;
+      activeTopic = fullModule.topics[tIdx];
+      topicIndex = tIdx;
+    }
+  }
+
+  // Fall back to curriculum prop
+  if (!activeTopic) {
+    for (let mIdx = 0; mIdx < curriculum.length; mIdx++) {
+      const mod = curriculum[mIdx];
+      const tIdx = mod.topics.findIndex(t => t.id === activeTopicId);
+      if (tIdx !== -1) { moduleIndex = mIdx; activeModule = mod; activeTopic = mod.topics[tIdx]; topicIndex = tIdx; break; }
+    }
   }
 
   const isCompleted = activeTopic ? completedTasks.includes(activeTopic.id) : false;
@@ -458,7 +503,7 @@ export function CoursePlayer({ curriculum, completedTasks, toggleTask, activeTop
               )}
 
               <div className="text-gray-700 leading-relaxed space-y-6">
-                <div className="prose prose-gray max-w-none break-words overflow-x-hidden prose-headings:text-gray-900 prose-strong:text-gray-900 prose-code:text-accent prose-code:bg-accent/5 prose-code:px-1 prose-code:rounded prose-a:text-accent">
+                <div className="prose prose-gray max-w-none break-words prose-headings:text-gray-900 prose-strong:text-gray-900 prose-code:text-accent prose-code:bg-accent/5 prose-code:px-1 prose-code:rounded prose-a:text-accent">
                   {activeTopic.content ? (() => {
                     let checkpointCounter = 0;
                     return (parsedContent ?? []).map((seg, i) => {
@@ -506,7 +551,12 @@ export function CoursePlayer({ curriculum, completedTasks, toggleTask, activeTop
                       return <div key={`md-${i}`}><ReactMarkdown remarkPlugins={[remarkGfm]} components={MarkdownComponents}>{seg.value}</ReactMarkdown></div>;
                     });
 
-                  })() : <p className="text-gray-400">{activeTopic.description}</p>}
+                  })() : loadingModule ? (
+                    <div className="flex items-center justify-center py-16 text-gray-400">
+                      <Loader2 className="w-6 h-6 animate-spin mr-3" />
+                      <span className="font-medium">Loading content...</span>
+                    </div>
+                  ) : <p className="text-gray-400">{activeTopic.description}</p>}
                 </div>
               </div>
 

@@ -3,15 +3,45 @@ import { Menu } from 'lucide-react';
 import { Sidebar, Tab } from './components/Sidebar';
 import { useLocalStorage } from './hooks/useLocalStorage';
 import { getCurriculum, setDecryptedData } from './utils/dataLoader';
-import { decryptFile } from './utils/crypto';
-import {
-  addTopicComment, subscribeToTopicComments, ChatMessage, TopicComment,
-  sendChatMessage, subscribeToChat, registerDevice,
-  syncUserProgress, subscribeToProgress, getMyUserId,
-} from './firebase/services';
-import { doc, getDoc } from 'firebase/firestore';
-import { db } from './firebase/config';
 import { ErrorBoundary } from './components/ErrorBoundary';
+
+type FirebaseServices = {
+  addTopicComment: (c: any) => void;
+  subscribeToTopicComments: (id: string, cb: (c: any[]) => void, err: (e: any) => void) => () => void;
+  sendChatMessage: (m: any) => void;
+  subscribeToChat: (cb: (m: any[]) => void, err: (e: any) => void) => () => void;
+  registerDevice: () => Promise<number>;
+  syncUserProgress: (id: number, tasks: string[], code?: string) => void;
+  subscribeToProgress: (id: number, cb: (d: any) => void, err: (e: any) => void) => () => void;
+  doc: typeof import('firebase/firestore').doc;
+  getDoc: typeof import('firebase/firestore').getDoc;
+  db: any;
+};
+type ChatMessage = { user: string; text: string; time: string };
+type TopicComment = { user: string; text: string; time: string; topicId: string };
+
+let firebasePromise: Promise<FirebaseServices> | null = null;
+function loadFirebase(): Promise<FirebaseServices> {
+  if (!firebasePromise) {
+    firebasePromise = Promise.all([
+      import('./firebase/services'),
+      import('firebase/firestore'),
+      import('./firebase/config'),
+    ]).then(([services, firestore, config]) => ({
+      addTopicComment: services.addTopicComment,
+      subscribeToTopicComments: services.subscribeToTopicComments,
+      sendChatMessage: services.sendChatMessage,
+      subscribeToChat: services.subscribeToChat,
+      registerDevice: services.registerDevice,
+      syncUserProgress: services.syncUserProgress,
+      subscribeToProgress: services.subscribeToProgress,
+      doc: firestore.doc,
+      getDoc: firestore.getDoc,
+      db: config.db,
+    }));
+  }
+  return firebasePromise;
+}
 
 export type { Tab };
 
@@ -56,62 +86,58 @@ export default function App() {
       } catch {}
     }
 
-    // 2. Background fetch fresh data
+    // 2. Background fetch fresh data from lightweight index
     (async () => {
       try {
-        const [encRes, classworksRes] = await Promise.all([
-          fetch('/data.enc?t=' + Date.now(), { cache: 'no-cache' }),
-          fetch('/classworks.enc?t=' + Date.now(), { cache: 'no-cache' }),
-        ]);
-        const [encData, classworksData] = await Promise.all([
-          encRes.arrayBuffer(),
-          classworksRes.ok ? classworksRes.arrayBuffer() : Promise.resolve(null),
-        ]);
-        const key = 'CYBERCAMP-2026';
-        const [decrypted, decryptedClassworks] = await Promise.all([
-          decryptFile(encData, key),
-          classworksData ? decryptFile(classworksData, key).catch(() => null) : Promise.resolve(null),
-        ]);
-        const parsed = JSON.parse(decrypted);
-        setDecryptedData(parsed, decryptedClassworks ? JSON.parse(decryptedClassworks) : null);
+        const res = await fetch('/data-index.json?t=' + Date.now(), { cache: 'no-cache' });
+        if (!res.ok) return;
+        const parsed = await res.json();
+        setDecryptedData(parsed);
         setDataVersion(v => v + 1);
       } catch (e) { console.error('Auto-load failed:', e); }
     })();
   }, []);
 
   useEffect(() => {
-    registerDevice().then(async (id) => {
-      setUserId(id);
-      if (!userCode && db) {
-        try {
-          const snap = await getDoc(doc(db, 'progress', `user${id}`));
-          if (snap.exists()) {
-            const data = snap.data();
-            if (data.userCode) setUserCode(data.userCode);
-            if (data.completedTasks?.length > 0 && completedTasks.length === 0) {
-              setCompletedTasks(data.completedTasks);
+    loadFirebase().then(({ registerDevice, doc, getDoc, db }) => {
+      registerDevice().then(async (id) => {
+        setUserId(id);
+        if (!userCode && db) {
+          try {
+            const snap = await getDoc(doc(db, 'progress', `user${id}`));
+            if (snap.exists()) {
+              const data = snap.data();
+              if (data.userCode) setUserCode(data.userCode);
+              if (data.completedTasks?.length > 0 && completedTasks.length === 0) {
+                setCompletedTasks(data.completedTasks);
+              }
             }
-          }
-        } catch {}
-      }
-      if (!userCode) setUserCode(`User ${id}`);
+          } catch {}
+        }
+        if (!userCode) setUserCode(`User ${id}`);
+      }).catch(() => { setUserId(1); setUserCode('User 1'); });
     }).catch(() => { setUserId(1); setUserCode('User 1'); });
   }, []);
 
   useEffect(() => {
     if (!userId || userId === 0) return;
     const otherId = userId === 1 ? 2 : 1;
-    const unsub = subscribeToProgress(
-      otherId,
-      (data) => { setOtherTasks(data.tasks); if (data.userCode) setOtherUserCode(data.userCode); },
-      (err) => console.warn('Other user progress sub error:', err)
-    );
-    return () => unsub();
+    let unsub: (() => void) | null = null;
+    loadFirebase().then(({ subscribeToProgress }) => {
+      unsub = subscribeToProgress(
+        otherId,
+        (data) => { setOtherTasks(data.tasks); if (data.userCode) setOtherUserCode(data.userCode); },
+        (err) => console.warn('Other user progress sub error:', err)
+      );
+    });
+    return () => { if (unsub) unsub(); };
   }, [userId]);
 
   useEffect(() => {
     if (!userId) return;
-    syncUserProgress(userId, completedTasks, userCode || undefined);
+    loadFirebase().then(({ syncUserProgress }) => {
+      syncUserProgress(userId, completedTasks, userCode || undefined);
+    });
   }, [completedTasks, userId, userCode]);
 
   const mergedTasks = useMemo(() => {
@@ -123,17 +149,20 @@ export default function App() {
   const activeTabRef = useRef(activeTab);
   activeTabRef.current = activeTab;
   useEffect(() => {
-    const unsub = subscribeToChat(
-      (msgs) => {
-        setOnlineMessages(msgs);
-        if (msgs.length > lastMsgCountRef.current && activeTabRef.current !== 'studyroom') {
-          setUnreadCount(prev => prev + (msgs.length - lastMsgCountRef.current));
-        }
-        lastMsgCountRef.current = msgs.length;
-      },
-      (err) => console.warn('Chat sub error:', err)
-    );
-    return () => unsub();
+    let unsub: (() => void) | null = null;
+    loadFirebase().then(({ subscribeToChat }) => {
+      unsub = subscribeToChat(
+        (msgs) => {
+          setOnlineMessages(msgs);
+          if (msgs.length > lastMsgCountRef.current && activeTabRef.current !== 'studyroom') {
+            setUnreadCount(prev => prev + (msgs.length - lastMsgCountRef.current));
+          }
+          lastMsgCountRef.current = msgs.length;
+        },
+        (err) => console.warn('Chat sub error:', err)
+      );
+    });
+    return () => { if (unsub) unsub(); };
   }, []);
 
   const resetUnread = useCallback(() => {
@@ -145,12 +174,15 @@ export default function App() {
   useEffect(() => { activeTopicIdRef.current = activeTopicId; }, [activeTopicId]);
   useEffect(() => {
     if (!activeTopicId) return;
-    const unsub = subscribeToTopicComments(
-      activeTopicId,
-      (comments) => setOnlineComments(prev => ({ ...prev, [activeTopicIdRef.current]: comments })),
-      (err) => console.warn('Comment sub error:', err)
-    );
-    return () => unsub();
+    let unsub: (() => void) | null = null;
+    loadFirebase().then(({ subscribeToTopicComments }) => {
+      unsub = subscribeToTopicComments(
+        activeTopicId,
+        (comments) => setOnlineComments(prev => ({ ...prev, [activeTopicIdRef.current]: comments })),
+        (err) => console.warn('Comment sub error:', err)
+      );
+    });
+    return () => { if (unsub) unsub(); };
   }, [activeTopicId]);
 
   const toggleTask = useCallback((taskId: string) => {
@@ -177,7 +209,7 @@ export default function App() {
       text,
       time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
     };
-    sendChatMessage(msg);
+    loadFirebase().then(({ sendChatMessage }) => sendChatMessage(msg));
   }, [userCode]);
 
   const handleAddComment = useCallback((topicId: string, text: string) => {
@@ -188,7 +220,7 @@ export default function App() {
       time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
       topicId,
     };
-    addTopicComment(comment);
+    loadFirebase().then(({ addTopicComment }) => addTopicComment(comment));
   }, [userCode]);
 
   const curriculumData = useMemo(() => getCurriculum(), [dataVersion]);

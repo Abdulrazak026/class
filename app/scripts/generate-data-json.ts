@@ -17,7 +17,7 @@ function encryptFile(inputPath: string, outputPath: string): void {
   const data = fs.readFileSync(inputPath, 'utf-8');
   const salt = crypto.randomBytes(16);
   const iv = crypto.randomBytes(12);
-  const key = crypto.pbkdf2Sync(CONTENT_KEY, salt, 100000, 32, 'sha256');
+  const key = crypto.pbkdf2Sync(CONTENT_KEY, salt, 10000, 32, 'sha256');
   const cipher = crypto.createCipheriv('aes-256-gcm', key, iv);
   const encrypted = Buffer.concat([cipher.update(data, 'utf-8'), cipher.final()]);
   const authTag = cipher.getAuthTag();
@@ -54,20 +54,46 @@ async function main() {
 
   await generateSearchIndex();
 
-  const dataJson = { version: BUILD_VERSION, modules: curriculum };
+  const dataJsonFull = { version: BUILD_VERSION, modules: curriculum };
   const dataJsonPath = path.join(publicDir, 'data.json');
   const classworksJsonPath = path.join(publicDir, 'classworks.json');
 
-  fs.writeFileSync(dataJsonPath, JSON.stringify(dataJson, null, 2), 'utf-8');
-  fs.writeFileSync(classworksJsonPath, JSON.stringify(topicClassworks, null, 2), 'utf-8');
+  // Full data.json (unencrypted - fast client load)
+  fs.writeFileSync(dataJsonPath, JSON.stringify(dataJsonFull), 'utf-8');
+  fs.writeFileSync(classworksJsonPath, JSON.stringify(topicClassworks), 'utf-8');
+  console.log(`  Written: data.json, classworks.json`);
 
+  // data.enc (backward compat - encrypted)
   encryptFile(dataJsonPath, path.join(publicDir, 'data.enc'));
   encryptFile(classworksJsonPath, path.join(publicDir, 'classworks.enc'));
 
-  fs.unlinkSync(dataJsonPath);
-  fs.unlinkSync(classworksJsonPath);
+  // Lightweight data-index.json (module + topic metadata only, no content/quiz)
+  const dataIndex = {
+    version: BUILD_VERSION,
+    modules: curriculum.map(m => ({
+      id: m.id, title: m.title, durationText: m.durationText,
+      focus: m.focus, output: m.output,
+      topics: m.topics.map(t => ({
+        id: t.id, title: t.title, description: t.description,
+        type: t.type, duration: t.duration,
+        labUrl: t.labUrl, labTitle: t.labTitle,
+      }))
+    }))
+  };
+  fs.writeFileSync(path.join(publicDir, 'data-index.json'), JSON.stringify(dataIndex), 'utf-8');
+  console.log(`  Written: data-index.json (lightweight)`);
 
-  console.log(`Generated data.enc, classworks.enc (v${BUILD_VERSION})`);
+  // Per-module weekXX.json files (full content loaded on demand)
+  let totalBytes = 0;
+  for (const mod of curriculum) {
+    const weekData = { version: BUILD_VERSION, module: mod };
+    const json = JSON.stringify(weekData);
+    fs.writeFileSync(path.join(publicDir, `${mod.id}.json`), json, 'utf-8');
+    totalBytes += json.length;
+  }
+  console.log(`  Written: ${curriculum.length} weekXX.json files (${(totalBytes / 1024 / 1024).toFixed(1)} MB total)`);
+
+  console.log(`Generated all data files (v${BUILD_VERSION})`);
 }
 
 main().catch(e => { console.error('Build failed:', e); process.exit(1); });

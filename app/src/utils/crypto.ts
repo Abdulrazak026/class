@@ -1,4 +1,4 @@
-const ITERATIONS = 100000;
+const ITERATIONS = 10000;
 
 export async function deriveKey(password: string, salt: Uint8Array): Promise<CryptoKey> {
   const enc = new TextEncoder();

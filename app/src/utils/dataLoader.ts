@@ -1,17 +1,20 @@
-import type { Module } from '../data';
+import type { Module, Topic } from '../data';
 import type { ParsedClasswork } from '../components/ClassworkCard';
 
 const LIVE_DATA_KEY = 'live-data';
 const LIVE_CLASSWORKS_KEY = 'live-classworks';
 const LIVE_VERSION_KEY = 'live-data-version';
+const FULL_MODULES_KEY = 'full-module-cache';
 
 let cachedCurriculum: Module[] | null = null;
 let cachedClassworks: Record<string, ParsedClasswork[]> | null = null;
 
+// Holds full module content keyed by module id (merged with index on demand)
+let fullModuleCache: Record<string, Module> = {};
+
 export function setDecryptedData(data: any, classworks?: any): void {
   if (data && Array.isArray(data.modules)) {
     cachedCurriculum = data.modules as Module[];
-    // Also cache in localStorage for persistence
     try {
       localStorage.setItem(LIVE_DATA_KEY, JSON.stringify(data));
       if (data.version) localStorage.setItem(LIVE_VERSION_KEY, data.version);
@@ -65,6 +68,7 @@ export function clearLiveData(): void {
   localStorage.removeItem(LIVE_VERSION_KEY);
   cachedCurriculum = null;
   cachedClassworks = null;
+  fullModuleCache = {};
 }
 
 export function hasLiveData(): boolean {
@@ -80,4 +84,37 @@ export function getDecryptKey(): string | null {
   } catch {
     return null;
   }
+}
+
+/** Fetch and cache a single module's full content (including content/quiz) */
+export async function loadModuleContent(moduleId: string): Promise<Module | null> {
+  if (fullModuleCache[moduleId]) return fullModuleCache[moduleId];
+  try {
+    const res = await fetch(`/${moduleId}.json?t=${Date.now()}`, { cache: 'no-cache' });
+    if (!res.ok) return null;
+    const data = await res.json();
+    if (data && data.module) {
+      fullModuleCache[moduleId] = data.module;
+      return data.module;
+    }
+    return null;
+  } catch {
+    return null;
+  }
+}
+
+/** Merge a module's full content into the cached curriculum */
+export function mergeModuleIntoCurriculum(moduleId: string, fullModule: Module): boolean {
+  const idx = cachedCurriculum?.findIndex(m => m.id === moduleId);
+  if (idx !== undefined && idx >= 0 && cachedCurriculum) {
+    // Merge content, quiz, aiPrompt, requirements into the topics
+    for (const fullTopic of fullModule.topics) {
+      const topicIdx = cachedCurriculum[idx].topics.findIndex(t => t.id === fullTopic.id);
+      if (topicIdx >= 0) {
+        cachedCurriculum[idx].topics[topicIdx] = fullTopic;
+      }
+    }
+    return true;
+  }
+  return false;
 }

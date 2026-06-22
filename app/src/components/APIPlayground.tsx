@@ -46,18 +46,18 @@ const ENDPOINTS: Endpoint[] = [
   },
   {
     method: 'GET',
-    path: '/api/analytics/sales-summary',
-    description: 'Get sales summary statistics',
-    response: JSON.stringify({ total_revenue: 48250.00, total_orders: 345, avg_order_value: 139.86, top_category: 'Electronics', period: '2025-04-01 to 2025-04-30' }, null, 2),
+    path: '/api/security/threat-feed',
+    description: 'Get latest threat intelligence feed',
+    response: JSON.stringify({ source: 'AlienVault OTX', indicators: 47, severity: 'medium', top_threat: 'CVE-2026-1234 RCE', last_updated: '2026-06-21T10:00:00Z' }, null, 2),
   },
   {
     method: 'GET',
-    path: '/api/analytics/daily-sales',
-    description: 'Get daily sales data for the last 30 days',
+    path: '/api/security/scan-results',
+    description: 'Get vulnerability scan results summary',
     response: JSON.stringify([
-      { date: '2025-04-08', revenue: 1850.00, orders: 14 },
-      { date: '2025-04-09', revenue: 2100.50, orders: 17 },
-      { date: '2025-04-10', revenue: 1620.75, orders: 11 },
+      { target: '10.0.1.25', critical: 2, high: 5, medium: 12, low: 34 },
+      { target: '10.0.1.26', critical: 0, high: 1, medium: 8, low: 22 },
+      { target: '10.0.1.27', critical: 4, high: 9, medium: 15, low: 41 },
     ], null, 2),
   },
 ];
