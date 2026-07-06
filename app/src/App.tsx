@@ -69,6 +69,8 @@ export default function App() {
   const [onlineComments, setOnlineComments] = useState<Record<string, TopicComment[]>>({});
   const [userId, setUserId] = useState<number | null>(null);
   const [dataVersion, setDataVersion] = useState(0);
+  const [showNamePrompt, setShowNamePrompt] = useState(false);
+  const [nameInput, setNameInput] = useState('');
 
   useEffect(() => {
     document.documentElement.classList.toggle('dark', darkMode);
@@ -114,9 +116,12 @@ export default function App() {
             }
           } catch {}
         }
-        if (!userCode) setUserCode(`User ${id}`);
-      }).catch(() => { setUserId(1); setUserCode('User 1'); });
-    }).catch(() => { setUserId(1); setUserCode('User 1'); });
+        if (!userCode) {
+          setUserCode(`User ${id}`);
+          setShowNamePrompt(true);
+        }
+      }).catch(() => { setUserId(1); setUserCode('User 1'); setShowNamePrompt(true); });
+    }).catch(() => { setUserId(1); setUserCode('User 1'); setShowNamePrompt(true); });
   }, []);
 
   useEffect(() => {
@@ -248,6 +253,42 @@ export default function App() {
 
   return (
     <>
+      {/* Name Prompt Modal */}
+      {showNamePrompt && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl p-6 sm:p-8 max-w-sm w-full shadow-2xl">
+            <h2 className="text-xl font-bold text-gray-900 mb-2">Welcome!</h2>
+            <p className="text-sm text-gray-500 mb-6">Enter your name so others can see who you are in chat and comments.</p>
+            <input
+              autoFocus
+              value={nameInput}
+              onChange={e => setNameInput(e.target.value)}
+              onKeyDown={e => {
+                if (e.key === 'Enter' && nameInput.trim()) {
+                  setUserCode(nameInput.trim());
+                  setShowNamePrompt(false);
+                }
+              }}
+              className="w-full border border-gray-300 rounded-xl px-4 py-3 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-accent/40 mb-4"
+              placeholder="Your name (e.g. Abdulrazak)"
+              maxLength={20}
+            />
+            <button
+              onClick={() => {
+                if (nameInput.trim()) {
+                  setUserCode(nameInput.trim());
+                  setShowNamePrompt(false);
+                }
+              }}
+              disabled={!nameInput.trim()}
+              className="w-full bg-accent text-white py-3 rounded-xl font-bold hover:bg-accent-dark transition-all disabled:opacity-40 disabled:cursor-not-allowed"
+            >
+              Continue
+            </button>
+          </div>
+        </div>
+      )}
+
       <div className="flex bg-deep min-h-screen font-sans">
         {activeTab !== 'syllabus' && (
         <Sidebar 
