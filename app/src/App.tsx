@@ -256,6 +256,7 @@ export default function App() {
           isMobileOpen={isMobileOpen} 
           setIsMobileOpen={setIsMobileOpen}
           userCode={userCode || ''}
+          onUserCodeChange={setUserCode}
           darkMode={darkMode}
           onDarkModeChange={setDarkMode}
           unreadCount={unreadCount}

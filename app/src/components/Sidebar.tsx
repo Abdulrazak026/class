@@ -11,6 +11,7 @@ interface SidebarProps {
   isMobileOpen: boolean;
   setIsMobileOpen: (open: boolean) => void;
   userCode: string;
+  onUserCodeChange: (code: string) => void;
   darkMode: boolean;
   onDarkModeChange: (dark: boolean) => void;
   unreadCount?: number;
@@ -27,10 +28,12 @@ const tabs: { id: Tab; label: string; icon: React.ReactNode }[] = [
   { id: 'studyroom', label: 'Study Room', icon: <MessageSquare className="w-5 h-5" /> },
 ];
 
-function SidebarContent({ activeTab, setActiveTab, collapsed, onToggleCollapse, userCode, darkMode, onDarkModeChange, unreadCount }: {
+function SidebarContent({ activeTab, setActiveTab, collapsed, onToggleCollapse, userCode, onUserCodeChange, darkMode, onDarkModeChange, unreadCount }: {
   activeTab: Tab; setActiveTab: (tab: Tab) => void; collapsed: boolean; onToggleCollapse: () => void;
-  userCode: string; darkMode: boolean; onDarkModeChange: (dark: boolean) => void; unreadCount?: number;
+  userCode: string; onUserCodeChange: (code: string) => void; darkMode: boolean; onDarkModeChange: (dark: boolean) => void; unreadCount?: number;
 }) {
+  const [editingName, setEditingName] = useState(false);
+  const [nameInput, setNameInput] = useState(userCode);
   const isLive = hasLiveData();
   const version = getLiveVersion();
 
@@ -76,8 +79,45 @@ function SidebarContent({ activeTab, setActiveTab, collapsed, onToggleCollapse, 
           <div className="p-3 space-y-2">
             <div className="flex items-center gap-2 px-2 py-1.5 rounded-lg bg-deeper">
               <User className="w-4 h-4 text-slate-500" />
-              <span className="text-xs font-medium text-slate-600 dark:text-slate-400">{userCode}</span>
-              <span className="ml-auto flex items-center gap-1 text-xs text-slate-400">
+              {editingName ? (
+                <input
+                  autoFocus
+                  value={nameInput}
+                  onChange={e => setNameInput(e.target.value)}
+                  onBlur={() => {
+                    const trimmed = nameInput.trim();
+                    if (trimmed && trimmed !== userCode) {
+                      onUserCodeChange(trimmed);
+                    }
+                    setEditingName(false);
+                  }}
+                  onKeyDown={e => {
+                    if (e.key === 'Enter') {
+                      const trimmed = nameInput.trim();
+                      if (trimmed && trimmed !== userCode) {
+                        onUserCodeChange(trimmed);
+                      }
+                      setEditingName(false);
+                    }
+                    if (e.key === 'Escape') {
+                      setNameInput(userCode);
+                      setEditingName(false);
+                    }
+                  }}
+                  className="flex-1 text-xs font-medium bg-white dark:bg-slate-800 border border-accent rounded px-1.5 py-0.5 outline-none text-slate-800 dark:text-slate-200"
+                  maxLength={20}
+                  placeholder="Your name"
+                />
+              ) : (
+                <button
+                  onClick={() => { setNameInput(userCode); setEditingName(true); }}
+                  className="text-xs font-medium text-slate-600 dark:text-slate-400 hover:text-accent transition-colors truncate flex-1 text-left"
+                  title="Click to change your name"
+                >
+                  {userCode}
+                </button>
+              )}
+              <span className="ml-auto flex items-center gap-1 text-xs text-slate-400 shrink-0">
                 {isLive ? <Cloud className="w-3 h-3 text-indigo-500" /> : <CloudOff className="w-3 h-3 text-slate-400" />}
                 {isLive ? 'Live' : 'Built-in'}
               </span>
@@ -138,7 +178,7 @@ function SidebarContent({ activeTab, setActiveTab, collapsed, onToggleCollapse, 
   );
 }
 
-export function Sidebar({ activeTab, setActiveTab, isMobileOpen, setIsMobileOpen, userCode, darkMode, onDarkModeChange, unreadCount }: SidebarProps) {
+export function Sidebar({ activeTab, setActiveTab, isMobileOpen, setIsMobileOpen, userCode, onUserCodeChange, darkMode, onDarkModeChange, unreadCount }: SidebarProps) {
   const [collapsed, setCollapsed] = useState(false);
 
   return (
@@ -146,7 +186,7 @@ export function Sidebar({ activeTab, setActiveTab, isMobileOpen, setIsMobileOpen
       <aside className="hidden lg:flex h-screen sticky top-0 shrink-0">
         <SidebarContent activeTab={activeTab} setActiveTab={setActiveTab}
           collapsed={collapsed} onToggleCollapse={() => setCollapsed(prev => !prev)}
-          userCode={userCode} darkMode={darkMode} onDarkModeChange={onDarkModeChange}
+          userCode={userCode} onUserCodeChange={onUserCodeChange} darkMode={darkMode} onDarkModeChange={onDarkModeChange}
           unreadCount={unreadCount} />
       </aside>
 
@@ -166,7 +206,7 @@ export function Sidebar({ activeTab, setActiveTab, isMobileOpen, setIsMobileOpen
                 </button>
                 <SidebarContent activeTab={activeTab} setActiveTab={setActiveTab}
                   collapsed={false} onToggleCollapse={() => {}}
-                  userCode={userCode} darkMode={darkMode} onDarkModeChange={onDarkModeChange}
+                  userCode={userCode} onUserCodeChange={onUserCodeChange} darkMode={darkMode} onDarkModeChange={onDarkModeChange}
                   unreadCount={unreadCount} />
               </div>
             </motion.aside>
