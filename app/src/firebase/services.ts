@@ -111,6 +111,7 @@ export function subscribeToProgress(
 
 export interface ChatMessage {
   user: string;
+  userId?: number;
   text: string;
   time: string;
   createdAt?: any;
@@ -150,7 +151,12 @@ export function subscribeToChat(
     snap.forEach((d) => {
       const data = d.data();
       if (data && typeof data === 'object' && typeof data.text === 'string' && typeof data.user === 'string') {
-        msgs.push({ text: data.text.slice(0, 10000), user: data.user.slice(0, 100), time: typeof data.time === 'string' ? data.time.slice(0, 100) : '' });
+        msgs.push({
+          text: data.text.slice(0, 10000),
+          user: data.user.slice(0, 100),
+          userId: typeof data.userId === 'number' ? data.userId : undefined,
+          time: typeof data.time === 'string' ? data.time.slice(0, 100) : ''
+        });
       }
     });
     onMessages(msgs);

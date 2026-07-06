@@ -18,6 +18,7 @@ interface StudyRoomProps {
   onlineMessages: ChatMessage[];
   onSendMessage: (text: string) => void;
   userCode: string;
+  userId: number | null;
   onOpen?: () => void;
 }
 
@@ -305,7 +306,7 @@ function saveCompleted(ids: string[]) {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(ids));
 }
 
-export function StudyRoom({ completedTasks, completedTasksOwn, completedTasksOther, otherUserCode, curriculum, onlineMessages, onSendMessage, userCode, onOpen }: StudyRoomProps) {
+export function StudyRoom({ completedTasks, completedTasksOwn, completedTasksOther, otherUserCode, curriculum, onlineMessages, onSendMessage, userCode, userId, onOpen }: StudyRoomProps) {
   const [activeTab, setActiveTab] = useState<PracticeTab>('chat');
   const [input, setInput] = useState('');
   const chatEnd = useRef<HTMLDivElement>(null);
@@ -581,15 +582,16 @@ export function StudyRoom({ completedTasks, completedTasksOwn, completedTasksOth
                 </div>
               )}
               {onlineMessages.map((msg, i) => {
-                const isOwn = msg.user === userCode;
+                const isOwn = msg.userId != null && msg.userId === userId;
+                const displayName = isOwn ? 'You' : (msg.user || 'Unknown');
                 return (
-                <div key={`${msg.user}-${msg.time}-${i}`} className="flex gap-3">
+                <div key={`${msg.userId || msg.user}-${msg.time}-${i}`} className="flex gap-3">
                   <div className={`shrink-0 w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold text-white ${isOwn ? 'bg-accent' : 'bg-emerald-500'}`}>
-                    {msg.user.charAt(0).toUpperCase()}
+                    {displayName.charAt(0).toUpperCase()}
                   </div>
                   <div className="flex-1">
                     <div className="flex items-center gap-2 mb-1">
-                      <span className="text-xs font-bold text-slate-700">{isOwn ? 'You' : msg.user}</span>
+                      <span className="text-xs font-bold text-slate-700">{displayName}</span>
                       <span className="text-[10px] text-slate-400">{msg.time}</span>
                     </div>
                     <div className={`p-3 rounded-xl text-sm ${isOwn ? 'bg-accent/5 border border-accent/20 text-slate-800' : 'bg-emerald-50 border border-emerald-200 text-slate-800'}`}>{renderMessageText(msg.text)}</div>
