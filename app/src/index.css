@@ -348,38 +348,37 @@ body {
 }
 
 /* Mobile responsive adjustments */
-@media (max-width: 640px) {
+@media (max-width: 768px) {
   .prose h2 {
-    font-size: 1.25rem;
-    margin-top: 1.5rem;
-    margin-bottom: 0.75rem;
-  }
-  .prose h3 {
-    font-size: 1.1rem;
+    font-size: 1.15rem;
     margin-top: 1.25rem;
     margin-bottom: 0.5rem;
   }
+  .prose h3 {
+    font-size: 1rem;
+    margin-top: 1rem;
+    margin-bottom: 0.4rem;
+  }
   .prose pre {
-    font-size: 0.75rem;
-    padding: 0.75rem;
+    font-size: 0.7rem;
+    padding: 0.6rem;
     border-radius: 0.5rem;
   }
   .prose p {
-    font-size: 0.9rem;
-    line-height: 1.6;
+    font-size: 0.85rem;
+    line-height: 1.55;
   }
   .prose li {
-    font-size: 0.9rem;
+    font-size: 0.85rem;
   }
   .prose blockquote {
-    padding: 0.75rem 1rem;
-    font-size: 0.85rem;
+    padding: 0.6rem 0.8rem;
+    font-size: 0.8rem;
   }
   .prose img {
     max-width: 100%;
     height: auto;
   }
-  /* Overflow handling for wide content */
   .prose {
     overflow-wrap: break-word;
     word-wrap: break-word;
@@ -387,6 +386,34 @@ body {
   .prose pre > code {
     white-space: pre-wrap;
     word-break: break-all;
+  }
+}
+
+/* Split-screen / small desktop adjustments */
+@media (min-width: 640px) and (max-width: 900px) {
+  .prose h2 {
+    font-size: 1.2rem;
+    margin-top: 1.25rem;
+    margin-bottom: 0.5rem;
+  }
+  .prose h3 {
+    font-size: 1.05rem;
+    margin-top: 1rem;
+    margin-bottom: 0.4rem;
+  }
+  .prose pre {
+    font-size: 0.75rem;
+    padding: 0.6rem;
+  }
+  .prose p, .prose li {
+    font-size: 0.85rem;
+    line-height: 1.55;
+  }
+  .prose table {
+    font-size: 0.8em;
+  }
+  .prose th, .prose td {
+    padding: 0.3em;
   }
 }
 
