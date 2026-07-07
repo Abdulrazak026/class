@@ -1056,7 +1056,134 @@ What does awk '{print $11}' do?
 - Print the 11th field/column
 - Print 11 copies
 - Delete the 11th field
-:::`,
+:::
+
+## Advanced awk — The Hacker's Report Engine
+
+awk is the most powerful text processing tool in Linux. Beyond basic field extraction, it can generate reports, count patterns, and detect anomalies.
+
+### Custom Field Separator: -F
+
+By default, awk splits on whitespace. Use -F to specify a delimiter:
+
+\`\`\`bash
+# Parse /etc/passwd (colon-separated)
+awk -F: '{print $1, $7}' /etc/passwd
+\`\`\`
+
+Output: Shows username and shell for each user.
+
+\`\`\`bash
+# Parse CSV files
+awk -F, '{print $2}' data.csv
+\`\`\`
+
+:::checkpoint
+What does awk -F: '{print $1}' /etc/passwd do?
+- Print the first line of passwd
+- Print the first field (username) using colon as separator
+- Print all fields
+- Delete the first field
+:::
+
+### BEGIN and END Blocks
+
+BEGIN runs before processing any lines. END runs after processing all lines. Use them for report headers and summaries.
+
+\`\`\`bash
+# Report with header and footer
+awk 'BEGIN { print "=== User Report ===" } 
+{print $1} 
+END { print "=== End Report ===" }' /etc/passwd
+\`\`\`
+
+**Practical example — Count lines with header:**
+\`\`\`bash
+awk 'BEGIN { count=0 } 
+{count++} 
+END { print "Total lines:", count }' /var/log/auth.log
+\`\`\`
+
+:::checkpoint
+When does a BEGIN block execute?
+- After each line
+- Before processing any lines
+- Only if the file is empty
+- At the end of processing
+:::
+
+### Conditional Logic in awk
+
+awk can filter lines based on conditions:
+
+\`\`\`bash
+# Show only lines containing "Failed"
+awk '/Failed/ {print $0}' /var/log/auth.log
+
+# Show lines where field 11 matches an IP pattern
+awk '$11 ~ /^[0-9]+\./ {print $11}' /var/log/auth.log
+
+# Count failed vs successful logins
+awk 'BEGIN {f=0; s=0} /Failed/ {f++} /Accepted/ {s++} END {print "Failed:", f, "Success:", s}' /var/log/auth.log
+\`\`\`
+
+### Formatted Output with printf
+
+printf gives you control over output formatting:
+
+\`\`\`bash
+# Formatted table
+awk -F: 'BEGIN {printf "%-20s %s\\n", "USERNAME", "SHELL"} 
+{printf "%-20s %s\\n", $1, $7}' /etc/passwd
+\`\`\`
+
+Output:
+\`\`\`
+USERNAME             SHELL
+root                 /bin/bash
+daemon               /usr/sbin/nologin
+user                 /bin/bash
+\`\`\`
+
+:::checkpoint
+What does printf "%-20s" do?
+- Print 20 characters, left-aligned
+- Print 20 characters, right-aligned
+- Print only 20 lines
+- Delete 20 characters
+:::
+
+## tee — Write to File AND Screen
+
+tee sends output to both a file and stdout simultaneously. Essential for logging while watching output.
+
+\`\`\`bash
+# Save scan results while viewing them
+nmap -sV 192.168.1.1 | tee scan_results.txt
+
+# Append to log while running
+echo "Scan started: $(date)" | tee -a scan_log.txt
+nmap -sV 192.168.1.1 | tee -a scan_log.txt
+\`\`\`
+
+:::checkpoint
+What does tee do differently from >?
+- Nothing, they are the same
+- tee writes to both file AND screen, > only writes to file
+- tee deletes the file first
+- tee only works with pipes
+:::
+
+## Practical Exercise: Build a Log Report
+
+\`\`\`bash
+# Generate a formatted report of failed logins
+grep "Failed" /var/log/auth.log | \\
+awk 'BEGIN {print "=== Failed Login Report ==="; print ""; count=0} 
+{count++; printf "%-5s %-15s %s\\n", count, $11, $0} 
+END {print ""; print "Total failed attempts:", count}' | \\
+tee report.txt
+\`\`\``,
         aiPrompt: "Explain how pipes and redirects work in Linux and give examples of security-focused one-liners.",
         labUrl: "",
         labTitle: "",
@@ -1070,7 +1197,10 @@ What does awk '{print $11}' do?
           { question: "What does sort | uniq -c do?", options: ["Delete duplicates", "Sort and count unique lines", "Find unique files", "Create backup"], correctAnswerIndex: 1, difficulty: "intermediate", explanation: "sort orders lines, then uniq -c counts consecutive identical lines.", certTags: ["Linux+"] },
           { question: "What does awk '{print $11}' do?", options: ["Print line 11", "Print the 11th field", "Print 11 copies", "Delete field 11"], correctAnswerIndex: 1, difficulty: "intermediate", explanation: "awk splits each line into fields. $11 is the 11th field.", certTags: ["Linux+"] },
           { question: "What does /dev/null do?", options: ["Store data", "Discard all output", "Create a file", "Show errors"], correctAnswerIndex: 1, difficulty: "beginner", explanation: "/dev/null is the null device — writing to it discards the data.", certTags: ["Linux+"] },
-          { question: "How do you chain multiple commands?", options: ["Use ;", "Use |", "Use &", "Use >"], correctAnswerIndex: 1, difficulty: "beginner", explanation: "| (pipe) chains commands by sending output of one to input of next. ; runs sequentially, & runs in background, > redirects to file.", certTags: ["Linux+"] }
+          { question: "What does awk -F: do?", options: ["Print field 1", "Use colon as field separator", "Filter lines", "Format output"], correctAnswerIndex: 1, difficulty: "intermediate", explanation: "-F sets the field separator. -F: means split on colons.", certTags: ["Linux+"] },
+          { question: "When does awk BEGIN block execute?", options: ["After each line", "Before processing any lines", "Only if file is empty", "At the end"], correctAnswerIndex: 1, difficulty: "intermediate", explanation: "BEGIN runs once before awk processes any input lines.", certTags: ["Linux+"] },
+          { question: "What does tee do differently from >?", options: ["Same thing", "Writes to both file AND screen", "Deletes file first", "Only works with pipes"], correctAnswerIndex: 1, difficulty: "intermediate", explanation: "tee sends output to both stdout and a file. > only redirects to file.", certTags: ["Linux+"] },
+          { question: "What does printf '%-20s' do?", options: ["Print 20 chars, left-aligned", "Print 20 chars, right-aligned", "Print only 20 lines", "Delete 20 chars"], correctAnswerIndex: 0, difficulty: "intermediate", explanation: "- means left-aligned, 20s means 20-character string field.", certTags: ["Linux+"] }
         ]
       },
       {
@@ -1263,6 +1393,287 @@ host $TARGET 2>/dev/null
 \`\`\`bash
 chmod +x recon.sh
 ./recon.sh 192.168.1.1
+\`\`\`
+
+## While Loops — Continuous Monitoring
+
+For loops iterate over a list. While loops repeat until a condition is false. Essential for monitoring scripts.
+
+\`\`\`bash
+# Simple while loop
+count=1
+while [ $count -le 5 ]; do
+    echo "Count: $count"
+    count=$((count + 1))
+done
+\`\`\`
+
+**Infinite loop with break condition:**
+\`\`\`bash
+while true; do
+    echo "Checking..."
+    # Your monitoring logic here
+    sleep 5  # Wait 5 seconds before checking again
+done
+\`\`\`
+
+**Read file line by line:**
+\`\`\`bash
+while read -r line; do
+    echo "Processing: $line"
+done < /etc/passwd
+\`\`\`
+
+:::checkpoint
+What does while true do?
+- Run once
+- Loop forever until manually stopped
+- Loop 10 times
+- Only run if condition is true
+:::
+
+## Functions — Reusable Code Blocks
+
+Functions let you organize code into reusable blocks. Essential for clean, maintainable scripts.
+
+\`\`\`bash
+#!/bin/bash
+
+# Define a function
+check_port() {
+    local target=$1
+    local port=$2
+    nc -z -w 1 $target $port 2>/dev/null
+    if [ $? -eq 0 ]; then
+        echo "Port $port is OPEN on $target"
+    else
+        echo "Port $port is CLOSED on $target"
+    fi
+}
+
+# Call the function
+check_port 192.168.1.1 22
+check_port 192.168.1.1 80
+\`\`\`
+
+**Key concepts:**
+- \`local\` — variable only exists inside the function
+- \`$1\`, \`$2\` — function arguments (not script arguments)
+- \`return\` — return a value (0-255)
+
+:::checkpoint
+What does local do in a bash function?
+- Makes the variable global
+- Makes the variable only exist inside the function
+- Deletes the variable
+- Prints the variable
+:::
+
+## Arithmetic — Counting and Comparing
+
+\`\`\`bash
+# Basic arithmetic
+count=$((count + 1))
+total=$((a + b))
+remainder=$((n % 2))
+
+# Comparison in if statements
+if [ $count -gt 10 ]; then
+    echo "Count is greater than 10"
+fi
+
+# Shorthand increment
+((count++))
+((total += 5))
+\`\`\`
+
+:::checkpoint
+What does $((count + 1)) do?
+- Print the string "count + 1"
+- Add 1 to the variable count
+- Create a new variable
+- Delete the variable
+:::
+
+## Color Output — Making Alerts Visible
+
+ANSI escape codes add color to terminal output. Essential for security tools that need to highlight critical findings.
+
+\`\`\`bash
+# Color codes
+RED='\\033[0;31m'
+GREEN='\\033[0;32m'
+YELLOW='\\033[1;33m'
+NC='\\033[0m'  # No Color (reset)
+
+echo -e "\${RED}CRITICAL: Root login detected!\${NC}"
+echo -e "\${GREEN}OK: No issues found\${NC}"
+echo -e "\${YELLOW}WARNING: Suspicious activity\${NC}"
+\`\`\`
+
+**Color reference:**
+| Code | Color |
+|------|-------|
+| \\033[0;31m | Red |
+| \\033[0;32m | Green |
+| \\033[1;33m | Yellow |
+| \\033[0;34m | Blue |
+| \\033[0m | Reset (no color) |
+
+:::checkpoint
+What does \\033[0m do?
+- Set text to red
+- Reset text color to default
+- Make text bold
+- Clear the screen
+:::
+
+## sleep — Waiting Between Checks
+
+\`\`\`bash
+sleep 5      # Wait 5 seconds
+sleep 1m     # Wait 1 minute
+sleep 0.5    # Wait half a second
+\`\`\`
+
+Used in monitoring loops to avoid overwhelming the system with checks.
+
+## case Statements — Menu Selection
+
+case is cleaner than multiple if/elif for matching a variable against known values.
+
+\`\`\`bash
+#!/bin/bash
+echo "Select scan type:"
+echo "1) Quick scan"
+echo "2) Full scan"
+echo "3) Stealth scan"
+read -p "Choice: " choice
+
+case $choice in
+    1) echo "Running quick scan..."; nmap -T4 --top-ports 100 $1 ;;
+    2) echo "Running full scan..."; nmap -T4 -p- $1 ;;
+    3) echo "Running stealth scan..."; nmap -sS -T2 $1 ;;
+    *) echo "Invalid choice"; exit 1 ;;
+esac
+\`\`\`
+
+:::checkpoint
+What does case $choice in do?
+- Create a loop
+- Match a variable against multiple patterns
+- Read user input
+- Delete a file
+:::
+
+## printf — Formatted Output
+
+printf gives precise control over output formatting. Essential for reports.
+
+\`\`\`bash
+# Formatted table
+printf "%-20s %-15s %s\\n" "USERNAME" "STATUS" "SHELL"
+printf "%-20s %-15s %s\\n" "root" "active" "/bin/bash"
+printf "%-20s %-15s %s\\n" "nobody" "inactive" "/usr/sbin/nologin"
+\`\`\`
+
+**Format specifiers:**
+| Specifier | Meaning |
+|-----------|---------|
+| %s | String |
+| %d | Integer |
+| %-20s | Left-aligned string, 20 chars wide |
+| %10s | Right-aligned string, 10 chars wide |
+
+## sudo -l — Checking Sudo Privileges
+
+\`\`\`bash
+sudo -l
+\`\`\`
+
+Output shows what commands you can run as root:
+\`\`\`
+User user may run the following commands on target:
+    (root) NOPASSWD: /usr/bin/nmap
+    (root) /usr/bin/vim
+\`\`\`
+
+If you see NOPASSWD, you can run that command as root without a password. Check GTFOBins (https://gtfobins.github.io/) for exploitation methods.
+
+:::checkpoint
+What does sudo -l show?
+- All users on the system
+- What commands you can run as root
+- The root password
+- System logs
+:::
+
+## nmap Advanced Flags
+
+\`\`\`bash
+nmap -sV -sC --top-ports 100 -oN scan.txt 192.168.1.1
+\`\`\`
+
+| Flag | Meaning |
+|------|---------|
+| -sV | Service version detection |
+| -sC | Run default scripts |
+| --top-ports 100 | Scan the 100 most common ports |
+| -p- | Scan all 65535 ports |
+| -oN scan.txt | Save output in normal format |
+| -oX scan.xml | Save output in XML format |
+| -O | OS detection |
+| -T4 | Speed template (1=slow/stealth, 5=fast/noisy) |
+
+:::checkpoint
+What does nmap -sV do?
+- Scan all ports
+- Detect service versions
+- Run stealth scan
+- Save results to file
+:::
+
+## read — User Input
+
+\`\`\`bash
+read -p "Enter target IP: " target
+echo "Scanning $target..."
+\`\`\`
+
+- \`-p\` shows a prompt before reading
+- Input is stored in the variable after -p
+
+## Practical Exercise: Complete Recon Script
+
+\`\`\`bash
+#!/bin/bash
+# full_recon.sh — Complete recon with functions and color
+
+RED='\\033[0;31m'
+GREEN='\\033[0;32m'
+YELLOW='\\033[1;33m'
+NC='\\033[0m'
+
+TARGET=$1
+
+if [ -z "$TARGET" ]; then
+    echo "Usage: $0 <target>"
+    exit 1
+fi
+
+echo -e "\${GREEN}=== Recon Report for \$TARGET ===\${NC}"
+echo "Date: \$(date)"
+
+echo -e "\\n\${YELLOW}--- Open Ports ---\${NC}"
+nmap -sV --top-ports 20 \$TARGET 2>/dev/null | grep "open"
+
+echo -e "\\n\${YELLOW}--- Listening Services ---\${NC}"
+ss -tlnp 2>/dev/null | grep LISTEN
+
+echo -e "\\n\${YELLOW}--- SUID Binaries ---\${NC}"
+find / -perm -4000 -type f 2>/dev/null | head -5
+
+echo -e "\\n\${GREEN}=== Scan Complete ===\${NC}"
 \`\`\``,
         aiPrompt: "Explain how bash scripts work and why automation is important for security professionals.",
         labUrl: "",
@@ -1581,6 +1992,354 @@ What is the first thing you do after gaining access to a Linux system?
           { question: "What does crontab -l show?", options: ["Current directory", "Scheduled tasks for current user", "Running processes", "Network connections"], correctAnswerIndex: 1, difficulty: "beginner", explanation: "crontab -l lists the current user's scheduled cron jobs.", certTags: ["Linux+"] },
           { question: "Why check /etc/os-release?", options: ["Get IP address", "Identify OS distribution and version", "Find users", "Check network"], correctAnswerIndex: 1, difficulty: "beginner", explanation: "/etc/os-release contains the OS name and version — needed for exploit matching.", certTags: ["Security+"] },
           { question: "What does uptime show?", options: ["Current time", "How long the system has been running", "User accounts", "Network status"], correctAnswerIndex: 1, difficulty: "beginner", explanation: "uptime shows how long the system has been running since last reboot.", certTags: ["Linux+"] }
+        ]
+      },
+    ]
+  },
+  {
+    id: "weekLINUXproj",
+    title: "Linux Projects",
+    durationText: "Week L - 4 Projects",
+    focus: "Build real security tools using everything you learned in the Linux tutorials",
+    output: "4 portfolio-ready scripts: recon tool, intrusion detector, privesc checker, network analyzer",
+    topics: [
+      {
+        id: "proj-linux-recon",
+        title: "Project: Automated Recon Tool",
+        description: "Build a bash script that automatically enumerates a target system — ports, services, SUID binaries, users, cron jobs. The first tool every hacker writes.",
+        type: "project",
+        duration: "2-3 hours",
+        content: `:::objectives
+- Build a modular bash script using functions
+- Enumerate system information: ports, services, users, SUID files, cron jobs
+- Generate a formatted report using printf
+- Handle errors and edge cases
+:::
+
+## Your Mission
+
+Build a recon script that takes a target IP as input and automatically enumerates the system. This is the first tool every penetration tester writes — it saves hours of manual work.
+
+## Requirements
+
+Your script must:
+
+1. Accept a target IP as \`$1\` — show usage message if missing
+2. Use **functions** for each check (one function per enumeration vector)
+3. Check at least 5 of these:
+   - Open ports (nmap -sV --top-ports 20)
+   - Listening services (ss -tlnp)
+   - SUID binaries (find / -perm -4000)
+   - Users with shells (grep -v nologin /etc/passwd)
+   - Cron jobs (crontab -l, ls -la /etc/cron*)
+   - Network interfaces (ip addr)
+   - Kernel version (uname -a)
+4. Output results to a **report file** with timestamp
+5. Use **printf** for formatted output (aligned columns)
+6. Use **color** for section headers (green for OK, yellow for findings)
+7. Handle errors gracefully (suppress stderr with 2>/dev/null)
+
+## Hints
+
+\`\`\`bash
+# Function template
+check_ports() {
+    local target=$1
+    echo -e "\\033[1;33m--- Open Ports ---\\033[0m"
+    nmap -sV --top-ports 20 $target 2>/dev/null | grep "open"
+}
+
+# Report header with printf
+printf "%-20s %s\\n" "CHECK" "RESULT"
+printf "%-20s %s\\n" "---" "---"
+
+# Save to file while displaying
+./recon.sh 192.168.1.1 | tee report.txt
+\`\`\`
+
+## Checklist
+
+- [ ] Script accepts target as argument
+- [ ] Usage message if no argument
+- [ ] Functions for each check
+- [ ] At least 5 enumeration vectors
+- [ ] Formatted report output
+- [ ] Color-coded sections
+- [ ] Error handling (2>/dev/null)
+- [ ] Results saved to file
+`,
+        aiPrompt: "Explain the methodology for automated system enumeration during a penetration test.",
+        labUrl: "",
+        labTitle: "",
+        interviewQuestion: "How would you build an automated recon script for a penetration test?",
+        interviewAnswer: "I'd build a modular bash script with separate functions for each check: port scanning with nmap, SUID binary enumeration with find, user enumeration from /etc/passwd, cron job listing, and network interface discovery. Each function outputs formatted results, and I pipe everything to a timestamped report file.",
+        quiz: [
+          { question: "Why use functions in a recon script?", options: ["To make it longer", "To organize code and make it reusable", "To slow down execution", "To hide the code"], correctAnswerIndex: 1, difficulty: "beginner", explanation: "Functions organize code into reusable blocks, making scripts easier to read and maintain.", certTags: ["Linux+"] },
+          { question: "What nmap flag detects service versions?", options: ["-sS", "-sV", "-O", "-p-"], correctAnswerIndex: 1, difficulty: "beginner", explanation: "-sV detects service versions running on open ports.", certTags: ["Security+"] },
+          { question: "What does find / -perm -4000 find?", options: ["Hidden files", "SUID binaries", "Large files", "Recent files"], correctAnswerIndex: 1, difficulty: "intermediate", explanation: "-perm -4000 finds files with the SUID permission bit set.", certTags: ["Security+"] },
+          { question: "What does local do in a bash function?", options: ["Makes variable global", "Restricts variable to function scope", "Deletes the variable", "Prints the variable"], correctAnswerIndex: 1, difficulty: "intermediate", explanation: "local restricts a variable to the function scope.", certTags: ["Linux+"] },
+          { question: "What does tee do?", options: ["Delete output", "Write to file AND screen", "Only write to file", "Only show on screen"], correctAnswerIndex: 1, difficulty: "beginner", explanation: "tee sends output to both stdout and a file.", certTags: ["Linux+"] },
+          { question: "What does printf '%-20s' do?", options: ["Print 20 chars, left-aligned", "Print 20 chars, right-aligned", "Print 20 lines", "Delete 20 chars"], correctAnswerIndex: 0, difficulty: "intermediate", explanation: "- means left-aligned, 20s means 20-character string field.", certTags: ["Linux+"] },
+          { question: "What does 2>/dev/null do?", options: ["Save errors to file", "Suppress error messages", "Show only errors", "Redirect stdout"], correctAnswerIndex: 1, difficulty: "beginner", explanation: "2>/dev/null suppresses error messages by sending them to the null device.", certTags: ["Linux+"] },
+          { question: "What does ss -tlnp show?", options: ["File contents", "Listening ports with processes", "CPU usage", "User accounts"], correctAnswerIndex: 1, difficulty: "intermediate", explanation: "ss -tlnp shows TCP listening ports with process names.", certTags: ["Security+"] }
+        ]
+      },
+      {
+        id: "proj-linux-intrusion",
+        title: "Project: Real-Time Intrusion Detector",
+        description: "Build a script that monitors auth.log in real-time, detects brute force attacks, and alerts when thresholds are exceeded. The foundation of every SOC tool.",
+        type: "project",
+        duration: "2-3 hours",
+        content: `:::objectives
+- Monitor log files in real-time using tail -f
+- Count failed login attempts per IP using awk and arithmetic
+- Alert with color-coded output when thresholds are exceeded
+- Log alerts to a file for later analysis
+:::
+
+## Your Mission
+
+Build a real-time intrusion detection script that monitors SSH login attempts and alerts on suspicious activity. This is what SOC analysts use every day.
+
+## Requirements
+
+Your script must:
+
+1. Monitor \`/var/log/auth.log\` in real-time using \`tail -f\`
+2. **Count** failed login attempts per IP address
+3. **Alert** when an IP exceeds 5 failed attempts (color: red)
+4. **Log** successful logins as potential compromises (color: yellow)
+5. Run continuously until killed (Ctrl+C)
+6. Save all alerts to a log file with timestamps
+7. Use **color output** for different alert levels
+
+## Hints
+
+\`\`\`bash
+# Real-time monitoring
+tail -f /var/log/auth.log | while read -r line; do
+    # Process each line
+    if echo "$line" | grep -q "Failed"; then
+        # Extract IP
+        ip=$(echo "$line" | awk '{print $11}')
+        # Count and alert
+        count=$((count + 1))
+        if [ $count -gt 5 ]; then
+            echo -e "\\033[0;31mALERT: $ip has $count failed attempts\\033[0m"
+        fi
+    fi
+done
+
+# Color codes
+RED='\\033[0;31m'
+GREEN='\\033[0;32m'
+YELLOW='\\033[1;33m'
+NC='\\033[0m'
+
+# Log with timestamp
+echo "$(date): ALERT - $ip" >> alerts.log
+\`\`\`
+
+## Checklist
+
+- [ ] Uses tail -f for real-time monitoring
+- [ ] Counts failed logins per IP
+- [ ] Alerts when threshold exceeded (5+ attempts)
+- [ ] Color-coded output (red for alerts, yellow for warnings)
+- [ ] Logs alerts to file with timestamps
+- [ ] Runs continuously until killed
+- [ ] Handles Ctrl+C gracefully
+`,
+        aiPrompt: "Explain how real-time log monitoring works in a SOC environment.",
+        labUrl: "",
+        labTitle: "",
+        interviewQuestion: "How would you build a real-time SSH brute force detector?",
+        interviewAnswer: "I'd use tail -f to monitor auth.log in real-time, pipe each line through a while read loop, grep for 'Failed password', extract the source IP with awk, count occurrences per IP, and alert when a threshold is exceeded. I'd color-code alerts and log them to a file with timestamps.",
+        quiz: [
+          { question: "What does tail -f do?", options: ["Show last lines", "Follow file in real-time", "Find text in file", "Format file output"], correctAnswerIndex: 1, difficulty: "beginner", explanation: "-f follows the file — new lines appear as they're added.", certTags: ["Linux+"] },
+          { question: "What does while read -r line do?", options: ["Read one line", "Read file line by line in a loop", "Delete lines", "Count lines"], correctAnswerIndex: 1, difficulty: "intermediate", explanation: "while read processes a file line by line in a loop.", certTags: ["Linux+"] },
+          { question: "What does $((count + 1)) do?", options: ["Print count", "Add 1 to count", "Delete count", "Create variable"], correctAnswerIndex: 1, difficulty: "beginner", explanation: "$(( )) performs arithmetic. count + 1 increments the counter.", certTags: ["Linux+"] },
+          { question: "What does \\033[0;31m do?", options: ["Set text to red", "Reset color", "Clear screen", "Print newline"], correctAnswerIndex: 0, difficulty: "intermediate", explanation: "0;31m is the ANSI escape code for red text.", certTags: ["Linux+"] },
+          { question: "What does awk '{print $11}' extract?", options: ["Line 11", "11th field (source IP)", "11th file", "11th character"], correctAnswerIndex: 1, difficulty: "intermediate", explanation: "In auth.log, field 11 is typically the source IP address.", certTags: ["Security+"] },
+          { question: "How do you save alerts to a file?", options: ["echo alert > file", "echo alert >> file", "echo alert | file", "echo alert - file"], correctAnswerIndex: 1, difficulty: "beginner", explanation: ">> appends to the file. > would overwrite it.", certTags: ["Linux+"] },
+          { question: "What does sleep 5 do?", options: ["Wait 5 seconds", "Sleep for 5 minutes", "Pause the script forever", "Delete 5 files"], correctAnswerIndex: 0, difficulty: "beginner", explanation: "sleep 5 pauses execution for 5 seconds.", certTags: ["Linux+"] },
+          { question: "How do you stop a tail -f process?", options: ["Ctrl+C", "Ctrl+Z", "exit", "kill"], correctAnswerIndex: 0, difficulty: "beginner", explanation: "Ctrl+C sends SIGINT, stopping the process.", certTags: ["Linux+"] }
+        ]
+      },
+      {
+        id: "proj-linux-privesc",
+        title: "Project: Privilege Escalation Checker",
+        description: "Build a script that checks a system for privilege escalation vectors — SUID binaries, sudo misconfigs, writable files, cron jobs. What every pentester runs first.",
+        type: "project",
+        duration: "2-3 hours",
+        content: `:::objectives
+- Check SUID/SGID binaries using find
+- Parse sudo -l output for exploitable commands
+- Find writable sensitive files
+- Check cron job permissions
+- Generate a color-coded risk report
+:::
+
+## Your Mission
+
+Build a privilege escalation checker that scans a system for common escalation vectors. This is the first tool you run after gaining access to a target.
+
+## Requirements
+
+Your script must:
+
+1. Check **SUID/SGID binaries** (find / -perm -4000)
+2. Check **sudo privileges** (sudo -l)
+3. Check **writable sensitive files** (find / -writable)
+4. Check **cron job permissions** (ls -la /etc/cron*)
+5. Check **kernel version** for known exploits (uname -r)
+6. Use **color-coded risk levels**:
+   - Red: Critical (SUID binary with known exploit)
+   - Yellow: Warning (writable file, suspicious cron)
+   - Green: OK (no issues found)
+7. Use **case statements** for risk level selection
+8. Output a summary with total findings count
+
+## Hints
+
+\`\`\`bash
+# SUID check
+find / -perm -4000 -type f 2>/dev/null | while read -r binary; do
+    echo -e "\\033[0;31mSUID: $binary\\033[0m"
+done
+
+# Sudo check
+sudo -l 2>/dev/null | grep "NOPASSWD"
+
+# Writable files
+find /etc -writable -type f 2>/dev/null
+
+# Risk levels with case
+risk_level() {
+    case $1 in
+        critical) echo -e "\\033[0;31mCRITICAL\\033[0m" ;;
+        warning)  echo -e "\\033[1;33mWARNING\\033[0m" ;;
+        ok)       echo -e "\\033[0;32mOK\\033[0m" ;;
+    esac
+}
+
+# GTFOBins URL pattern
+echo "Check: https://gtfobins.github.io/gtfobins/$binary/"
+\`\`\`
+
+## Checklist
+
+- [ ] Checks SUID/SGID binaries
+- [ ] Checks sudo -l output
+- [ ] Checks writable sensitive files
+- [ ] Checks cron job permissions
+- [ ] Checks kernel version
+- [ ] Color-coded risk levels
+- [ ] Summary with findings count
+- [ ] References GTFOBins for SUID binaries
+`,
+        aiPrompt: "Explain the methodology for privilege escalation enumeration on a Linux system.",
+        labUrl: "",
+        labTitle: "",
+        interviewQuestion: "How do you check for privilege escalation vectors on a Linux system?",
+        interviewAnswer: "I run find / -perm -4000 to find SUID binaries, sudo -l to check for NOPASSWD entries, find / -writable to find writable sensitive files, and check /etc/cron* for writable cron scripts. I cross-reference SUID binaries with GTFOBins and check the kernel version for known exploits.",
+        quiz: [
+          { question: "What does sudo -l show?", options: ["All users", "Your sudo privileges", "Root password", "System logs"], correctAnswerIndex: 1, difficulty: "beginner", explanation: "sudo -l shows what commands you can run with sudo.", certTags: ["Security+"] },
+          { question: "What is GTFOBins?", options: ["A password cracker", "A list of exploitable Unix binaries", "A network scanner", "A firewall tool"], correctAnswerIndex: 1, difficulty: "intermediate", explanation: "GTFOBins documents how to exploit legitimate binaries for privilege escalation.", certTags: ["Security+"] },
+          { question: "What does find / -perm -4000 find?", options: ["Hidden files", "SUID binaries", "Large files", "Recent files"], correctAnswerIndex: 1, difficulty: "intermediate", explanation: "-perm -4000 finds files with the SUID bit set.", certTags: ["Security+"] },
+          { question: "What does NOPASSWD mean in sudo -l?", options: ["Password is required", "No password needed for that command", "Account is disabled", "Password expired"], correctAnswerIndex: 1, difficulty: "intermediate", explanation: "NOPASSWD means you can run the command as root without entering a password.", certTags: ["Security+"] },
+          { question: "What does case $1 in do?", options: ["Create a loop", "Match variable against patterns", "Read input", "Delete a file"], correctAnswerIndex: 1, difficulty: "intermediate", explanation: "case matches a variable against multiple patterns, like a switch statement.", certTags: ["Linux+"] },
+          { question: "What does find / -writable find?", options: ["Executable files", "Files you can write to", "Hidden files", "Large files"], correctAnswerIndex: 1, difficulty: "intermediate", explanation: "-writable finds files that the current user can write to.", certTags: ["Security+"] },
+          { question: "What color indicates critical findings?", options: ["Green", "Yellow", "Red", "Blue"], correctAnswerIndex: 2, difficulty: "beginner", explanation: "Red indicates critical findings that need immediate attention.", certTags: ["Security+"] },
+          { question: "What does uname -r show?", options: ["Hostname", "Kernel version", "IP address", "User count"], correctAnswerIndex: 1, difficulty: "beginner", explanation: "uname -r shows the kernel release version.", certTags: ["Linux+"] }
+        ]
+      },
+      {
+        id: "proj-linux-network",
+        title: "Project: Network Forensics Analyzer",
+        description: "Build a script that analyzes network traffic logs, extracts IPs, counts connections, and detects port scan patterns. The analyst's eyes on the network.",
+        type: "project",
+        duration: "2-3 hours",
+        content: `:::objectives
+- Parse network log files using awk with custom field separators
+- Extract and count unique source IPs using associative arrays
+- Detect port scan patterns (one IP hitting many ports)
+- Generate a formatted report with top talkers
+:::
+
+## Your Mission
+
+Build a network forensics analyzer that reads firewall or access logs and extracts intelligence. This is what network analysts use to detect intrusions.
+
+## Requirements
+
+Your script must:
+
+1. Accept a **log file** as input (\$1)
+2. Extract **unique source IPs** from the log
+3. Count **connections per IP**
+4. Detect **port scan patterns** (1 IP hitting 10+ different ports)
+5. Show **top 10 talkers** sorted by connection count
+6. Use **awk BEGIN/END blocks** for report headers and summaries
+7. Use **printf** for formatted table output
+8. Output a **summary report** with total connections, unique IPs, and scan alerts
+
+## Hints
+
+\`\`\`bash
+# Extract IPs (field 1 typically)
+awk '{print $1}' firewall.log | sort | uniq -c | sort -rn | head -10
+
+# Associative arrays in awk for counting
+awk '{ip[$1]++} END {for (i in ip) print ip[i], i}' firewall.log
+
+# BEGIN/END for report framing
+awk 'BEGIN {print "=== Network Report ==="} 
+{print} 
+END {print "=== End ==="}' firewall.log
+
+# Detect port scans (IP hitting many ports)
+awk '{ip[$1":"$5]++} 
+END {
+    for (key in ip) {
+        split(key, parts, ":")
+        ports[parts[1]]++
+    }
+    for (ip in ports) {
+        if (ports[ip] > 10) print "SCAN DETECTED:", ip, ports[ip], "ports"
+    }
+}' firewall.log
+
+# Formatted table
+printf "%-20s %-10s %s\\n" "IP" "CONNECTIONS" "STATUS"
+printf "%-20s %-10s %s\\n" "192.168.1.100" "1547" "SUSPICIOUS"
+\`\`\`
+
+## Checklist
+
+- [ ] Accepts log file as argument
+- [ ] Extracts unique source IPs
+- [ ] Counts connections per IP
+- [ ] Detects port scan patterns (10+ ports from same IP)
+- [ ] Shows top 10 talkers
+- [ ] Uses awk BEGIN/END blocks
+- [ ] Formatted table output with printf
+- [ ] Summary report with totals
+`,
+        aiPrompt: "Explain how to analyze network logs to detect intrusions and suspicious activity.",
+        labUrl: "",
+        labTitle: "",
+        interviewQuestion: "How would you analyze firewall logs to detect a port scan?",
+        interviewAnswer: "I'd use awk to extract source IPs and destination ports, then use associative arrays to count unique ports per IP. If one IP hits more than 10 different ports in a short time, it's likely a port scan. I'd output the top talkers sorted by connection count.",
+        quiz: [
+          { question: "What does awk '{print $1}' do?", options: ["Print first line", "Print first field", "Print all fields", "Delete first field"], correctAnswerIndex: 1, difficulty: "beginner", explanation: "$1 is the first field (typically source IP in log files).", certTags: ["Linux+"] },
+          { question: "What does sort | uniq -c | sort -rn do?", options: ["Delete duplicates", "Count unique values and sort by frequency", "Find unique files", "Create backup"], correctAnswerIndex: 1, difficulty: "intermediate", explanation: "sort orders lines, uniq -c counts, sort -rn sorts numerically in reverse.", certTags: ["Linux+"] },
+          { question: "What is an awk associative array?", options: ["A regular array", "An array indexed by strings instead of numbers", "A deleted array", "A sorted array"], correctAnswerIndex: 1, difficulty: "advanced", explanation: "Associative arrays use strings as keys (like ip[$1]++).", certTags: ["Linux+"] },
+          { question: "What does awk BEGIN block do?", options: ["Run after each line", "Run before processing any lines", "Run only if empty", "Run at the end"], correctAnswerIndex: 1, difficulty: "intermediate", explanation: "BEGIN runs once before awk processes any input.", certTags: ["Linux+"] },
+          { question: "What does head -10 do?", options: ["Show first 10 lines", "Show last 10 lines", "Delete 10 lines", "Count 10 lines"], correctAnswerIndex: 0, difficulty: "beginner", explanation: "head -10 shows the first 10 lines of output.", certTags: ["Linux+"] },
+          { question: "What indicates a port scan?", options: ["One connection to one port", "One IP hitting many different ports", "Many IPs to one port", "No connections"], correctAnswerIndex: 1, difficulty: "intermediate", explanation: "A port scan is when one IP probes many different ports.", certTags: ["Security+"] },
+          { question: "What does printf '%-20s' do?", options: ["Print 20 chars, left-aligned", "Print 20 chars, right-aligned", "Print 20 lines", "Delete 20 chars"], correctAnswerIndex: 0, difficulty: "intermediate", explanation: "- means left-aligned, 20s means 20-character string.", certTags: ["Linux+"] },
+          { question: "What does awk 'END {}' do?", options: ["Run at start", "Run after all input processed", "Run on each line", "Delete output"], correctAnswerIndex: 1, difficulty: "intermediate", explanation: "END runs once after all input lines have been processed.", certTags: ["Linux+"] }
         ]
       },
     ]
