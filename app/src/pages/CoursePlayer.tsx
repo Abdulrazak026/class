@@ -411,8 +411,8 @@ export function CoursePlayer({ curriculum, completedTasks, toggleTask, activeTop
   }, []);
 
   const shouldShowTerminal = useCallback((topic: Topic): boolean => {
-    if (/^w(0[1-6]|01|02|03|04|05|06|1|2|3|4|5|6)/.test(topic.id)) return true;
-    const kw = ['terminal', 'network', 'security tool', 'scan', 'ping', 'nmap', 'wireshark', 'tcpdump'];
+    if (/^w(e?0[0-9]|0[0-9]|[0-9])/.test(topic.id)) return true;
+    const kw = ['terminal', 'network', 'security tool', 'scan', 'ping', 'nmap', 'wireshark', 'tcpdump', 'linux', 'bash', 'shell', 'command'];
     const t = topic.title.toLowerCase(), d = topic.description.toLowerCase();
     return kw.some(k => t.includes(k) || d.includes(k));
   }, []);
