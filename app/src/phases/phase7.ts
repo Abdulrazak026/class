@@ -2602,11 +2602,11 @@ Exercise: Update your LinkedIn headline, About section, and Featured section. Co
 
 **Model Answer:**
 
-"First, I validate the alert — check if it is a true positive or false positive by examining the source IP, destination, and event details. I look at the MITRE ATT&CK technique it maps to.
+"First, I validate the alert - check if it is a true positive or false positive by examining the source IP, destination, and event details. I look at the MITRE ATT&CK technique it maps to.
 
 Then I check context: Is this IP known malicious? Has it been seen before? What is the baseline for this host? I pull related alerts from the last 24 hours to look for patterns.
 
-If it is a true positive, I escalate per the IR playbook — document the timeline, preserve evidence, and notify the IR lead. If it is false positive, I tune the rule to reduce future noise."
+If it is a true positive, I escalate per the IR playbook - document the timeline, preserve evidence, and notify the IR lead. If it is false positive, I tune the rule to reduce future noise."
 
 ### Q: How would you investigate a phishing report?
 
@@ -2623,9 +2623,9 @@ If it is a true positive, I escalate per the IR playbook — document the timeli
 
 **Model Answer:**
 
-"Vulnerability scanning is automated — tools like Nessus identify known vulnerabilities across systems. It is broad, fast, and non-destructive.
+"Vulnerability scanning is automated - tools like Nessus identify known vulnerabilities across systems. It is broad, fast, and non-destructive.
 
-Penetration testing is manual and targeted — a tester simulates real attacks to chain vulnerabilities and achieve objectives like data exfiltration. It is deeper, can be destructive, and requires authorization.
+Penetration testing is manual and targeted - a tester simulates real attacks to chain vulnerabilities and achieve objectives like data exfiltration. It is deeper, can be destructive, and requires authorization.
 
 Scanning finds the holes. Pen testing checks if they are actually exploitable."
 
@@ -2633,7 +2633,7 @@ Scanning finds the holes. Pen testing checks if they are actually exploitable."
 
 ### Q: Tell me about yourself.
 
-" I am a cybersecurity analyst focused on SOC operations and incident response. I have built hands-on skills through my home lab — I deployed Wazuh SIEM monitoring 50,000+ daily events, created MITRE ATT&CK-mapped detection rules, and documented everything on my GitHub and blog.
+" I am a cybersecurity analyst focused on SOC operations and incident response. I have built hands-on skills through my home lab - I deployed Wazuh SIEM monitoring 50,000+ daily events, created MITRE ATT&CK-mapped detection rules, and documented everything on my GitHub and blog.
 
 I also completed PortSwigger labs focusing on web application security, and I am currently pursuing my Security+ certification. I am looking for a SOC Analyst role where I can apply these skills."
 
@@ -3021,11 +3021,11 @@ SAFETY: Never run malware samples on your host machine. Always use an isolated V
 ## File Type Identification
 
 \`\`\`bash
-# Linux/macOS — identify file type
+# Linux/macOS - identify file type
 file suspicious.exe
 file suspicious.pdf
 
-# Windows — check file signature
+# Windows - check file signature
 sigcheck.exe suspicious.exe
 \`\`\`
 

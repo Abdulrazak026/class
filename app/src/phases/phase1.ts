@@ -322,7 +322,7 @@ You can also pin Windows Terminal to your taskbar for quick access. Right-click 
 
 1. Go to https://code.visualstudio.com/
 2. Click the **Windows** download button
-3. Run the installer — accept defaults, but **check these boxes**:
+3. Run the installer - accept defaults, but **check these boxes**:
    - ✅ Add "Open with Code" to the context menu
    - ✅ Add to PATH
    - ✅ Register Code as an editor for supported file types
@@ -3287,7 +3287,7 @@ Save this as \`~/tools/port_scanner.py\`:
 \`\`\`python
 #!/usr/bin/env python3
 """
-TCP Port Scanner — scans target ports with optional threading.
+TCP Port Scanner - scans target ports with optional threading.
 Usage: python3 port_scanner.py <target> [start_port] [end_port] [threads]
 Example: python3 port_scanner.py 192.168.1.1 1 1024 50
 """
@@ -4358,7 +4358,7 @@ Piping techniques: \`grep | awk | sort | uniq -c | sort -rn\` is the standard pa
 
 ## Step 1: IP Addresses and Routes
 
-### ip addr — Show Network Interfaces
+### ip addr - Show Network Interfaces
 
 \`\`\`bash
 # Show all interfaces

@@ -66,9 +66,9 @@ The CIA triad is the cornerstone of information security. Every security control
 Ensuring information is accessible only to authorized individuals.
 
 **Real failures:**
-- **Equifax (2017):** 147 million records exposed due to unpatched Apache Struts vulnerability — confidentiality breach of SSNs, birth dates, addresses
+- **Equifax (2017):** 147 million records exposed due to unpatched Apache Struts vulnerability - confidentiality breach of SSNs, birth dates, addresses
 - **Capital One (2019):** Misconfigured WAF allowed SSRF attack, exposing 100M+ credit applications stored in AWS S3
-- **Hospital insider:** Nurse accesses celebrity patient records out of curiosity — confidentiality breach via authorized user
+- **Hospital insider:** Nurse accesses celebrity patient records out of curiosity - confidentiality breach via authorized user
 
 **Controls that protect confidentiality:** Encryption (AES-256), access controls (RBAC), data classification, DLP, MFA
 
@@ -76,9 +76,9 @@ Ensuring information is accessible only to authorized individuals.
 Ensuring data has not been altered in an unauthorized manner.
 
 **Real failures:**
-- **Stuxnet (2010):** Modified PLC firmware to spin uranium centrifuges beyond safe limits — integrity attack on industrial control systems
+- **Stuxnet (2010):** Modified PLC firmware to spin uranium centrifuges beyond safe limits - integrity attack on industrial control systems
 - **Target breach:** Attackers modified HVAC vendor credentials to pivot into payment network
-- **Grade tampering:** Student modifies their grade in the university database — integrity violation
+- **Grade tampering:** Student modifies their grade in the university database - integrity violation
 
 **Controls that protect integrity:** Hashing (SHA-256), digital signatures, file permissions, version control, change management, checksums
 
@@ -86,9 +86,9 @@ Ensuring data has not been altered in an unauthorized manner.
 Ensuring systems and data are accessible when needed.
 
 **Real failures:**
-- **Dyn DNS attack (2016):** Mirai botnet DDoS took down Twitter, Netflix, Reddit — availability destruction via IoT botnet
-- **Ransomware on hospital:** City Hospital locked out of EHR during emergency — availability denial with patient safety impact
-- **Power outage:** Data center without UPS loses all active sessions — availability failure
+- **Dyn DNS attack (2016):** Mirai botnet DDoS took down Twitter, Netflix, Reddit - availability destruction via IoT botnet
+- **Ransomware on hospital:** City Hospital locked out of EHR during emergency - availability denial with patient safety impact
+- **Power outage:** Data center without UPS loses all active sessions - availability failure
 
 **Controls that protect availability:** Redundancy (RAID, failover), backups, DDoS mitigation, UPS/generators, load balancing, disaster recovery plans
 
@@ -127,10 +127,10 @@ Audit trails that answer: who, what, when, where, and outcome.
 
 | Actor | Motivation | Typical Methods | Real Example |
 |---|---|---|---|
-| **Nation-state (APT)** | Espionage, warfare | Zero-days, supply chain, APTs | APT29 (Cozy Bear) — SolarWinds |
-| **Organized crime** | Financial gain | Ransomware, credit card theft, BEC | FIN7 — POS malware |
-| **Hacktivists** | Ideology, publicity | DDoS, defacement, data leaks | Anonymous — Operation Payback |
-| **Insider threat** | Varies | Data exfiltration, sabotage | Edward Snowden — NSA leak |
+| **Nation-state (APT)** | Espionage, warfare | Zero-days, supply chain, APTs | APT29 (Cozy Bear) - SolarWinds |
+| **Organized crime** | Financial gain | Ransomware, credit card theft, BEC | FIN7 - POS malware |
+| **Hacktivists** | Ideology, publicity | DDoS, defacement, data leaks | Anonymous - Operation Payback |
+| **Insider threat** | Varies | Data exfiltration, sabotage | Edward Snowden - NSA leak |
 | **Script kiddies** | Thrill, recognition | Pre-made tools, simple exploits | Teens using LOIC for DDoS |
 | **Competitors** | Competitive advantage | Corporate espionage | Economic espionage targeting IP |
 
@@ -206,7 +206,7 @@ Malware is any software designed to cause damage to a computer, server, client, 
 Malicious code that attaches to a legitimate file and requires user action to spread.
 
 **Real examples:**
-- **ILOVEYOU (2000):** Email attachment "LOVE-LETTER-FOR-YOU.txt.vbs" — $10B in damages
+- **ILOVEYOU (2000):** Email attachment "LOVE-LETTER-FOR-YOU.txt.vbs" - $10B in damages
 - **Melissa (1999):** Word macro virus that mailed itself to Outlook contacts
 - **CIH/Chernobyl (1998):** Overwrote first megabyte of hard drive and corrupted BIOS
 
@@ -223,7 +223,7 @@ Malware disguised as legitimate software. Does not self-replicate.
 
 **Real examples:**
 - **Emotet:** Started as banking Trojan, evolved into malware-as-a-service
-- **Remote Access Trojans (RATs):** DarkComet, njRAT — give attackers full control
+- **Remote Access Trojans (RATs):** DarkComet, njRAT - give attackers full control
 - **Gameover Zeus:** P2P Trojan that stole banking credentials and delivered ransomware
 
 ### Ransomware
@@ -238,7 +238,7 @@ Malware that encrypts victim's files and demands payment for decryption key.
 
 ### Rootkits & Bootkits
 **Rootkit:** Hides its presence by modifying OS components. User-mode, kernel-mode, hypervisor-level.
-**Bootkit:** Infects MBR, VBR, or UEFI firmware. **LoJax (2018):** First in-the-wild UEFI rootkit — survives OS reinstall.
+**Bootkit:** Infects MBR, VBR, or UEFI firmware. **LoJax (2018):** First in-the-wild UEFI rootkit - survives OS reinstall.
 
 ### Fileless Malware
 Runs entirely in memory, leaving no files on disk. Uses PowerShell scripts, registry persistence, LOLBin techniques.
@@ -410,7 +410,7 @@ Cryptography provides the mathematical foundation for confidentiality, integrity
 |---|---|---|
 | **Keys** | Same key encrypt/decrypt | Public encrypt, private decrypt |
 | **Speed** | Fast (hardware-accelerated) | Slow (1000x slower) |
-| **Key distribution** | Problematic — must share securely | Public key freely distributed |
+| **Key distribution** | Problematic - must share securely | Public key freely distributed |
 | **Key size** | 128-256 bits | 2048-4096 bits (RSA), 256 bits (ECC) |
 | **Use cases** | Bulk data encryption | Key exchange, digital signatures |
 | **Scalability** | n(n-1)/2 keys for n users | 2n keys for n users |
@@ -424,7 +424,7 @@ Cryptography provides the mathematical foundation for confidentiality, integrity
 ### AES (Advanced Encryption Standard)
 - **Key sizes:** 128, 192, 256 bits | **Block size:** 128 bits
 - **Status:** Current gold standard
-- **Modes:** ECB (insecure — pattern preservation), CBC (requires IV, vulnerable to padding oracle), GCM (provides encryption AND authentication — recommended)
+- **Modes:** ECB (insecure - pattern preservation), CBC (requires IV, vulnerable to padding oracle), GCM (provides encryption AND authentication - recommended)
 
 ### 3DES (Triple DES)
 - Applies DES three times. Effective key size: 112 bits
@@ -467,15 +467,15 @@ RSA and Diffie-Hellman are vulnerable to quantum computing (Shor's algorithm). P
 | argon2 | Variable | Best | Password storage |
 
 ### Hashing Properties
-1. Deterministic — same input → same output
+1. Deterministic - same input → same output
 2. Fixed output length
-3. One-way — cannot reverse
+3. One-way - cannot reverse
 4. Collision-resistant
-5. Avalanche effect — small change → completely different hash
+5. Avalanche effect - small change → completely different hash
 
 ### Password Hashing & Salting
 **Rainbow table:** Precomputed lookup table of hashes.
-**Salt:** Random value added before hashing — defeats rainbow tables.
+**Salt:** Random value added before hashing - defeats rainbow tables.
 
 :::concept
 **Password storage:** hash = argon2(password + unique_salt). Store: salt + hash. Never store plaintext.
@@ -774,7 +774,7 @@ Dividing network into separate zones to limit lateral movement.
 
 ### Air-Gapped Networks
 Physical separation from all networks. Use: military, SCADA, nuclear facilities.
-Limitation: Stuxnet entered via USB — not impenetrable.
+Limitation: Stuxnet entered via USB - not impenetrable.
 
 ## Zero Trust Architecture (NIST SP 800-207)
 
@@ -801,7 +801,7 @@ Limitation: Stuxnet entered via USB — not impenetrable.
 ### Micro-segmentation
 Granular security zones around individual workloads. Reduces blast radius of any compromise.
 
-## Cloud Security — Shared Responsibility Model
+## Cloud Security - Shared Responsibility Model
 
 | Responsibility | IaaS | PaaS | SaaS |
 |---|---|---|---|
@@ -811,7 +811,7 @@ Granular security zones around individual workloads. Reduces blast radius of any
 | Physical | Provider | Provider | Provider |
 
 :::warning
-Zero Trust is not a product — it is an architectural approach requiring changes to identity, network, device, and application layers.
+Zero Trust is not a product - it is an architectural approach requiring changes to identity, network, device, and application layers.
 :::`,
         quiz: [
           { question: 'In a properly designed DMZ, what should be true about DMZ server data?', options: ['Contains production databases', 'Should NEVER contain sensitive internal data', 'Has direct internal network access', 'Runs same software as internal servers'], correctAnswerIndex: 1, difficulty: 'beginner', explanation: 'DMZ is a buffer zone. If compromised, attacker should find nothing valuable.', certTags: ['Security+'] },
@@ -871,14 +871,14 @@ Virtualization and resilience technologies provide secure, available, and recove
 | Density | Fewer per host | Many more per host |
 
 :::warning
-Containers share the host kernel — container escape attacks can affect the host. For maximum isolation, run containers inside VMs.
+Containers share the host kernel - container escape attacks can affect the host. For maximum isolation, run containers inside VMs.
 :::
 
 ## High Availability
 
 ### Load Balancing
-- **Layer 4 (Transport):** Based on IP:port — fast
-- **Layer 7 (Application):** Based on HTTP headers/URL — intelligent routing
+- **Layer 4 (Transport):** Based on IP:port - fast
+- **Layer 7 (Application):** Based on HTTP headers/URL - intelligent routing
 - Algorithms: Round Robin, Least Connections, IP Hash, Weighted
 
 ### Failover
@@ -964,11 +964,11 @@ Incident response is the organized approach to addressing and managing security 
 :::
 
 :::concept
-**NIST SP 800-61 Rev. 2 — Incident Response Lifecycle:**
+**NIST SP 800-61 Rev. 2 - Incident Response Lifecycle:**
 
 1. **Preparation** → 2. **Detection & Analysis** → 3. **Containment, Eradication, Recovery** → 4. **Post-Incident Activity (Lessons Learned)**
 
-This is a continuous cycle — lessons learned feed back into preparation.
+This is a continuous cycle - lessons learned feed back into preparation.
 :::
 
 ## Phase 1: Preparation
@@ -1001,7 +1001,7 @@ Not every alert is an incident. False positives waste resources. Validate before
 - Scan for persistence mechanisms
 
 :::tip
-Eradication is not just removing malware — it's closing the entry point. If you don't close the vulnerability, the attacker returns.
+Eradication is not just removing malware - it's closing the entry point. If you don't close the vulnerability, the attacker returns.
 :::
 
 ## Phase 5: Recovery
@@ -1133,7 +1133,7 @@ Logging and monitoring are the eyes and ears of security. You cannot detect what
 | 7 | DEBUG | Debug-level messages |
 
 :::info
-In practice, production systems log at INFO or WARNING level. DEBUG generates too much volume. EMERG/ALERT are rare — system is going down.
+In practice, production systems log at INFO or WARNING level. DEBUG generates too much volume. EMERG/ALERT are rare - system is going down.
 :::
 
 ## SIEM (Security Information and Event Management)
@@ -1222,7 +1222,7 @@ Attackers often delete logs to cover their tracks. Centralized logging (send log
 :::
 
 :::info
-Vulnerability management is the continuous process of identifying, classifying, remediating, and mitigating security vulnerabilities. It is proactive — finding weaknesses before attackers do.
+Vulnerability management is the continuous process of identifying, classifying, remediating, and mitigating security vulnerabilities. It is proactive - finding weaknesses before attackers do.
 :::
 
 ## Vulnerability Scanning vs Penetration Testing
@@ -1360,7 +1360,7 @@ Digital forensics is the recovery and investigation of digital evidence. Proper 
 | 7 | Archival media | Access backups |
 
 :::warning
-If the system is powered on, collect memory FIRST. Shutting down destroys volatile evidence. If you must shut down, pull the power cord (don't use graceful shutdown — it clears RAM).
+If the system is powered on, collect memory FIRST. Shutting down destroys volatile evidence. If you must shut down, pull the power cord (don't use graceful shutdown - it clears RAM).
 :::
 
 ## Forensic Imaging
@@ -1537,10 +1537,10 @@ Risk management is the process of identifying, analyzing, and responding to risk
 
 ## Risk Management Process
 
-1. **Identify** — What are the risks?
-2. **Assess** — How likely and impactful are they?
-3. **Respond** — What will we do about them?
-4. **Monitor** — Are controls working? Have risks changed?
+1. **Identify** - What are the risks?
+2. **Assess** - How likely and impactful are they?
+3. **Respond** - What will we do about them?
+4. **Monitor** - Are controls working? Have risks changed?
 
 ## Risk Identification
 
@@ -1679,23 +1679,23 @@ The goal of risk management is not to eliminate all risk - it's to make informed
 NIST provides the most widely adopted frameworks for managing cybersecurity risk in the United States and globally. Understanding these frameworks is essential for compliance and effective security programs.
 :::
 
-## NIST Risk Management Framework (RMF) — SP 800-37
+## NIST Risk Management Framework (RMF) - SP 800-37
 
 ### 7 Steps
 
-1. **Categorize** — Classify system based on impact (Low, Moderate, High)
-2. **Select** — Choose appropriate security controls from SP 800-53
-3. **Implement** — Deploy selected controls
-4. **Assess** — Evaluate control effectiveness
-5. **Authorize** — ATO (Authority to Operate) decision
-6. **Monitor** — Continuous monitoring of controls
-7. **Prepare** — Organizational preparation (new in Rev 2)
+1. **Categorize** - Classify system based on impact (Low, Moderate, High)
+2. **Select** - Choose appropriate security controls from SP 800-53
+3. **Implement** - Deploy selected controls
+4. **Assess** - Evaluate control effectiveness
+5. **Authorize** - ATO (Authority to Operate) decision
+6. **Monitor** - Continuous monitoring of controls
+7. **Prepare** - Organizational preparation (new in Rev 2)
 
 :::concept
 **RMF creates a continuous cycle:** Prepare → Categorize → Select → Implement → Assess → Authorize → Monitor → (back to Prepare)
 :::
 
-## NIST Cybersecurity Framework (CSF) — 5 Functions
+## NIST Cybersecurity Framework (CSF) - 5 Functions
 
 ### 1. IDENTIFY (ID)
 Understand organizational context, assets, and risks.
@@ -1924,7 +1924,7 @@ Consent must be freely given, specific, informed, and unambiguous. Pre-ticked bo
 :::
 
 :::tip
-GDPR compliance is not just about avoiding fines — it builds customer trust, improves data quality, and creates competitive advantage through responsible data handling.
+GDPR compliance is not just about avoiding fines - it builds customer trust, improves data quality, and creates competitive advantage through responsible data handling.
 :::`,
         quiz: [
           { question: 'GDPR applies to organizations:', options: ['Only located in the EU', 'Only EU government agencies', 'Anywhere in the world that processes EU resident personal data', 'Only organizations with more than 250 employees'], correctAnswerIndex: 2, difficulty: 'beginner', explanation: 'GDPR has extraterritorial reach - it applies to any organization processing personal data of EU residents.', certTags: ['Security+'] },
@@ -2130,19 +2130,19 @@ Symmetric and asymmetric cryptography form the backbone of modern security. Unde
 
 | Mode | Description | IV Required | Parallelizable | Security |
 |---|---|---|---|---|
-| **ECB** | Each block encrypted independently | No | Yes | Insecure — pattern preservation |
+| **ECB** | Each block encrypted independently | No | Yes | Insecure - pattern preservation |
 | **CBC** | Each block XORed with previous ciphertext | Yes | Encrypt: No, Decrypt: Yes | Good with authentication |
-| **GCM** | Counter mode + Galois authentication | Yes (nonce) | Yes | Best — provides AEAD |
+| **GCM** | Counter mode + Galois authentication | Yes (nonce) | Yes | Best - provides AEAD |
 
 ### ECB Problems (The Penguin Problem)
-ECB mode encrypts identical plaintext blocks into identical ciphertext blocks. When encrypting an image, the outline and patterns remain visible — this is the "penguin problem" demonstrating ECB's insecurity for large data.
+ECB mode encrypts identical plaintext blocks into identical ciphertext blocks. When encrypting an image, the outline and patterns remain visible - this is the "penguin problem" demonstrating ECB's insecurity for large data.
 
 ### CBC with Authentication
 - Requires Initialization Vector (IV) for each encryption
 - Vulnerable to padding oracle attacks if not properly implemented
 - Should be combined with HMAC for authentication
 
-### GCM (Galois/Counter Mode) — Recommended
+### GCM (Galois/Counter Mode) - Recommended
 - **AEAD (Authenticated Encryption with Associated Data):** Provides both encryption AND integrity
 - No padding needed (counter mode)
 - Hardware-accelerated (AES-NI instruction set)
@@ -2206,7 +2206,7 @@ ECC is based on the elliptic curve discrete logarithm problem, which is harder t
 7. Both arrive at shared secret s = gᵃᵇ mod p
 
 ### Man-in-the-Middle Vulnerability
-Plain DH is vulnerable to MITM — an attacker can intercept and relay communications, establishing separate keys with each party.
+Plain DH is vulnerable to MITM - an attacker can intercept and relay communications, establishing separate keys with each party.
 
 ### Solution: Ephemeral DH with Authentication
 - **DHE (Ephemeral Diffie-Hellman):** Generates new keys per session
@@ -2280,7 +2280,7 @@ openssl ecparam -genkey -name prime256v1 -noout -out ec_private.pem
 :::
 
 :::info
-Hashing converts arbitrary data into fixed-size digests. Unlike encryption, hashing is one-way — you cannot reverse a hash to get the original data. This makes hashing ideal for integrity verification and password storage.
+Hashing converts arbitrary data into fixed-size digests. Unlike encryption, hashing is one-way - you cannot reverse a hash to get the original data. This makes hashing ideal for integrity verification and password storage.
 :::
 
 ## Hash Functions Comparison
@@ -2675,7 +2675,7 @@ openssl s_client -connect example.com:443
 - **Password Security:** bcrypt, argon2 (memory-hard), salting
 
 :::checkpoint
-**Assessment Checklist — Can you:**
+**Assessment Checklist - Can you:**
 1. Explain each CIA triad component with real-world examples
 2. Distinguish malware types and their propagation methods
 3. Analyze phishing emails and identify red flags
@@ -2698,15 +2698,15 @@ A company discovers ransomware encrypting file shares. Users cannot access criti
 **Questions:**
 1. Which CIA triad components are impacted? (Availability + Integrity)
 2. What are the first three actions in the IR lifecycle? (Contain, Eradicate, Recover)
-3. Should the company pay the ransom? (Generally no — no guarantee of decryption, funds criminal activity)
+3. Should the company pay the ransom? (Generally no - no guarantee of decryption, funds criminal activity)
 
 ### Scenario 2: Access Control
 A hospital wants to implement access controls for its EHR system.
 
 **Questions:**
-1. Which model is most appropriate? (RBAC — roles: doctor, nurse, billing)
+1. Which model is most appropriate? (RBAC - roles: doctor, nurse, billing)
 2. How does least privilege apply? (Each role gets minimum necessary access)
-3. What AAA protocol for network device admin? (TACACS+ — encrypts full packet)
+3. What AAA protocol for network device admin? (TACACS+ - encrypts full packet)
 
 ### Scenario 3: Cryptography
 A startup needs to encrypt data in transit and at rest.
@@ -2722,7 +2722,7 @@ A Nigerian company processes EU customer data.
 **Questions:**
 1. Which regulations apply? (Both GDPR and NDPR)
 2. What are breach notification requirements? (72 hours to both NDPC and relevant EU DPA)
-3. Do they need a DPO? (Yes — required under both frameworks)
+3. Do they need a DPO? (Yes - required under both frameworks)
 
 :::warning
 The Security+ exam tests application, not memorization. Understand concepts deeply enough to apply them to novel scenarios. Practice explaining concepts in your own words.
@@ -2730,10 +2730,10 @@ The Security+ exam tests application, not memorization. Understand concepts deep
 
 :::tip
 **Exam day tips:**
-1. Read questions carefully — look for keywords (FIRST, BEST, MOST)
+1. Read questions carefully - look for keywords (FIRST, BEST, MOST)
 2. Eliminate obviously wrong answers first
 3. Consider the business context, not just technical correctness
-4. Time management — don't spend too long on any single question
+4. Time management - don't spend too long on any single question
 5. Flag difficult questions and return to them
 :::`,
         quiz: [

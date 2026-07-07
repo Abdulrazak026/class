@@ -1279,7 +1279,7 @@ A brute force attack tries every possible password until one works. But "brute f
 | **Hybrid** | Combines dictionary + rules | Medium | password1, password!, Password1 |
 | **Credential Stuffing** | Uses leaked username:password pairs | Fast | Data breach dumps |
 
-**Why dictionary attacks are most common:** A 8-character password has 218 trillion possible combinations. Even at 1 billion guesses/second, that's 69 years. A dictionary attack tries the 14 million most common passwords first — and usually finds one in minutes.
+**Why dictionary attacks are most common:** A 8-character password has 218 trillion possible combinations. Even at 1 billion guesses/second, that's 69 years. A dictionary attack tries the 14 million most common passwords first - and usually finds one in minutes.
 
 ## Online vs Offline Attacks
 
@@ -1294,12 +1294,12 @@ This is the most important concept in password cracking:
 
 **Offline attacks** (what Hashcat/John do):
 - Crack password HASHES you've already obtained
-- No network required — all computation is local
-- No lockout — try as fast as your hardware allows
+- No network required - all computation is local
+- No lockout - try as fast as your hardware allows
 - Speed: ~10 billion guesses/second (GPU)
 - Use when: You've dumped a database, stolen /etc/shadow, or captured a hash
 
-**The key difference:** Online attacks are slow and detectable. Offline attacks are fast and silent. Always prefer offline when possible — get the hash first, crack it later.
+**The key difference:** Online attacks are slow and detectable. Offline attacks are fast and silent. Always prefer offline when possible - get the hash first, crack it later.
 
 ## Why Protocol Choice Matters
 
@@ -1340,7 +1340,7 @@ hydra -l <username> -P <password_list> <target> <service>
 
 ## Attack: SSH Brute Force
 
-SSH is the most common target for brute force — it's exposed on most servers and rarely has CAPTCHA.
+SSH is the most common target for brute force - it's exposed on most servers and rarely has CAPTCHA.
 
 \`\`\`bash
 # Single username, password list
@@ -1372,9 +1372,9 @@ hydra -l admin -P /usr/share/wordlists/rockyou.txt 192.168.1.100 http-post-form 
 | Part | Meaning |
 |------|---------|
 | \`/login\` | The URL path to POST to |
-| \`username=^USER^\` | POST parameter — \`^USER^\` replaced by username |
-| \`password=^PASS^\` | POST parameter — \`^PASS^\` replaced by password |
-| \`F=incorrect\` | Failure string — response containing this means login failed |
+| \`username=^USER^\` | POST parameter - \`^USER^\` replaced by username |
+| \`password=^PASS^\` | POST parameter - \`^PASS^\` replaced by password |
+| \`F=incorrect\` | Failure string - response containing this means login failed |
 
 **Why F= matters:** Hydra needs to know what a FAILED login looks like. If the response contains "incorrect", it's a failure. If it doesn't, the login succeeded.
 
@@ -1386,7 +1386,7 @@ hydra -l admin -P wordlist.txt 192.168.1.100 http-post-form "/login:user=^USER^&
 
 ## Attack: FTP Brute Force
 
-FTP is straightforward — no complex syntax needed.
+FTP is straightforward - no complex syntax needed.
 
 \`\`\`bash
 hydra -l admin -P /usr/share/wordlists/rockyou.txt 192.168.1.100 ftp
@@ -1405,7 +1405,7 @@ hydra -l root -P passwords.txt 192.168.1.100 mysql
 hydra -l administrator -P passwords.txt 192.168.1.100 rdp
 \`\`\`
 
-## Wordlists — Your Ammunition
+## Wordlists - Your Ammunition
 
 The quality of your wordlist determines your success. Don't just use rockyou.txt for everything.
 
@@ -1423,10 +1423,10 @@ The quality of your wordlist determines your success. Don't just use rockyou.txt
 4. If that fails, create a custom wordlist based on target info
 
 :::tip
-For initial brute-force, start with fasttrack.txt (small, common passwords). If that fails, move to rockyou.txt (larger, comprehensive). Never start with the biggest wordlist — it wastes time.
+For initial brute-force, start with fasttrack.txt (small, common passwords). If that fails, move to rockyou.txt (larger, comprehensive). Never start with the biggest wordlist - it wastes time.
 :::
 
-## Defenses — What You'll Encounter
+## Defenses - What You'll Encounter
 
 Understanding defenses helps you plan your attack:
 
@@ -1436,7 +1436,7 @@ Understanding defenses helps you plan your attack:
 
 **IP banning:** The service blocks your IP after N failed attempts. Countermeasure: rotate proxies or use a slow attack.
 
-**CAPTCHA:** Requires human interaction. Countermeasure: no automated bypass — move to a different vector.
+**CAPTCHA:** Requires human interaction. Countermeasure: no automated bypass - move to a different vector.
 
 **Fail2ban:** Monitors logs and bans IPs with too many failed attempts. Countermeasure: check \`/var/log/fail2ban.log\` for ban duration.
 
@@ -1630,28 +1630,28 @@ Breaking it down:
 | \`r-x\` | Group | Group members can read and execute |
 | \`r-x\` | Others | Everyone else can read and execute |
 
-The **SUID bit** changes this: when set, the process runs with the FILE OWNER's UID, not yours. This is how \`passwd\` works — it's owned by root with SUID set, so it can modify \`/etc/shadow\` even when you run it as a regular user.
+The **SUID bit** changes this: when set, the process runs with the FILE OWNER's UID, not yours. This is how \`passwd\` works - it's owned by root with SUID set, so it can modify \`/etc/shadow\` even when you run it as a regular user.
 
 ## The Privilege Escalation Mindset
 
 Privilege escalation is not about running random commands and hoping something works. It follows a methodology:
 
-1. **Enumerate** — Gather system information (OS, kernel, users, services)
-2. **Identify** — Find misconfigurations, vulnerable software, writable files
-3. **Evaluate** — Determine which finding is actually exploitable
-4. **Exploit** — Use the vulnerability to gain higher privileges
-5. **Verify** — Confirm you have root/SYSTEM access
+1. **Enumerate** - Gather system information (OS, kernel, users, services)
+2. **Identify** - Find misconfigurations, vulnerable software, writable files
+3. **Evaluate** - Determine which finding is actually exploitable
+4. **Exploit** - Use the vulnerability to gain higher privileges
+5. **Verify** - Confirm you have root/SYSTEM access
 
 The most common escalation vectors on Linux are:
-- **SUID binaries** — Binaries that run as root
-- **Sudo misconfigurations** — Commands you can run as root without a password
-- **Cron jobs** — Scheduled tasks running as root that you can modify
-- **Writable files** — Files owned by root that you can edit
-- **Kernel exploits** — Vulnerabilities in the Linux kernel itself
-- **Capabilities** — Fine-grained permissions on binaries
-- **Docker group** — If you're in the docker group, you can mount the host filesystem
+- **SUID binaries** - Binaries that run as root
+- **Sudo misconfigurations** - Commands you can run as root without a password
+- **Cron jobs** - Scheduled tasks running as root that you can modify
+- **Writable files** - Files owned by root that you can edit
+- **Kernel exploits** - Vulnerabilities in the Linux kernel itself
+- **Capabilities** - Fine-grained permissions on binaries
+- **Docker group** - If you're in the docker group, you can mount the host filesystem
 
-## Step 1: Enumeration — Know Your Target
+## Step 1: Enumeration - Know Your Target
 
 Before you can escalate, you need to know what you're working with. Run these commands first:
 
@@ -1685,7 +1685,7 @@ sudo -l
 Always check \`sudo -l\` first. If you can run ANY command as root without a password, you've already won.
 :::
 
-## Step 2: SUID Binaries — The #1 Vector
+## Step 2: SUID Binaries - The #1 Vector
 
 SUID binaries run with the file owner's privileges. If a binary is owned by root AND has SUID set, it runs as root. The dangerous ones are binaries that can:
 - Execute arbitrary commands (find, vim, nmap, python)
@@ -1726,7 +1726,7 @@ Why this works: vim can execute shell commands with \`:!\`. Since vim is running
 Visit GTFOBins (https://gtfobins.github.io/) to look up exploitation methods for any SUID binary you find. Search for the binary name, click "SUID", and follow the instructions.
 :::
 
-## Step 3: Sudo Misconfigurations — Instant Root
+## Step 3: Sudo Misconfigurations - Instant Root
 
 If \`sudo -l\` shows you can run a command as root without a password (NOPASSWD), check GTFOBins for that binary. Common exploitable entries:
 
@@ -1743,7 +1743,7 @@ If \`sudo -l\` shows you can run a command as root without a password (NOPASSWD)
 
 **Why this works:** sudo runs the command as root. If the command can execute arbitrary commands (vim's \`:!\`, find's \`-exec\`, python's \`os.system\`), you get a root shell.
 
-## Step 4: Cron Jobs — Scheduled Root Commands
+## Step 4: Cron Jobs - Scheduled Root Commands
 
 Cron jobs run on a schedule. If a cron job runs as root and executes a script you can write to, you can modify the script to execute your commands.
 
@@ -1782,13 +1782,13 @@ export PATH=/tmp:$PATH
 
 When the cron job runs \`backup\`, it finds yours first.
 
-## Step 5: Kernel Exploits — Nuclear Option
+## Step 5: Kernel Exploits - Nuclear Option
 
 :::warning
 Kernel exploits can crash the system. Only use in lab environments. Never use on production systems.
 :::
 
-Kernel exploits target vulnerabilities in the Linux kernel itself. They're powerful but risky — a failed exploit can kernel panic the system.
+Kernel exploits target vulnerabilities in the Linux kernel itself. They're powerful but risky - a failed exploit can kernel panic the system.
 
 **Check kernel version:**
 
@@ -1815,9 +1815,9 @@ searchsploit linux kernel 5.15
 1. Verify the kernel version matches the exploit requirements
 2. Check if the system has patches installed
 3. Have a backup plan if the exploit crashes the system
-4. Prefer other vectors first (SUID, sudo, cron) — they're safer
+4. Prefer other vectors first (SUID, sudo, cron) - they're safer
 
-## Step 6: LinPEAS — Automated Enumeration
+## Step 6: LinPEAS - Automated Enumeration
 
 LinPEAS automates the entire enumeration process. It checks dozens of vectors in minutes.
 
@@ -2007,14 +2007,14 @@ Windows uses a different security model than Linux. Understanding it is essentia
 **Integrity Levels:**
 | Level | Who Runs At This | What They Can Do |
 |-------|-----------------|-----------------|
-| Low | Untrusted processes, sandboxed apps | Very limited — can't write to most locations |
-| Medium | Standard users | Normal operations — can't modify system files |
-| High | Administrators (elevated) | Full admin access — can modify most things |
-| System | Windows services, kernel | Complete control — can do anything |
+| Low | Untrusted processes, sandboxed apps | Very limited - can't write to most locations |
+| Medium | Standard users | Normal operations - can't modify system files |
+| High | Administrators (elevated) | Full admin access - can modify most things |
+| System | Windows services, kernel | Complete control - can do anything |
 
 **Why this matters for privesc:** If you're running as Medium integrity and can get a process to run as High or System, you've escalated. The vectors are: misconfigured services, weak permissions, stored credentials, token impersonation.
 
-## Step 1: Enumeration — Know Your Position
+## Step 1: Enumeration - Know Your Position
 
 \`\`\`bash
 # Who are you and what can you do?
@@ -2039,7 +2039,7 @@ netstat -ano          # Listening ports with PIDs
 Always check \`whoami /priv\` first. If you see SeImpersonatePrivilege or SeAssignPrimaryTokenPrivilege, Potato attacks may give you SYSTEM.
 :::
 
-## Step 2: Unquoted Service Paths — Windows Path Search
+## Step 2: Unquoted Service Paths - Windows Path Search
 
 When a service path contains spaces and is NOT quoted, Windows tries alternative paths:
 
@@ -2069,7 +2069,7 @@ sc stop VulnService
 sc start VulnService
 \`\`\`
 
-## Step 3: Weak Service Permissions — Modify the Binary Path
+## Step 3: Weak Service Permissions - Modify the Binary Path
 
 If you can modify a service's configuration, you can change what it runs:
 
@@ -2085,7 +2085,7 @@ sc start VulnService
 
 **Why this works:** The service runs with its original account's privileges (often SYSTEM). If you change the binary path to your malicious executable, it runs as SYSTEM when the service starts.
 
-## Step 4: AlwaysInstallElevated — MSI as SYSTEM
+## Step 4: AlwaysInstallElevated - MSI as SYSTEM
 
 If both registry keys are set to 1, ANY user can install MSI packages with SYSTEM privileges:
 
@@ -2160,7 +2160,7 @@ reg query HKCU\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run
 
 If an AutoRun entry points to a writable path, replace it with a malicious executable. It runs at the next login.
 
-## WinPEAS — Automated Enumeration
+## WinPEAS - Automated Enumeration
 
 \`\`\`bash
 # Transfer WinPEAS to target
@@ -2375,7 +2375,7 @@ Active Directory knowledge is essential for enterprise security roles. These con
 - **Domain Controller (DC):** Server that handles authentication and enforces security policies
 - **Global Catalog:** Partial replica of all objects in the forest, enables cross-domain searches
 - **Group Policy Objects (GPO):** Rules applied to OUs to enforce configuration
-- **DNS:** Critical for AD — clients locate DCs via DNS SRV records
+- **DNS:** Critical for AD - clients locate DCs via DNS SRV records
 
 ## LDAP (Lightweight Directory Access Protocol)
 
@@ -2590,7 +2590,7 @@ All attack techniques described in this topic are for local lab use only, never 
 
 ## How Kerberos Authentication Works
 
-Before understanding AD attacks, you need to understand Kerberos — the authentication protocol that Active Directory uses.
+Before understanding AD attacks, you need to understand Kerberos - the authentication protocol that Active Directory uses.
 
 **The Kerberos flow:**
 
@@ -2602,7 +2602,7 @@ Before understanding AD attacks, you need to understand Kerberos — the authent
 
 **Why this matters:** Each stage has a different attack vector. The attacks below target specific weaknesses in this flow.
 
-## Kerberoasting — Stealing Service Account Passwords
+## Kerberoasting - Stealing Service Account Passwords
 
 **The weakness:** Any authenticated user can request a TGS for ANY service with an SPN (Service Principal Name). The TGS is encrypted with the service account's NTLM hash. If you crack the hash, you have the service account's password.
 
@@ -2613,11 +2613,11 @@ Before understanding AD attacks, you need to understand Kerberos — the authent
 4. You take the TGS offline and crack it with Hashcat (mode 13100)
 5. If the password is weak (and service accounts often have weak passwords), you crack it in minutes
 
-**The key insight:** The DC doesn't check if you actually NEED access to the service. It just hands out the ticket. This is by design — Kerberos was built for usability, not security.
+**The key insight:** The DC doesn't check if you actually NEED access to the service. It just hands out the ticket. This is by design - Kerberos was built for usability, not security.
 
 **Detection:** Monitor Event ID 4769 (TGS requests). If one user requests tickets for many SPNs in a short time, it's Kerberoasting.
 
-## AS-REP Roasting — Attacking Pre-Auth Disabled Accounts
+## AS-REP Roasting - Attacking Pre-Auth Disabled Accounts
 
 **The weakness:** Some accounts have "Do not require Kerberos pre-authentication" enabled. This means the DC sends the AS-REP (Authentication Service Response) without requiring the user to prove they know the password first.
 
@@ -2630,21 +2630,21 @@ Before understanding AD attacks, you need to understand Kerberos — the authent
 
 **Detection:** Monitor Event ID 4768 (TGT requests) for accounts with pre-auth disabled. Audit accounts with the DONT_REQUIRE_PREAUTH flag.
 
-## Pass-the-Hash — Using Stolen Hashes Directly
+## Pass-the-Hash - Using Stolen Hashes Directly
 
-**The weakness:** Windows NTLM authentication doesn't require the plaintext password — it only requires the hash. If you have the hash, you can authenticate as the user.
+**The weakness:** Windows NTLM authentication doesn't require the plaintext password - it only requires the hash. If you have the hash, you can authenticate as the user.
 
 **Why this works:**
 1. Attacker dumps password hashes from SAM database or LSASS process
 2. Attacker uses the hash directly in an NTLM authentication request
-3. The server verifies the hash matches — authentication succeeds
+3. The server verifies the hash matches - authentication succeeds
 4. No password cracking required
 
 **The key insight:** NTLM authentication is a challenge-response protocol. The server sends a challenge, the client responds with the hash. If you have the hash, you can respond correctly without knowing the password.
 
 **Detection:** Monitor for NTLM authentication from unusual sources. Implement Credential Guard to protect LSASS. Restrict NTLM usage where possible.
 
-## Golden Ticket — Forging Domain Admin Access
+## Golden Ticket - Forging Domain Admin Access
 
 **The weakness:** The KRBTGT account hash is used to encrypt TGTs. If you have this hash, you can forge TGTs for ANY user, ANY group, with ANY expiration time.
 
@@ -2655,11 +2655,11 @@ Before understanding AD attacks, you need to understand Kerberos — the authent
 4. The DC accepts the forged TGT as legitimate
 5. Attacker has Domain Admin access for as long as they want
 
-**The key insight:** The DC trusts any TGT encrypted with the KRBTGT hash. If you have the hash, you ARE the DC. This is the most powerful AD attack — it's essentially game over for the domain.
+**The key insight:** The DC trusts any TGT encrypted with the KRBTGT hash. If you have the hash, you ARE the DC. This is the most powerful AD attack - it's essentially game over for the domain.
 
 **Detection:** Protect the KRBTGT account. Change the password twice annually. Monitor for KRBTGT hash access. Detect TGTs with anomalous characteristics (unusual lifetime, modified fields).
 
-## DCSync — Stealing All Domain Passwords
+## DCSync - Stealing All Domain Passwords
 
 **The weakness:** Domain Controllers replicate password data between each other using the DRS (Directory Replication Service) protocol. Any account with Replicating Directory Changes permissions can request this data.
 
@@ -2667,9 +2667,9 @@ Before understanding AD attacks, you need to understand Kerberos — the authent
 1. Attacker gains Domain Admin or Replicating Directory Changes privileges
 2. Attacker's machine sends a replication request to the DC
 3. The DC sends back ALL password hashes in the domain (including KRBTGT)
-4. Attacker now has every password hash — can forge any ticket, impersonate anyone
+4. Attacker now has every password hash - can forge any ticket, impersonate anyone
 
-**The key insight:** DCSync is not an exploit — it's a legitimate feature. The DC is designed to replicate password data to authorized machines. The attack is getting authorized access to request replication.
+**The key insight:** DCSync is not an exploit - it's a legitimate feature. The DC is designed to replicate password data to authorized machines. The attack is getting authorized access to request replication.
 
 **Detection:** Monitor Event ID 4662 (Directory Service Access) for replication operations. Alert on non-DC machines performing directory replication. Restrict which accounts can replicate directory data.
 
@@ -3154,7 +3154,7 @@ For each finding:
 What the vulnerability is and why it matters.
 
 ### Affected System
-IP address, port, service, URL — be specific.
+IP address, port, service, URL - be specific.
 
 ### Steps to Reproduce
 1. Step one

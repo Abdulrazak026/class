@@ -742,7 +742,7 @@ If "javascript:" is blocked in href:
 <a href="data:text/html,<script>alert(1)</script>">click</a>
 \`\`\`
 
-## Content Security Policy (CSP) — The Real Defense
+## Content Security Policy (CSP) - The Real Defense
 
 CSP is an HTTP response header that tells the browser which resources are allowed to load. Unlike input filtering, CSP is enforced by the browser, not the application.
 
@@ -772,19 +772,19 @@ The browser then:
 
 **Why CSP defeats most XSS:**
 
-If CSP is \`script-src 'self'\`, even if an attacker injects \`<script>alert(1)</script>\`, the browser blocks it because inline scripts are not allowed. The attacker needs to find a script file on YOUR domain that does something dangerous — which is much harder.
+If CSP is \`script-src 'self'\`, even if an attacker injects \`<script>alert(1)</script>\`, the browser blocks it because inline scripts are not allowed. The attacker needs to find a script file on YOUR domain that does something dangerous - which is much harder.
 
 ## CSP Bypass Techniques
 
 CSP is strong but not perfect. Common weaknesses:
 
-**1. 'unsafe-inline' — Defeats CSP entirely**
+**1. 'unsafe-inline' - Defeats CSP entirely**
 \`\`\`
 Content-Security-Policy: script-src 'unsafe-inline'
 \`\`\`
 This allows inline scripts. If present, CSP provides zero XSS protection.
 
-**2. 'unsafe-eval' — Allows eval()**
+**2. 'unsafe-eval' - Allows eval()**
 \`\`\`
 Content-Security-Policy: script-src 'unsafe-eval'
 \`\`\`
@@ -939,7 +939,7 @@ The attacker controls the Host header. By changing it to their own domain, the r
    https://attacker.com/reset?token=abc123
    \`\`\`
 4. Victim receives an email with the attacker's URL
-5. Victim clicks the link — token is sent to attacker.com
+5. Victim clicks the link - token is sent to attacker.com
 6. Attacker uses the token to reset the victim's password
 
 **Why this works:** The server trusts the Host header without validation. The Host header is controlled by the client, not the server.
@@ -1026,7 +1026,7 @@ If the 2FA token is the same session token used before 2FA:
 
 ## Prevention Summary
 
-1. Never use the Host header to construct URLs — use a configured base URL
+1. Never use the Host header to construct URLs - use a configured base URL
 2. Validate the Host header against a whitelist
 3. Rate limit password reset requests
 4. Use time-limited, single-use tokens
@@ -1158,17 +1158,17 @@ You can decode JWTs, identify weak implementations, and exploit unverified signa
 
 JWTs use algorithms to sign tokens. The signature ensures the token hasn't been tampered with. There are two types:
 
-**HS256 (HMAC-SHA256) — Symmetric:**
+**HS256 (HMAC-SHA256) - Symmetric:**
 - ONE key is used for both signing and verification
 - The server signs with the secret, the server verifies with the SAME secret
 - If you know the secret, you can forge tokens
-- Analogy: a house key — same key locks and unlocks
+- Analogy: a house key - same key locks and unlocks
 
-**RS256 (RSA-SHA256) — Asymmetric:**
+**RS256 (RSA-SHA256) - Asymmetric:**
 - TWO keys are used: private key for signing, public key for verification
 - The server signs with the PRIVATE key, anyone can verify with the PUBLIC key
 - Knowing the public key does NOT let you forge tokens
-- Analogy: a mailbox — the post office has the key to put mail in (private), anyone can check if mail is there (public)
+- Analogy: a mailbox - the post office has the key to put mail in (private), anyone can check if mail is there (public)
 
 **Why RS256 is more secure:** Even if the attacker obtains the public key (which is often publicly available at JWKS endpoints), they cannot sign tokens because they don't have the private key.
 
@@ -1203,7 +1203,7 @@ RSA-SHA256_verify(header.payload, signature, PUBLIC_KEY)
    \`\`\`
    HMAC-SHA256_verify(header.payload, signature, PUBLIC_KEY)
    \`\`\`
-5. **The signature matches** — because the same key was used for both signing and verification
+5. **The signature matches** - because the same key was used for both signing and verification
 
 **Why this works:** HS256 uses the SAME key for signing and verification. If the server uses its public key as the verification key for HS256, and the attacker signs with that same public key, the verification succeeds.
 
@@ -1245,10 +1245,10 @@ curl -H "Authorization: Bearer <forged_jwt>" https://target/admin
 
 ## Prevention
 
-1. **Validate the algorithm against a server-side allowlist** — never accept algorithm changes from the client
-2. **Use separate keys for different algorithms** — don't reuse the same key for RS256 and HS256
-3. **Reject HS256 if RS256 is expected** — if your system uses asymmetric signing, never accept symmetric
-4. **Use a JWT library that enforces algorithm validation** — don't implement JWT verification manually
+1. **Validate the algorithm against a server-side allowlist** - never accept algorithm changes from the client
+2. **Use separate keys for different algorithms** - don't reuse the same key for RS256 and HS256
+3. **Reject HS256 if RS256 is expected** - if your system uses asymmetric signing, never accept symmetric
+4. **Use a JWT library that enforces algorithm validation** - don't implement JWT verification manually
 
 :::checkpoint
 You understand the cryptographic difference between RS256 and HS256, why algorithm confusion works, and how to exploit it. You can test JWT implementations for this vulnerability.
@@ -1363,16 +1363,16 @@ You can discover API documentation, identify IDOR vulnerabilities, and exploit m
 - Exploit query batching for rate limit bypass and nested query DoS attacks
 :::
 
-## GraphQL Architecture — What You're Attacking
+## GraphQL Architecture - What You're Attacking
 
 GraphQL is a query language for APIs. Unlike REST (where the server defines the response structure), GraphQL lets the client specify exactly what data it wants.
 
 **How GraphQL works:**
 
-1. **Schema** — The server defines a schema with types, queries, and mutations
-2. **Resolvers** — Each field in the schema has a resolver function that fetches the data
-3. **Query** — The client sends a query specifying exactly which fields it wants
-4. **Response** — The server returns only the requested fields
+1. **Schema** - The server defines a schema with types, queries, and mutations
+2. **Resolvers** - Each field in the schema has a resolver function that fetches the data
+3. **Query** - The client sends a query specifying exactly which fields it wants
+4. **Response** - The server returns only the requested fields
 
 **Example schema:**
 \`\`\`graphql
@@ -1381,7 +1381,7 @@ type User {
   name: String!
   email: String!
   role: String!
-  ssn: String  # Hidden field — should not be exposed
+  ssn: String  # Hidden field - should not be exposed
 }
 
 type Query {
@@ -1423,7 +1423,7 @@ type Mutation {
 
 **The security implication:** GraphQL schemas often contain hidden fields (ssn, role, internal IDs, admin flags) that are accessible if you know to ask for them. Introspection reveals ALL of these.
 
-## Introspection — Mapping the Attack Surface
+## Introspection - Mapping the Attack Surface
 
 Introspection is a built-in GraphQL feature that lets you query the schema itself. It's like having a map of the entire API.
 
@@ -1599,7 +1599,7 @@ Server-Side Request Forgery (SSRF) occurs when an application makes HTTP request
 
 1. The application has a feature that fetches URLs (image preview, link unfurling, webhook, PDF generation)
 2. The attacker provides a URL pointing to an internal resource
-3. The server fetches the URL — but from the SERVER's perspective, not the attacker's
+3. The server fetches the URL - but from the SERVER's perspective, not the attacker's
 4. The server returns the internal data to the attacker
 
 **Example vulnerable code:**
@@ -1628,7 +1628,7 @@ The server fetches the cloud metadata and returns it to the attacker.
 | File system | /etc/passwd, config files | High |
 | DNS | Data exfiltration via DNS queries | Medium |
 
-## Cloud Metadata — The Big Prize
+## Cloud Metadata - The Big Prize
 
 Cloud providers (AWS, GCP, Azure) expose instance metadata at a special IP address. This metadata includes credentials, tokens, and configuration that can lead to full cloud account compromise.
 
@@ -1740,7 +1740,7 @@ Content-Length: 13
 username=admin
 \`\`\`
 
-**Transfer-Encoding (TE):** "The body is chunked — read until you see a zero-length chunk"
+**Transfer-Encoding (TE):** "The body is chunked - read until you see a zero-length chunk"
 \`\`\`http
 POST /login HTTP/1.1
 Transfer-Encoding: chunked
@@ -1807,7 +1807,7 @@ SMUGGLED
 
 **Back-end (uses CL):** Reads exactly 3 bytes: \`8\\r\\n\`. Then \`SMUGGLED\\r\\n0\\r\\n\` is treated as the start of a NEW request.
 
-**Result:** Same as CL.TE — a smuggled request that bypasses front-end security.
+**Result:** Same as CL.TE - a smuggled request that bypasses front-end security.
 
 ## Impact of Request Smuggling
 
@@ -1838,9 +1838,9 @@ If the server times out waiting for more data, it's using Transfer-Encoding. If 
 
 ## Prevention
 
-1. **Use HTTP/2 end-to-end** — HTTP/2 binary framing eliminates the Content-Length vs Transfer-Encoding ambiguity entirely
-2. **Normalize requests at the front-end** — Remove or reject requests with both CL and TE headers
-3. **Ensure consistent parsing** — Front-end and back-end must agree on which header to use
+1. **Use HTTP/2 end-to-end** - HTTP/2 binary framing eliminates the Content-Length vs Transfer-Encoding ambiguity entirely
+2. **Normalize requests at the front-end** - Remove or reject requests with both CL and TE headers
+3. **Ensure consistent parsing** - Front-end and back-end must agree on which header to use
 4. **Disable Transfer-Encoding** if not needed
 
 :::checkpoint

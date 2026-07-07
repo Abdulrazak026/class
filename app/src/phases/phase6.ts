@@ -19,7 +19,7 @@ export const phase6: Module[] = [
 - Verify the installation end-to-end
 :::
 
-## Wazuh Architecture — How the Components Work Together
+## Wazuh Architecture - How the Components Work Together
 
 Wazuh is an open-source security platform providing XDR and SIEM capabilities. It has four components that work together:
 
@@ -46,12 +46,12 @@ Endpoint (Agent) ──→ Manager ──→ Indexer ──→ Dashboard
 6. Analyst views the alert on Dashboard
 
 **Why this architecture matters:**
-- Agents are lightweight — they just collect and send
-- Manager does the heavy lifting — rule evaluation, alert generation
-- Indexer scales horizontally — add more nodes for more capacity
-- Dashboard is stateless — can be load-balanced
+- Agents are lightweight - they just collect and send
+- Manager does the heavy lifting - rule evaluation, alert generation
+- Indexer scales horizontally - add more nodes for more capacity
+- Dashboard is stateless - can be load-balanced
 
-## Installation — What Happens Under the Hood
+## Installation - What Happens Under the Hood
 
 The installer script does several things:
 1. Installs OpenSearch (Indexer) with TLS certificates
@@ -168,19 +168,19 @@ Before configuring anything, you need to understand how Wazuh processes logs. Ev
 Raw Log → Decoder → Rule → Alert → Action
 \`\`\`
 
-**Step 1: Raw Log** — A log arrives from an agent (SSH log, web access log, Windows Event, etc.)
+**Step 1: Raw Log** - A log arrives from an agent (SSH log, web access log, Windows Event, etc.)
 
-**Step 2: Decoder** — Wazuh parses the log to extract fields. A decoder says: "If the log looks like THIS pattern, extract THESE fields."
+**Step 2: Decoder** - Wazuh parses the log to extract fields. A decoder says: "If the log looks like THIS pattern, extract THESE fields."
 
-**Step 3: Rule** — Wazuh checks if the decoded log matches any rules. A rule says: "If this field has this value, generate an alert with this severity."
+**Step 3: Rule** - Wazuh checks if the decoded log matches any rules. A rule says: "If this field has this value, generate an alert with this severity."
 
-**Step 4: Alert** — If a rule matches, an alert is generated with a severity level (0-16).
+**Step 4: Alert** - If a rule matches, an alert is generated with a severity level (0-16).
 
-**Step 5: Action** — Based on severity, Wazuh can: send email, trigger an active response, write to log, forward to external system.
+**Step 5: Action** - Based on severity, Wazuh can: send email, trigger an active response, write to log, forward to external system.
 
 **Why this matters:** If you don't understand this pipeline, you can't write effective rules or debug false positives. Every configuration change affects one of these stages.
 
-## Agent Groups — Centralized Policy Management
+## Agent Groups - Centralized Policy Management
 
 Agent groups let you apply the same configuration to multiple agents. Instead of configuring each agent individually, you configure the group once and all agents in that group inherit the settings.
 
@@ -220,14 +220,14 @@ sudo /var/ossec/bin/agent_groups -l -g web_servers
 
 \`\`\`bash
 ls /var/etc/shared/web_servers/
-# agent.conf — shared configuration for all agents in this group
+# agent.conf - shared configuration for all agents in this group
 \`\`\`
 
 :::info
 Group configurations are pushed to agents automatically. When you edit \`/var/etc/shared/web_servers/agent.conf\`, all agents in the web_servers group receive the update within the agent's reconnect interval (default: 60 seconds).
 :::
 
-## Custom Decoders — Teaching Wazuh to Read Your Logs
+## Custom Decoders - Teaching Wazuh to Read Your Logs
 
 Wazuh has built-in decoders for common logs (sshd, apache, syslog). But when you have custom applications or non-standard log formats, you need to write your own decoder.
 
@@ -269,7 +269,7 @@ Wazuh has built-in decoders for common logs (sshd, apache, syslog). But when you
 Use \`wazuh-logtest\` to test your decoders. Paste a log line and see which decoder matches and what fields are extracted.
 :::
 
-## Custom Rules — Defining What's an Alert
+## Custom Rules - Defining What's an Alert
 
 Rules check decoded fields and generate alerts. Rules can inherit from parent rules (using \`<if_sid>\`) to build detection chains.
 
@@ -295,7 +295,7 @@ Rules check decoded fields and generate alerts. Rules can inherit from parent ru
 | \`<description>\` | Human-readable description |
 | \`<group>\` | Category tags for filtering |
 
-**How \`<if_sid>\` works:** Rule 100100 only fires if rule 5712 (SSH failed login) already matched. This is rule inheritance — you're adding conditions on top of an existing detection.
+**How \`<if_sid>\` works:** Rule 100100 only fires if rule 5712 (SSH failed login) already matched. This is rule inheritance - you're adding conditions on top of an existing detection.
 
 **Field operators:**
 | Syntax | Meaning |
@@ -305,9 +305,9 @@ Rules check decoded fields and generate alerts. Rules can inherit from parent ru
 | \`<field name="srcip">10.0.0.0/24</field>\` | Match if srcip is in this subnet |
 | \`<field name="user">admin\|root\|sa</field>\` | Match if user is any of these |
 
-## Alert Severity Levels — What They Mean
+## Alert Severity Levels - What They Mean
 
-Severity levels determine how Wazuh handles the alert. This is not just for display — it drives automated responses.
+Severity levels determine how Wazuh handles the alert. This is not just for display - it drives automated responses.
 
 | Level | Name | Meaning | Typical Response |
 |-------|------|---------|-----------------|
@@ -334,7 +334,7 @@ Severity levels determine how Wazuh handles the alert. This is not just for disp
 </active-response>
 \`\`\`
 
-## Tuning Rules — Reducing False Positives
+## Tuning Rules - Reducing False Positives
 
 False positives are alerts that fire for legitimate activity. They're the #1 problem in SOC operations. Common causes and fixes:
 
@@ -669,7 +669,7 @@ detection:
   level: critical
 \`\`\`
 
-**Why this works:** The rule checks TWO sources — command line execution AND file creation. If either matches, the alert fires.
+**Why this works:** The rule checks TWO sources - command line execution AND file creation. If either matches, the alert fires.
 
 ## Converting Sigma to SIEM Queries
 
@@ -1099,7 +1099,7 @@ T1566 -> T1059.001 -> T1003 -> T1021.002 -> T1053 -> T1486 -> T1567
 | **TLP:RED** | Restricted | Only within your organization |
 | **TLP:AMBER** | Amber | Your org + clients with need-to-know |
 | **TLP:GREEN** | Green | Within your community (ISACs) |
-| **TLP:CLEAR** | Clear | Unrestricted — public sharing |
+| **TLP:CLEAR** | Clear | Unrestricted - public sharing |
 
 :::warning
 Never share TLP:RED information outside your organization.
@@ -1670,7 +1670,7 @@ Details: C:\\Windows\\Temp\\update.exe
 
 | Pattern | Risk | Investigation |
 |---------|------|---------------|
-| \`powershell.exe -enc\` | Encoded commands — malware | Decode base64 payload |
+| \`powershell.exe -enc\` | Encoded commands - malware | Decode base64 payload |
 | \`cmd.exe /c certutil\` | File download via certutil | Check downloaded file hash |
 | \`mshta.exe http://\` | Remote script execution | Block URL, check for persistence |
 | \`wmic process call create\` | WMI lateral movement | Check creator process |
@@ -1913,10 +1913,10 @@ Offset(V)         Proto  Local Address        Foreign Address      State        
 
 **File Carving:**
 \`\`\`bash
-# Scalpel — carve files from disk image
+# Scalpel - carve files from disk image
 scalpel -o output/ disk_image.dd
 
-# Autopsy — GUI-based forensic analysis
+# Autopsy - GUI-based forensic analysis
 autopsy disk_image.dd
 \`\`\`
 
