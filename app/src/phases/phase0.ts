@@ -2549,7 +2549,7 @@ regedit
     topics: [
       {
         id: "we04d01",
-        title: "Project 1: Hello Terminal - Your First Commands",
+        title: "Hello Terminal - Your First Commands",
         description: "Learn what a terminal is, why hackers use it, and your first 5 commands: whoami, pwd, ls, echo, clear.",
         type: "practice",
         duration: "30 min",
@@ -2704,7 +2704,7 @@ clear
       },
       {
         id: "we04d02",
-        title: "Project 2: Files & Directories - Building Your Lab",
+        title: "Files & Directories - Building Your Lab",
         description: "Navigate the filesystem, create directories, move and delete files. Build your pentest workspace.",
         type: "practice",
         duration: "30 min",
@@ -2888,7 +2888,7 @@ What command creates multiple directories at once?
       },
       {
         id: "we04d03",
-        title: "Project 3: Reading Files - Extracting Intelligence",
+        title: "Reading Files - Extracting Intelligence",
         description: "Read files using cat, head, tail, wc, and file. Learn why reading files is the #1 hacker skill.",
         type: "practice",
         duration: "30 min",
@@ -3055,7 +3055,7 @@ In /etc/passwd, what does UID 0 indicate?
       },
       {
         id: "we04d04",
-        title: "Project 4: Searching - Finding Needles in Haystacks",
+        title: "Searching - Finding Needles in Haystacks",
         description: "Search inside files with grep, find files by name/size/type with find, and locate executables with which.",
         type: "practice",
         duration: "30 min",
@@ -3195,7 +3195,7 @@ What is the correct command to find all .log files in /var/log?
       },
       {
         id: "we04d05",
-        title: "Project 5: Permissions - Who Can Do What",
+        title: "Permissions - Who Can Do What",
         description: "Understand Linux permissions (rwx), ownership (user/group), and why SUID binaries are the #1 privilege escalation vector.",
         type: "practice",
         duration: "30 min",
@@ -3349,7 +3349,7 @@ find / -perm -4000 -type f 2>/dev/null
       },
       {
         id: "we04d06",
-        title: "Project 6: Processes - What's Running",
+        title: "Processes - What's Running",
         description: "View running processes with ps and top, kill processes, and understand process states. Learn to identify suspicious processes.",
         type: "practice",
         duration: "30 min",
@@ -3484,7 +3484,7 @@ ss -tulnp
       },
       {
         id: "we04d07",
-        title: "Project 7: Pipes & Redirects - Chaining Commands",
+        title: "Pipes & Redirects - Chaining Commands",
         description: "Chain commands together with pipes, redirect output to files, and build powerful one-liners for recon.",
         type: "practice",
         duration: "30 min",
@@ -3746,7 +3746,7 @@ tee report.txt
       },
       {
         id: "we04d08",
-        title: "Project 8: Bash Scripting - Writing Your First Tools",
+        title: "Bash Scripting - Writing Your First Tools",
         description: "Write bash scripts with variables, conditionals, and loops. Automate reconnaissance and build custom tools.",
         type: "practice",
         duration: "45 min",
@@ -4234,7 +4234,7 @@ echo -e "\\n\${GREEN}=== Scan Complete ===\${NC}"
       },
       {
         id: "we04d09",
-        title: "Project 9: Log Analysis - Reading the Battlefield",
+        title: "Log Analysis - Reading the Battlefield",
         description: "Analyze auth.log, syslog, and application logs to detect attacks, find patterns, and extract indicators of compromise.",
         type: "practice",
         duration: "30 min",
@@ -4375,7 +4375,7 @@ grep "Accepted" /var/log/auth.log
       },
       {
         id: "we04d10",
-        title: "Project 10: System Recon - Know Your Target",
+        title: "System Recon - Know Your Target",
         description: "Perform full system enumeration: OS version, users, network, services, scheduled tasks. The first step of any pentest.",
         type: "practice",
         duration: "30 min",
