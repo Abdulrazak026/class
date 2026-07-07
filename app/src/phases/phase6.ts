@@ -13,53 +13,116 @@ export const phase6: Module[] = [
         type: 'lab',
         duration: '4 hours',
         content: `:::objectives
-- Understand Wazuh four-component architecture
+- Understand Wazuh four-component architecture and how they interact
 - Install Wazuh indexer, manager, and dashboard on Ubuntu
 - Deploy and connect a Wazuh agent to the manager
 - Verify the installation end-to-end
 :::
 
-:::info
-Wazuh is an open-source security platform providing XDR and SIEM capabilities. It runs four components:
+## Wazuh Architecture — How the Components Work Together
 
-| Component | Role | Default Port |
-|-----------|------|--------------|
-| **Wazuh Indexer** | Stores and indexes alert data (OpenSearch fork) | 9200, 9300 |
-| **Wazuh Manager** | Analyzes agent data, triggers alerts, manages policies | 1514 (agent comms), 1515 (enrollment) |
-| **Wazuh Dashboard** | Web UI for visualization and management | 443 (HTTPS) |
-| **Wazuh Agent** | Collects logs, syscheck, rootcheck on endpoints | N/A (pushes to manager) |
+Wazuh is an open-source security platform providing XDR and SIEM capabilities. It has four components that work together:
+
+\`\`\`
+Endpoint (Agent) ──→ Manager ──→ Indexer ──→ Dashboard
+     │                  │            │            │
+  Collects logs    Analyzes data  Stores data  Visualizes
+  FIM, rootcheck   Triggers alerts Indexes     Web UI
+\`\`\`
+
+| Component | Role | Default Port | What It Does |
+|-----------|------|--------------|-------------|
+| **Wazuh Indexer** | Data store | 9200 (API), 9300 (cluster) | Stores and indexes all alert data using OpenSearch |
+| **Wazuh Manager** | Brain | 1514 (agent comms), 1515 (enrollment), 55000 (API) | Receives agent data, runs detection rules, triggers alerts |
+| **Wazuh Dashboard** | UI | 443 (HTTPS) | Web interface for searching alerts, managing agents, configuring rules |
+| **Wazuh Agent** | Endpoint sensor | N/A (pushes to manager) | Collects logs, monitors file integrity, checks rootkits on endpoints |
+
+**How data flows:**
+1. Agent collects logs from the endpoint (auth.log, syslog, Windows Events, syscheck)
+2. Agent sends logs to Manager over port 1514 (encrypted TLS channel)
+3. Manager runs detection rules against the logs
+4. If a rule matches, Manager generates an alert
+5. Manager sends the alert to Indexer for storage
+6. Analyst views the alert on Dashboard
+
+**Why this architecture matters:**
+- Agents are lightweight — they just collect and send
+- Manager does the heavy lifting — rule evaluation, alert generation
+- Indexer scales horizontally — add more nodes for more capacity
+- Dashboard is stateless — can be load-balanced
+
+## Installation — What Happens Under the Hood
+
+The installer script does several things:
+1. Installs OpenSearch (Indexer) with TLS certificates
+2. Installs Wazuh Manager with pre-configured detection rules
+3. Installs Kibana-based Dashboard connected to the Indexer
+4. Generates unique passwords for all services
+5. Configures TLS between all components
+
+:::warning
+Save the auto-generated passwords immediately. They are not stored anywhere after installation. You'll need them to log into the Dashboard and API.
 :::
 
-### Single-Node Installation
+## Single-Node Installation
 
 \`\`\`bash
 curl -sO https://packages.wazuh.com/4.7/wazuh-install.sh
 sudo bash ./wazuh-install.sh -a
 \`\`\`
 
-The \`-a\` flag installs all components on one node.
-
-:::warning
-Save the auto-generated passwords immediately. They are not stored anywhere after installation.
-:::
-
-### Agent Installation
+The \`-a\` flag installs all components on one node. After installation:
 
 \`\`\`bash
+# Check if all services are running
+sudo systemctl status wazuh-indexer
+sudo systemctl status wazuh-manager
+sudo systemctl status wazuh-dashboard
+
+# Access the dashboard
+# https://<your-ip> (admin / <generated-password>)
+\`\`\`
+
+## Agent Installation
+
+\`\`\`bash
+# Download and install agent
 curl -sO https://packages.wazuh.com/4.7/wazuh-agent.sh
 sudo bash ./wazuh-agent.sh
+
+# Configure agent to connect to manager
 sudo sed -i 's/<manager-ip>/192.168.1.100/' /var/ossec/etc/ossec.conf
-sudo systemctl enable wazuh-agent && sudo systemctl start wazuh-agent
+
+# Start the agent
+sudo systemctl enable wazuh-agent
+sudo systemctl start wazuh-agent
 \`\`\`
 
-Verify on the manager:
+**What the agent does on startup:**
+1. Reads /var/ossec/etc/ossec.conf for configuration
+2. Connects to manager on port 1515 for enrollment
+3. Receives a unique agent ID and TLS certificate
+4. Switches to port 1514 for ongoing log transmission
+5. Starts collecting logs based on configuration
 
+**Verify agent is connected:**
 \`\`\`bash
+# On the manager
 sudo /var/ossec/bin/agent_control -l
+# Should show agent ID, name, IP, status "Active"
 \`\`\`
+
+## What the Agent Collects by Default
+
+| Module | What It Monitors | Config Element |
+|--------|-----------------|----------------|
+| Syscheck | File integrity (permissions, content) | <syscheck> |
+| Rootcheck | Rootkit detection | <rootcheck> |
+| Logcollector | Log files (auth.log, syslog) | <localfile> |
+| Command | Custom command output | <localfile format="command"> |
 
 :::classwork
-**Lab:** Install Wazuh single-node, change admin password, install agent, confirm it appears in dashboard.
+**Lab:** Install Wazuh single-node, change admin password, install agent on a second VM, confirm it appears in Dashboard. Generate a failed SSH login and find the alert.
 :::`,
         aiPrompt: '',
         labUrl: '',
@@ -475,13 +538,49 @@ Jun 15 03:22:24 server sshd[12347]: Failed password for invalid user admin from 
         type: 'practice',
         duration: '4 hours',
         content: `:::objectives
-- Understand the Sigma rule YAML format
+- Understand why Sigma exists and how its abstraction layer works
 - Create Sigma rules for process creation, file events, and registry events
-- Use logsource categories and detection fields correctly
+- Use logsource categories and detection field modifiers correctly
 - Convert Sigma rules to Splunk, ELK, and Wazuh queries
 :::
 
-### Sigma Rule Structure
+## Why Sigma Exists
+
+Every SIEM has its own query language:
+- Splunk uses SPL
+- Elastic uses KQL
+- Wazuh uses XML rules
+- QRadar uses AQL
+- Sentinel uses KQL
+
+If you write a detection rule in Splunk SPL, it only works in Splunk. If your organization switches SIEMs, you lose all your detection rules.
+
+**Sigma solves this:** It's a vendor-neutral format for writing detection rules. You write ONE Sigma rule and convert it to ANY SIEM's query language.
+
+**How the abstraction works:**
+\`\`\`
+Sigma Rule (YAML) → sigma-cli convert → Splunk SPL
+Sigma Rule (YAML) → sigma-cli convert → Elastic KQL
+Sigma Rule (YAML) → sigma-cli convert → Wazuh XML
+Sigma Rule (YAML) → sigma-cli convert → QRadar AQL
+\`\`\`
+
+## The Logsource Abstraction
+
+Sigma uses "logsource" to abstract WHERE the log comes from. Instead of specifying "Sysmon Event ID 1" or "Windows Security Event 4688", you specify the category:
+
+| Sigma Category | Windows Source | Linux Source | What It Detects |
+|---------------|---------------|--------------|-----------------|
+| process_creation | Sysmon 1, Win Event 4688 | auditd | New process started |
+| file_event | Sysmon 11 | inotify | File created/modified |
+| registry_event | Sysmon 13 | N/A | Registry key modified |
+| network_connection | Sysmon 3 | auditd | Outbound connection |
+| dns_query | Sysmon 22 | syslog | DNS lookup |
+| service_creation | Win Event 7045 | systemctl | New service installed |
+
+**Why this matters:** When you write \`logsource: category: process_creation\`, Sigma knows to convert it to \`index=win* sourcetype=XmlWinEventLog:Microsoft-Windows-Sysmon/Operational EventCode=1\` in Splunk, or \`data.win.system.channel: Microsoft-Windows-Sysmon/Operational AND data.win.system.eventID: 1\` in Elastic.
+
+## Sigma Rule Structure
 
 \`\`\`yaml
 title: Suspicious PowerShell Encoded Command
@@ -510,32 +609,48 @@ detection:
   level: high
 \`\`\`
 
-### Logsource Categories
+**Breaking it down:**
 
-| Category | Windows Source | Linux Source |
-|----------|---------------|--------------|
-| process_creation | Sysmon 1, Win Event 4688 | auditd |
-| file_event | Sysmon 11 | inotify |
-| registry_event | Sysmon 13 | N/A |
-| network_connection | Sysmon 3 | auditd |
-| dns_query | Sysmon 22 | syslog |
-| service_creation | Win Event 7045 | systemctl |
+| Field | Purpose |
+|-------|---------|
+| title | Human-readable name |
+| id | Unique UUID for the rule |
+| status | experimental, testing, stable |
+| tags | MITRE ATT&CK mapping |
+| logsource | WHERE the log comes from |
+| selection | WHAT to look for in the log |
+| condition | HOW to combine selections |
+| level | Severity (informational, low, medium, high, critical) |
 
-### Detection Field Modifiers
+## Detection Field Modifiers
+
+Modifiers control HOW fields are matched:
 
 | Modifier | Usage | Example |
 |----------|-------|---------|
-| \`|contains\` | Contains string | \`CommandLine|contains: 'mimikatz'\` |
-| \`|startswith\` | Starts with | \`CommandLine|startswith: 'cmd.exe /c'\` |
-| \`|endswith\` | Ends with | \`Image|endswith: '\\\\rundll32.exe'\` |
-| \`|re\` | Regex match | \`CommandLine|re: '(?i)mimikatz'\` |
+| contains | Contains string | CommandLine|contains: 'mimikatz' |
+| startswith | Starts with | CommandLine|startswith: 'cmd.exe /c' |
+| endswith | Ends with | Image|endswith: '\\\\rundll32.exe' |
+| re | Regex match | CommandLine|re: '(?i)mimikatz' |
+||all| All values must match | CommandLine|contains|all: ['-enc', 'bypass'] |
 
-### Example: Detecting Mimikatz
+**Without modifier:** Exact match
+\`\`\`yaml
+CommandLine: 'whoami'  # Only matches exact string
+\`\`\`
+
+**With contains:** Partial match
+\`\`\`yaml
+CommandLine|contains: 'whoami'  # Matches 'cmd.exe /c whoami /all'
+\`\`\`
+
+## Example: Detecting Mimikatz
 
 \`\`\`yaml
 title: Credential Dumping via Mimikatz
 id: f7a8b9c0-d1e2-3456-7890-abcdef123456
 status: experimental
+description: Detects Mimikatz execution or file presence
 logsource:
   category: process_creation
   product: windows
@@ -554,27 +669,41 @@ detection:
   level: critical
 \`\`\`
 
-### Converting Sigma to Other Formats
+**Why this works:** The rule checks TWO sources — command line execution AND file creation. If either matches, the alert fires.
+
+## Converting Sigma to SIEM Queries
 
 \`\`\`bash
+# Install sigma-cli
 pip install sigma-cli pySigma-backend-splunk pySigma-pipelines-splunk
+
+# Convert to Splunk SPL
 sigma convert -t splunk -p windows_sysmon rule.yml
+
+# Convert to Elastic KQL
 sigma convert -t elasticsearch -p windows_sysmon rule.yml
+
+# Convert to Wazuh XML
+sigma convert -t wazuh rule.yml
 \`\`\`
 
-### Sigma to Wazuh Rule
+## Sigma to Wazuh Rule
+
+For Wazuh, Sigma rules are converted to XML:
 
 \`\`\`xml
 <rule id="100200" level="12">
   <if_sid>18104</if_sid>
-  <field name="data.win.eventdata.commandLine" type="pcre2">(?i)(powershell|pwsh).*(-enc|-encodedcommand)</field>
-  <description>Suspicious PowerShell Encoded Command</description>
-  <group>execution,powershell,attack_t1059.001</group>
+  <field name="win.eventdata.commandLine" type="pcre2">(?i)mimikatz|sekurlsa::logonpasswords</field>
+  <description>Credential Dumping via Mimikatz</description>
+  <mitre>
+    <id>T1003</id>
+  </mitre>
 </rule>
 \`\`\`
 
-:::classwork
-**Lab:** Write 3 Sigma rules: PsExec execution, schtasks /create, wmic process call create. Convert each to Splunk SPL.
+:::checkpoint
+You understand Sigma's abstraction model, can write detection rules in YAML format, and can convert them to any SIEM's query language.
 :::`,
         aiPrompt: '',
         labUrl: '',
@@ -1179,13 +1308,31 @@ Suppress alerts during maintenance windows.
         type: 'lab',
         duration: '4 hours',
         content: `:::objectives
-- Understand YARA rule structure: rule name, meta, strings, condition
-- Write rules using text, hex, and regex string types
-- Apply conditions: any of, all of, filesize, entrypoint
-- Test YARA rules against samples
+- Understand what YARA is and when to use it vs other tools
+- Write rules using text, hex, and regex string types with appropriate modifiers
+- Apply conditions to balance detection accuracy and false positive rates
+- Test YARA rules against samples and integrate into detection workflows
 :::
 
-### YARA Rule Structure
+## What Is YARA?
+
+YARA is a pattern matching tool for identifying malware by its content. Unlike Sigma (which searches LOGS for suspicious activity), YARA searches FILES for suspicious content.
+
+**When to use YARA:**
+| Scenario | Tool | Why |
+|----------|------|-----|
+| Scan a suspicious file for malware | YARA | File content matching |
+| Detect Mimikatz execution in logs | Sigma | Log event matching |
+| Hunt for malware in a directory | YARA | Recursive file scanning |
+| Alert on failed login attempts | Sigma | Log event matching |
+| Classify malware samples | YARA | Pattern-based classification |
+
+**How YARA works:**
+1. You write a rule defining patterns (strings, hex, regex)
+2. YARA scans files for those patterns
+3. If the patterns match, YARA reports the rule name
+
+## YARA Rule Structure
 
 \`\`\`yara
 rule Malware_Detection_Example
@@ -1202,7 +1349,6 @@ rule Malware_Detection_Example
         $s2 = "Another_Pattern" ascii
         $hex1 = { 4D 5A 90 00 03 00 00 00 }
         $regex1 = /powershell.*-enc [A-Za-z0-9+/=]{20,}/
-        $url = /https?:\\/\\/evil\\.com\\/payload/
 
     condition:
         uint16(0) == 0x5A4D and
@@ -1212,77 +1358,118 @@ rule Malware_Detection_Example
 }
 \`\`\`
 
-### String Types
+**Breaking it down:**
 
-| Type | Syntax | Use Case |
-|------|--------|----------|
-| **Text** | "string" ascii wide | ASCII and Unicode text |
-| **Hex** | { 4D 5A 90 00 } | Binary byte patterns |
-| **Regex** | /pattern/i | Complex pattern matching |
+| Section | Purpose |
+|---------|---------|
+| rule name | Unique identifier for the rule |
+| meta | Metadata (description, author, severity, references) |
+| strings | Patterns to match (text, hex, regex) |
+| condition | When the rule triggers (combines strings with logic) |
 
-**Text modifiers:**
-- \`ascii\` - match ASCII encoding
-- \`wide\` - match UTF-16 encoding
-- \`nocase\` - case insensitive
-- \`xor\` - XOR encoded strings
+## String Types - When to Use Each
 
-### Condition Operators
-
-| Operator | Usage | Example |
-|----------|-------|---------|
-| \`any of ($s*)\` | Any matching string | \`any of ($s*)\` |
-| \`all of ($s*)\` | All must match | \`all of ($s*)\` |
-| \`filesize\` | File size check | \`filesize < 1MB\` |
-| \`entrypoint\` | PE entry point | \`entrypoint > 0x1000\` |
-| \`at\` | Byte position | \`$hex at 0\` |
-| \`in\` | Range search | \`$s1 in (0..100)\` |
-| \`matches\` | Regex count | \`#regex1 > 3\` |
-
-### Example: Detecting Cobalt Strike Beacon
-
+### Text Strings
 \`\`\`yara
-rule CobaltStrike_Beacon
-{
-    meta:
-        description = "Detects Cobalt Strike beacon configuration"
-        author = "SOC Team"
-        severity = "critical"
-
-    strings:
-        $beacon_config = { 00 01 00 01 00 02 ?? ?? 00 02 00 01 00 02 ?? ?? }
-        $malleable = "Malleable C2" ascii
-        $pipe_name = "\\\\.\\pipe\\msagent_" ascii
-        $sleep_mask = { 4C 8B 53 08 45 8B 0A 45 8B 5A 04 4D 8D 52 08 45 85 C9 }
-
-    condition:
-        uint16(0) == 0x5A4D and
-        filesize < 500KB and
-        ($beacon_config or $malleable or $pipe_name or $sleep_mask)
-}
+$s1 = "mimikatz" ascii wide nocase
 \`\`\`
 
-### Example: Detecting Mimikatz
+**Use for:** Readable strings in malware (commands, URLs, function names)
 
+**Modifiers:**
+| Modifier | What It Does | When to Use |
+|----------|-------------|-------------|
+| ascii | Match ASCII encoding | Default - most strings |
+| wide | Match UTF-16 encoding | Windows APIs, some malware |
+| nocase | Case insensitive | When malware randomizes case |
+| xor | Match XOR-encoded strings | When malware uses single-byte XOR |
+
+**Why ascii + wide together:** Windows programs often store strings in both ASCII and UTF-16. Using both ensures you catch either variant.
+
+### Hex Strings
 \`\`\`yara
-rule Mimikatz_In_Memory
-{
-    meta:
-        description = "Detects Mimikatz patterns in memory dumps"
-        severity = "critical"
-
-    strings:
-        $mimikatz = "mimikatz" ascii wide nocase
-        $sekurlsa = "sekurlsa" ascii wide nocase
-        $kerberos = "kerberos::golden" ascii wide nocase
-        $crypto = "CryptoKey" ascii wide
-        $priv = "SeDebugPrivilege" ascii wide
-
-    condition:
-        3 of them
-}
+$hex1 = { 4D 5A 90 00 03 00 00 00 }
+$hex2 = { 4D 5A [4-8] 00 00 }
 \`\`\`
 
-### Testing YARA Rules
+**Use for:** Binary patterns, file headers, opcodes, specific byte sequences
+
+**Wildcards:**
+- \`??\` - match any single byte
+- \`[4-8]\` - match 4 to 8 bytes of anything
+- \`[0-]\` - match any number of bytes
+
+**Why hex over text:** Some patterns are binary (opcodes, headers, encrypted data) and cannot be represented as text.
+
+### Regex Strings
+\`\`\`yara
+$regex1 = /powershell.*-enc [A-Za-z0-9+/=]{20,}/
+$url = /https?:\\/\\/evil\\.com\\/payload/
+\`\`\`
+
+**Use for:** Complex patterns with variable parts (URLs, encoded commands, obfuscated strings)
+
+**Why regex:** Text matching is exact. Regex allows patterns like "any URL containing evil.com" or "any base64 string longer than 20 characters."
+
+## Condition Operators - Controlling When Rules Fire
+
+| Operator | Usage | Example | When to Use |
+|----------|-------|---------|-------------|
+| any of ($s*) | Any matching string | any of ($s*) | Broad detection - any indicator is suspicious |
+| all of ($s*) | All must match | all of ($s*) | Narrow detection - all indicators must be present |
+| N of ($s*) | N strings must match | 2 of ($s*) | Balanced - require some evidence |
+| filesize | File size check | filesize < 1MB | Limit scope to expected malware sizes |
+| at | Byte position | $hex at 0 | Check if pattern is at specific offset |
+| in | Range search | $s1 in (0..100) | Check if pattern is in specific region |
+| # | Count matches | #regex1 > 3 | Pattern appears multiple times |
+
+**Condition strategy:**
+
+**Too broad (many false positives):**
+\`\`\`yara
+condition: any of them  # Any string match triggers
+\`\`\`
+
+**Too narrow (misses variants):**
+\`\`\`yara
+condition: all of them  # Every string must match
+\`\`\`
+
+**Balanced:**
+\`\`\`yara
+condition: uint16(0) == 0x5A4D and filesize < 500KB and 2 of ($s*)
+# Must be a PE file, under 500KB, with 2+ string matches
+\`\`\`
+
+## Detection Strategy - Writing Effective Rules
+
+**Step 1: Identify unique strings**
+Find strings that are unique to the malware, not found in legitimate software.
+
+**Step 2: Add file type checks**
+\`\`\`yara
+uint16(0) == 0x5A4D  # PE file (MZ header)
+uint32(0) == 0x464C457F  # ELF file
+uint32(0) == 0x504B0304  # ZIP file
+\`\`\`
+
+**Step 3: Add size limits**
+\`\`\`yara
+filesize < 500KB  # Most malware is small
+\`\`\`
+
+**Step 4: Require multiple indicators**
+\`\`\`yara
+2 of ($s*)  # At least 2 strings must match
+\`\`\`
+
+**Step 5: Test against known samples**
+\`\`\`bash
+yara rule.yar malware_sample.exe  # Should match
+yara rule.yar legitimate_app.exe  # Should NOT match
+\`\`\`
+
+## Testing YARA Rules
 
 \`\`\`bash
 # Install YARA
@@ -1291,14 +1478,17 @@ sudo apt install yara
 # Test against a file
 yara rule.yar target.exe
 
-# Test against a directory
-yara -r rule.yar /path/to/samples/
+# Recursive scan of a directory
+yara -r rule.yar /path/to/scan/
 
-# Test with rules directory
-yara -r /etc/yara/rules/ /path/to/samples/
+# List rules in a file
+yara -l rule.yar
+
+# Test with verbose output
+yara -s rule.yar target.exe  # Show matched strings
 \`\`\`
 
-### YARA Rule Best Practices
+## YARA Rule Best Practices
 
 1. **Always include file type check** - \`uint16(0) == 0x5A4D\` for PE files
 2. **Use specific strings** - avoid generic patterns that match many files

