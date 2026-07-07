@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
-import { CheckCircle2 } from 'lucide-react';
-import { InlineCodeRunner } from './InlineCodeRunner';
+import { CheckCircle2, Terminal } from 'lucide-react';
 
 export type ClassworkLanguage = 'python' | 'sql' | 'text' | 'bash';
 
@@ -38,13 +37,27 @@ export function ClassworkCard({ classwork, onComplete }: ClassworkCardProps) {
       <div className="px-4 py-3">
         <p className="text-sm text-gray-800 mb-3 leading-relaxed font-medium">{classwork.task}</p>
 
-        <InlineCodeRunner
-          language={classwork.language}
-          code={classwork.code}
-          expectedOutput={classwork.expectedOutput}
-          showVerify
-          onComplete={handleComplete}
-        />
+        <div className="bg-gray-900 rounded-lg overflow-hidden border border-gray-800">
+          <div className="flex items-center gap-2 px-3 py-1.5 bg-gray-800/50 border-b border-gray-800">
+            <Terminal className="w-3 h-3 text-gray-500" />
+            <span className="text-[10px] text-gray-500 font-medium uppercase">{classwork.language}</span>
+          </div>
+          <pre className="p-3 overflow-x-auto text-xs font-mono text-gray-200 leading-relaxed">{classwork.code}</pre>
+        </div>
+
+        <p className="text-xs text-gray-500 mt-2">Open your WSL2 terminal and try this yourself. Type the commands, don't copy-paste.</p>
+
+        <button
+          onClick={handleComplete}
+          disabled={completed}
+          className={`mt-3 px-4 py-2 rounded-lg text-sm font-bold transition-all ${
+            completed
+              ? 'bg-emerald-100 text-emerald-700 border border-emerald-300'
+              : 'bg-indigo-600 text-white hover:bg-indigo-700'
+          }`}
+        >
+          {completed ? 'Completed' : 'Mark as Done'}
+        </button>
 
         {classwork.hint && (
           <details className="mt-2">

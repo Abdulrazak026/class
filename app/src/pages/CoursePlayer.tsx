@@ -4,14 +4,7 @@ import { Menu, PlayCircle, BookOpen, Presentation, CheckCircle2, XCircle, Refres
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { motion, AnimatePresence } from 'motion/react';
-import { SqlPlayground } from '../components/SqlPlayground';
-import { GitTerminal } from '../components/GitTerminal';
-import { PythonPlayground } from '../components/PythonPlayground';
 import { QuizModal } from '../components/QuizModal';
-import { APIPlayground } from '../components/APIPlayground';
-import { TerminalSimulator } from '../components/TerminalSimulator';
-import { VirtualShell } from '../components/VirtualShell';
-import { InlineCodeRunner } from '../components/InlineCodeRunner';
 import { ClassworkCard, parseClassworks, ParsedClasswork } from '../components/ClassworkCard';
 import { TopicComment } from '../firebase/services';
 import { hasFirebaseConfig } from '../firebase/config';
@@ -154,11 +147,6 @@ const MarkdownComponents = {
     const isInline = !className;
     if (isInline) {
       return <code className="bg-accent/10 text-accent px-1.5 py-0.5 rounded text-sm font-mono" {...props}>{children}</code>;
-    }
-    const match = /language-(\w+)/.exec(className || '');
-    const lang = match?.[1];
-    if (lang === 'python' || lang === 'sql' || lang === 'bash') {
-      return <InlineCodeRunner language={lang === 'bash' ? 'bash' : lang} code={String(children).replace(/\n$/, '')} />;
     }
     return (
       <div className="bg-gray-900 rounded-lg sm:rounded-xl overflow-hidden my-4 border border-gray-800">
@@ -371,47 +359,6 @@ export function CoursePlayer({ curriculum, completedTasks, toggleTask, activeTop
     return new RegExp('\\b' + escaped + '\\b', 'i').test(text);
   }, []);
 
-  const shouldShowSql = useCallback((topic: Topic): boolean => {
-    if (/^w(0[5-9]|1[0-2]|5|6|7|8|9|10|11|12)/.test(topic.id)) return true;
-    const t = topic.title.toLowerCase(), d = topic.description.toLowerCase();
-    return wordMatch(t, 'sql') || wordMatch(d, 'sql') || (topic.content && topic.content.includes('```sql')) || topic.content?.toLowerCase().includes('sql playground') === true;
-  }, [wordMatch]);
-
-  const shouldShowGit = useCallback((topic: Topic): boolean => {
-    const kw = ['git', 'commit', 'branch', 'merge', 'push', 'pull', 'github', 'version control'];
-    const t = topic.title.toLowerCase(), d = topic.description.toLowerCase();
-    return kw.some(k => t.includes(k) || d.includes(k));
-  }, []);
-
-  const shouldShowPython = useCallback((topic: Topic): boolean => {
-    if (/^w(07|13|14|15|16|17|7|13|14|15|16|17)/.test(topic.id)) return true;
-    const t = topic.title.toLowerCase(), d = topic.description.toLowerCase();
-    return wordMatch(t, 'python') || wordMatch(d, 'python') || (topic.content && topic.content.includes('```python')) || topic.content?.toLowerCase().includes('python playground') === true;
-  }, [wordMatch]);
-
-
-
-  const shouldShowAPI = useCallback((topic: Topic): boolean => {
-    const kw = ['api', 'rest', 'endpoint', 'request', 'response'];
-    const t = topic.title.toLowerCase(), d = topic.description.toLowerCase();
-    return kw.some(k => t.includes(k) || d.includes(k));
-  }, []);
-
-  const shouldShowBash = useCallback((topic: Topic): boolean => {
-    if (/^w(0[1-6]|01|02|03|04|05|06|1|2|3|4|5|6)/.test(topic.id)) return true;
-    if (topic.content && topic.content.includes('```bash')) return true;
-    const kw = ['terminal', 'command line', 'bash', 'shell', 'linux command', 'powershell', 'cli'];
-    const t = topic.title.toLowerCase(), d = topic.description.toLowerCase();
-    return kw.some(k => t.includes(k) || d.includes(k));
-  }, []);
-
-  const shouldShowTerminal = useCallback((topic: Topic): boolean => {
-    if (/^w(e?0[0-9]|0[0-9]|[0-9])/.test(topic.id)) return true;
-    const kw = ['terminal', 'network', 'security tool', 'scan', 'ping', 'nmap', 'wireshark', 'tcpdump', 'linux', 'bash', 'shell', 'command'];
-    const t = topic.title.toLowerCase(), d = topic.description.toLowerCase();
-    return kw.some(k => t.includes(k) || d.includes(k));
-  }, []);
-
   return (
     <div className="flex h-[calc(100vh-4rem)] lg:h-screen bg-gray-50 max-w-[1600px] mx-auto border-x border-gray-200 overflow-hidden animate-in fade-in zoom-in-95 duration-500">
       {/* Mobile overlay sidebar */}
@@ -477,13 +424,6 @@ export function CoursePlayer({ curriculum, completedTasks, toggleTask, activeTop
                 </div>
                 <h1 className="text-xl sm:text-2xl md:text-3xl font-extrabold text-gray-900 tracking-tight">{activeTopic.title}</h1>
               </div>
-
-              {shouldShowSql(activeTopic) && <SqlPlayground topicTitle={activeTopic.title} content={activeTopic.content} />}
-              {shouldShowGit(activeTopic) && <GitTerminal />}
-              {shouldShowPython(activeTopic) && <PythonPlayground topicId={activeTopic.id} topicTitle={activeTopic.title} content={activeTopic.content} />}
-
-              {shouldShowAPI(activeTopic) && <APIPlayground />}
-              {shouldShowTerminal(activeTopic) && <VirtualShell />}
 
               {activeTopic.requirements && activeTopic.requirements.length > 0 && (
                 <div className="mb-10 bg-white border border-accent/20 rounded-xl p-6">

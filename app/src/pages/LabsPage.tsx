@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { Beaker, Terminal, Shield, Globe, Wifi, Lock, AlertTriangle, ExternalLink, Clock, Star, Search, Filter, ChevronDown } from 'lucide-react';
-import { TerminalSimulator } from '../components/TerminalSimulator';
 import { SiemDashboard } from '../components/SiemDashboard';
 import { NetworkVisualizer } from '../components/NetworkVisualizer';
 import { VulnScanner } from '../components/VulnScanner';
@@ -9,7 +8,6 @@ import { ForensicsWorkspace } from '../components/ForensicsWorkspace';
 import { CtfChallenge } from '../components/CtfChallenge';
 
 const LAB_TOOLS = [
-  { id: 'terminal', label: 'Terminal Simulator', icon: Terminal, component: 'TerminalSimulator', desc: 'Practice Linux/Windows security commands in a safe environment' },
   { id: 'siem', label: 'SIEM Dashboard', icon: Shield, component: 'SiemDashboard', desc: 'Explore security event monitoring and log analysis' },
   { id: 'network', label: 'Network Topology', icon: Wifi, component: 'NetworkVisualizer', desc: 'Visualize network architectures and attack scenarios' },
   { id: 'vuln', label: 'Vuln Scanner', icon: AlertTriangle, component: 'VulnScanner', desc: 'Simulate vulnerability scanning against target systems' },
@@ -39,7 +37,6 @@ export function LabsPage() {
   const renderComponent = () => {
     if (!activeTool) return null;
     switch (activeTool) {
-      case 'TerminalSimulator': return <TerminalSimulator />;
       case 'SiemDashboard': return <SiemDashboard />;
       case 'NetworkVisualizer': return <NetworkVisualizer />;
       case 'VulnScanner': return <VulnScanner />;
