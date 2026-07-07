@@ -8,7 +8,6 @@ import { SqlPlayground } from '../components/SqlPlayground';
 import { GitTerminal } from '../components/GitTerminal';
 import { PythonPlayground } from '../components/PythonPlayground';
 import { QuizModal } from '../components/QuizModal';
-import { ScenarioPlayer } from '../components/ScenarioPlayer';
 import { APIPlayground } from '../components/APIPlayground';
 import { TerminalSimulator } from '../components/TerminalSimulator';
 import { VirtualShell } from '../components/VirtualShell';
@@ -390,11 +389,7 @@ export function CoursePlayer({ curriculum, completedTasks, toggleTask, activeTop
     return wordMatch(t, 'python') || wordMatch(d, 'python') || (topic.content && topic.content.includes('```python')) || topic.content?.toLowerCase().includes('python playground') === true;
   }, [wordMatch]);
 
-  const shouldShowScenario = useCallback((topic: Topic): boolean => {
-    const kw = ['scenario', 'decision', 'case study', 'business case', 'analytical thinking', 'capstone', 'incident response'];
-    const t = topic.title.toLowerCase(), d = topic.description.toLowerCase();
-    return kw.some(k => t.includes(k) || d.includes(k)) || (topic.content && topic.content.includes(':::checkpoint'));
-  }, []);
+
 
   const shouldShowAPI = useCallback((topic: Topic): boolean => {
     const kw = ['api', 'rest', 'endpoint', 'request', 'response'];
@@ -486,7 +481,7 @@ export function CoursePlayer({ curriculum, completedTasks, toggleTask, activeTop
               {shouldShowSql(activeTopic) && <SqlPlayground topicTitle={activeTopic.title} content={activeTopic.content} />}
               {shouldShowGit(activeTopic) && <GitTerminal />}
               {shouldShowPython(activeTopic) && <PythonPlayground topicId={activeTopic.id} topicTitle={activeTopic.title} content={activeTopic.content} />}
-              {shouldShowScenario(activeTopic) && <ScenarioPlayer />}
+
               {shouldShowAPI(activeTopic) && <APIPlayground />}
               {shouldShowTerminal(activeTopic) && <VirtualShell />}
 
