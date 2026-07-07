@@ -4884,5 +4884,128 @@ printf "%-20s %-10s %s\\n" "192.168.1.100" "1547" "SUSPICIOUS"
         ]
       },
     ]
+  },
+  {
+    id: "week05",
+    title: "Environment Setup",
+    durationText: "Week 5",
+    focus: "Install WSL2, Ubuntu, and security tools for the course.",
+    output: "Fully configured WSL2 Ubuntu environment with all security tools installed.",
+    topics: [
+      {
+        id: "we05d01",
+        title: "WSL2 + Ubuntu Installation",
+        description: "Enable WSL2 on Windows, install Ubuntu, and configure your terminal.",
+        type: "learn",
+        duration: "4-5 hours",
+        content: `:::objectives
+- Enable WSL2 and install Ubuntu
+- Configure Windows Terminal
+- Understand the Windows/Linux filesystem bridge
+:::
+
+## Step 1: Enable WSL
+
+Open PowerShell as Administrator:
+
+\`\`\`powershell
+wsl --install
+\`\`\`
+
+Restart your PC. After restart, open Ubuntu from the Start Menu and set your username/password.
+
+## Step 2: Filesystem Bridge
+
+| Windows | Ubuntu |
+|---------|--------|
+| C:\\Users\\you | /mnt/c/Users/you |
+| D:\\Projects | /mnt/d/Projects |
+
+\`\`\`bash
+ls /mnt/c/Users/*/Desktop
+\`\`\`
+
+:::checkpoint
+If you see the $ prompt, WSL2 is working.
+:::
+`,
+        aiPrompt: "Explain WSL2 setup for cybersecurity.",
+        labUrl: "",
+        labTitle: "",
+        interviewQuestion: "What is WSL2 and why use it?",
+        interviewAnswer: "WSL2 runs Linux natively inside Windows. Security tools like nmap and metasploit are native to Linux.",
+        quiz: [
+          { question: "What does wsl --install do?", options: ["Install Python", "Enable WSL2 and install Ubuntu", "Install Docker", "Install VS Code"], correctAnswerIndex: 1, difficulty: "beginner", explanation: "wsl --install enables WSL2 and installs Ubuntu.", certTags: ["A+"] }
+        ]
+      },
+      {
+        id: "we05d02",
+        title: "Security Tool Installation",
+        description: "Install all security tools needed for the course.",
+        type: "learn",
+        duration: "2-3 hours",
+        content: `:::objectives
+- Install nmap, metasploit, sqlmap, hashcat, and more
+- Verify each tool works
+:::
+
+\`\`\`bash
+sudo apt update && sudo apt upgrade -y
+sudo apt install -y nmap metasploit-framework sqlmap hashcat john nikto hydra gobuster netcat curl wget python3 git
+\`\`\`
+
+Verify:
+\`\`\`bash
+nmap --version
+msfconsole --version
+python3 --version
+\`\`\`
+
+:::checkpoint
+All tools should return version numbers.
+:::
+`,
+        aiPrompt: "Explain security tool installation.",
+        labUrl: "",
+        labTitle: "",
+        interviewQuestion: "What security tools do you use?",
+        interviewAnswer: "I use nmap for scanning, metasploit for exploitation, sqlmap for SQL injection, hashcat for password cracking.",
+        quiz: [
+          { question: "What is nmap for?", options: ["Port scanning", "Password cracking", "SQL injection", "Web scanning"], correctAnswerIndex: 0, difficulty: "beginner", explanation: "nmap scans network ports.", certTags: ["Security+"] }
+        ]
+      },
+      {
+        id: "we05d03",
+        title: "Lab Organization & GitHub",
+        description: "Create a structured workspace and set up Git.",
+        type: "practice",
+        duration: "2-3 hours",
+        content: `:::objectives
+- Create a pentest workspace
+- Set up Git for version control
+:::
+
+\`\`\`bash
+mkdir -p ~/cybercamp/{tools,notes,labs,writeups,scripts}
+cd ~/cybercamp
+git init
+git config --global user.name "Your Name"
+git config --global user.email "you@email.com"
+\`\`\`
+
+:::checkpoint
+You have a workspace and Git is configured.
+:::
+`,
+        aiPrompt: "Explain workspace organization.",
+        labUrl: "",
+        labTitle: "",
+        interviewQuestion: "How do you organize pentest work?",
+        interviewAnswer: "I create separate directories for tools, notes, labs, and write-ups. I use Git for version control.",
+        quiz: [
+          { question: "What does git init do?", options: ["Delete repo", "Create new repo", "Clone repo", "Push to remote"], correctAnswerIndex: 1, difficulty: "beginner", explanation: "git init creates a new Git repository.", certTags: ["Linux+"] }
+        ]
+      }
+    ]
   }
 ];
