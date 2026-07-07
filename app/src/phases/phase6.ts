@@ -91,56 +91,223 @@ sudo /var/ossec/bin/agent_control -l
         type: 'practice',
         duration: '4 hours',
         content: `:::objectives
-- Edit agent ossec.conf for specific monitoring modules
-- Assign agents to groups for centralized policy management
-- Create custom decoders and rules
-- Understand alert severity levels and filtering
+- Understand how Wazuh's detection pipeline works (log → decoder → rule → alert)
+- Configure agent data collection and assign groups for centralized management
+- Create custom decoders and rules for specific detection needs
+- Understand alert severity levels and how they drive response actions
 :::
 
-### Agent Groups
+## How Wazuh's Detection Pipeline Works
+
+Before configuring anything, you need to understand how Wazuh processes logs. Every log goes through a pipeline:
+
+\`\`\`
+Raw Log → Decoder → Rule → Alert → Action
+\`\`\`
+
+**Step 1: Raw Log** — A log arrives from an agent (SSH log, web access log, Windows Event, etc.)
+
+**Step 2: Decoder** — Wazuh parses the log to extract fields. A decoder says: "If the log looks like THIS pattern, extract THESE fields."
+
+**Step 3: Rule** — Wazuh checks if the decoded log matches any rules. A rule says: "If this field has this value, generate an alert with this severity."
+
+**Step 4: Alert** — If a rule matches, an alert is generated with a severity level (0-16).
+
+**Step 5: Action** — Based on severity, Wazuh can: send email, trigger an active response, write to log, forward to external system.
+
+**Why this matters:** If you don't understand this pipeline, you can't write effective rules or debug false positives. Every configuration change affects one of these stages.
+
+## Agent Groups — Centralized Policy Management
+
+Agent groups let you apply the same configuration to multiple agents. Instead of configuring each agent individually, you configure the group once and all agents in that group inherit the settings.
+
+**Common group structure:**
+| Group | Agents | Monitors |
+|-------|--------|----------|
+| web_servers | Apache, Nginx servers | Access logs, error logs, FIM on /var/www |
+| db_servers | MySQL, PostgreSQL servers | Query logs, FIM on data directories |
+| domain_controllers | Windows DCs | Security events, LDAP logs |
+| workstations | Employee laptops | USB events, software installation |
+
+**Creating a group:**
 
 \`\`\`bash
+# Create a new group called "web_servers"
 sudo /var/ossec/bin/agent_groups -a -g web_servers -q
+\`\`\`
+
+**Assigning an agent to a group:**
+
+\`\`\`bash
+# Assign agent 001 to web_servers group
 sudo /var/ossec/bin/agent_groups -a -i 001 -g web_servers -q
 \`\`\`
 
-### Custom Decoders
+**Viewing group assignments:**
+
+\`\`\`bash
+# List all groups
+sudo /var/ossec/bin/agent_groups -l
+
+# List agents in a group
+sudo /var/ossec/bin/agent_groups -l -g web_servers
+\`\`\`
+
+**Where group configs are stored:**
+
+\`\`\`bash
+ls /var/etc/shared/web_servers/
+# agent.conf — shared configuration for all agents in this group
+\`\`\`
+
+:::info
+Group configurations are pushed to agents automatically. When you edit \`/var/etc/shared/web_servers/agent.conf\`, all agents in the web_servers group receive the update within the agent's reconnect interval (default: 60 seconds).
+:::
+
+## Custom Decoders — Teaching Wazuh to Read Your Logs
+
+Wazuh has built-in decoders for common logs (sshd, apache, syslog). But when you have custom applications or non-standard log formats, you need to write your own decoder.
+
+**What a decoder does:**
+1. Matches a log pattern (pre_match, regex, program_name)
+2. Extracts named fields (srcip, dstuser, action, etc.)
+3. Passes the extracted fields to the rule engine
+
+**Decoder structure:**
 
 \`\`\`xml
-<decoder name="sshd-failed-auth">
+<decoder name="my-custom-app">
+  <program_name>myapp</program_name>
+  <regex>user=(\S+) action=(\S+) from (\S+)</regex>
+  <order>user, action, srcip</order>
+</decoder>
+\`\`\`
+
+| Element | Purpose |
+|---------|---------|
+| \`<program_name>\` | Match logs from this syslog program name |
+| \`<pre_match>\` | Quick string match before regex (faster) |
+| \`<regex>\` | Extract fields using capture groups |
+| \`<order>\` | Name the captured groups (in order) |
+
+**Example: Custom SSH decoder for non-standard format:**
+
+\`\`\`xml
+<decoder name="sshd-custom-auth">
   <pre_match>Failed password for invalid user </pre_match>
-  <regex>from (\\S+) port \\d+</regex>
+  <regex>from (\S+) port \d+</regex>
   <order>srcip</order>
 </decoder>
 \`\`\`
 
-### Custom Rules
+**Why pre_match before regex:** \`pre_match\` is a fast string comparison. If it doesn't match, Wazuh skips the expensive regex. Always use \`pre_match\` to filter first.
+
+:::tip
+Use \`wazuh-logtest\` to test your decoders. Paste a log line and see which decoder matches and what fields are extracted.
+:::
+
+## Custom Rules — Defining What's an Alert
+
+Rules check decoded fields and generate alerts. Rules can inherit from parent rules (using \`<if_sid>\`) to build detection chains.
+
+**Rule structure:**
 
 \`\`\`xml
 <rule id="100100" level="10">
   <if_sid>5712</if_sid>
   <field name="srcip">!192.168.1.0/24</field>
   <description>SSH brute force from external IP</description>
+  <group>authentication_failures,</group>
 </rule>
 \`\`\`
 
-### Alert Severity Levels
+**Breaking it down:**
 
-| Level | Meaning |
-|-------|---------|
-| 0 | Ignore |
-| 1-3 | Low |
-| 4-7 | Medium |
-| 8-11 | High |
-| 12-15 | Critical |
-| 16 | Emergency |
+| Element | Purpose |
+|---------|---------|
+| \`id="100100"\` | Unique rule ID (custom rules use 100000+) |
+| \`level="10"\` | Severity level (see table below) |
+| \`<if_sid>5712</if_sid>\` | Only fire if rule 5712 already matched (parent rule) |
+| \`<field name="srcip">!192.168.1.0/24</field>\` | Only fire if srcip is NOT in 192.168.1.0/24 |
+| \`<description>\` | Human-readable description |
+| \`<group>\` | Category tags for filtering |
+
+**How \`<if_sid>\` works:** Rule 100100 only fires if rule 5712 (SSH failed login) already matched. This is rule inheritance — you're adding conditions on top of an existing detection.
+
+**Field operators:**
+| Syntax | Meaning |
+|--------|---------|
+| \`<field name="srcip">10.0.0.1</field>\` | Match if srcip = 10.0.0.1 |
+| \`<field name="srcip">!10.0.0.1</field>\` | Match if srcip ≠ 10.0.0.1 |
+| \`<field name="srcip">10.0.0.0/24</field>\` | Match if srcip is in this subnet |
+| \`<field name="user">admin\|root\|sa</field>\` | Match if user is any of these |
+
+## Alert Severity Levels — What They Mean
+
+Severity levels determine how Wazuh handles the alert. This is not just for display — it drives automated responses.
+
+| Level | Name | Meaning | Typical Response |
+|-------|------|---------|-----------------|
+| 0 | Ignore | No alert generated | Nothing |
+| 1-3 | Low | Informational | Log only, no action |
+| 4-7 | Medium | Suspicious | Dashboard alert, optional email |
+| 8-11 | High | Likely attack | Email alert, active response |
+| 12-15 | Critical | Confirmed attack | Immediate email, active response, page on-call |
+| 16 | Emergency | System compromised | All hands, incident response |
+
+**Why severity matters for tuning:**
+- Too many low-severity alerts = alert fatigue (analysts stop paying attention)
+- Too few high-severity alerts = missed attacks
+- The goal is: every alert at level 8+ should require human investigation
+
+**Active response by severity:**
+
+\`\`\`xml
+<!-- Block IP on level 10+ alerts -->
+<active-response>
+  <command>firewall-drop</command>
+  <level>10</level>
+  <location>defined-agent</location>
+</active-response>
+\`\`\`
+
+## Tuning Rules — Reducing False Positives
+
+False positives are alerts that fire for legitimate activity. They're the #1 problem in SOC operations. Common causes and fixes:
+
+**Problem: Too many alerts from a known-safe IP**
+
+\`\`\`xml
+<white_list>192.168.1.50</white_list>
+\`\`\`
+
+**Problem: Rule fires too often (threshold too low)**
+
+\`\`\`xml
+<rule id="100101" level="10">
+  <if_sid>5712</if_sid>
+  <frequency>10</frequency>
+  <timeframe>60</timeframe>
+  <description>10 failed SSH attempts in 60 seconds</description>
+</rule>
+\`\`\`
+
+**Problem: Rule matches legitimate application logs**
+
+\`\`\`xml
+<rule id="100102" level="0">
+  <if_sid>100100</if_sid>
+  <field name="srcip">10.0.0.100</field>
+  <description>Ignore health check from monitoring server</description>
+</rule>
+\`\`\`
 
 :::warning
-Always test custom rules with \`wazuh-logtest\` before deploying to production.
+Always test custom rules with \`wazuh-logtest\` before deploying to production. A bad rule can either generate thousands of false positives or suppress real alerts.
 :::
 
 :::classwork
-**Lab:** Enable auth.log monitoring, create a custom rule for SSH brute force, test with wazuh-logtest.
+**Lab:** Enable auth.log monitoring, create a custom rule for SSH brute force (10 attempts in 60 seconds from external IP), test with wazuh-logtest, then test by actually failing SSH login.
 :::`,
         aiPrompt: '',
         labUrl: '',

