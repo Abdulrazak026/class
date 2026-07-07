@@ -1,2573 +1,11 @@
 export const phase0: Module[] = [
   {
-    id: "weekLINUX",
-    title: "Linux Fundamentals",
-    durationText: "Week L - 10 Projects",
-    focus: "Master Linux from absolute beginner to intermediate level through hands-on projects",
-    output: "Ability to navigate, read, search, script, and analyze systems on Linux — the hacker's primary tool",
-    topics: [
-      {
-        id: "weLINUXd01",
-        title: "Project 1: Hello Terminal — Your First Commands",
-        description: "Learn what a terminal is, why hackers use it, and your first 5 commands: whoami, pwd, ls, echo, clear.",
-        type: "practice",
-        duration: "30 min",
-        content: `:::objectives
-- Understand what a terminal is and why hackers prefer it over GUI
-- Learn the difference between shell, terminal, and command line
-- Execute your first 5 Linux commands with confidence
-:::
-
-## What Is a Terminal?
-
-A terminal is a text-based interface to your computer. Instead of clicking icons, you type commands. Every hacker uses the terminal because it's faster, more powerful, and works on any system — including remote servers you've compromised.
-
-**Three things people confuse:**
-
-| Term | What It Is | Example |
-|------|-----------|---------|
-| Terminal | The window that displays text | Windows Terminal, GNOME Terminal |
-| Shell | The program that interprets your commands | bash, zsh, fish |
-| Command Line | The interface where you type | The \`$\` prompt |
-
-When you type \`whoami\`, the terminal sends it to the shell (bash), bash executes it, and the terminal displays the output.
-
-## Your First Command: whoami
-
-The first thing a hacker does after gaining access to a system: find out who they are.
-
-\`\`\`bash
-whoami
-\`\`\`
-
-Output: \`user\`
-
-This tells you the username of the current user. If you're \`root\`, you have full control. If you're \`www-data\` or \`nobody\`, you need to escalate privileges.
-
-:::checkpoint
-What does \`whoami\` return?
-- Your IP address
-- Your current username
-- Your home directory
-- Your operating system
-:::
-
-## Where Am I? pwd
-
-\`\`\`bash
-pwd
-\`\`\`
-
-Output: \`/home/user\`
-
-**pwd** stands for "Print Working Directory." It shows your current location in the filesystem. Every hacker needs to know where they are — especially when navigating a compromised system.
-
-The path \`/home/user\` means you're in the \`user\` directory inside \`/home\`. The \`/\` at the beginning is the root of the entire filesystem.
-
-:::checkpoint
-What does \`pwd\` stand for?
-- Password Directory
-- Print Working Directory
-- Previous Working Disk
-- Program Working Data
-:::
-
-## What's Here? ls
-
-\`\`\`bash
-ls
-\`\`\`
-
-Output: \`Documents  Downloads  scripts  notes.txt\`
-
-**ls** lists the files and directories in your current location. This is how you see what's available — configuration files, scripts, databases, credentials.
-
-:::checkpoint
-What command lists files in the current directory?
-- dir
-- list
-- ls
-- show
-:::
-
-## Say Something: echo
-
-\`\`\`bash
-echo "Hello World"
-\`\`\`
-
-Output: \`Hello World\`
-
-**echo** prints text to the screen. It's also used to display variable values:
-
-\`\`\`bash
-echo $USER
-\`\`\`
-
-Output: \`user\`
-
-The \`$\` before \`USER\` means it's a variable. \`$USER\` contains your username. Hackers use \`echo\` to test scripts, display environment variables, and create files.
-
-## Clear the Screen: clear
-
-\`\`\`bash
-clear
-\`\`\`
-
-This clears the terminal. When your screen is full of output from previous commands, \`clear\` gives you a fresh start. Shortcut: \`Ctrl+L\`.
-
-## Your First 5 Commands — Summary
-
-| Command | What It Does | Why Hackers Use It |
-|---------|-------------|-------------------|
-| \`whoami\` | Shows current username | First command after gaining access |
-| \`pwd\` | Shows current directory | Know where you are on the target |
-| \`ls\` | Lists files | Find config files, scripts, credentials |
-| \`echo\` | Prints text/variables | Test scripts, check environment |
-| \`clear\` | Clears screen | Clean up after messy output |
-
-:::checkpoint
-You've gained access to a target machine. What's the FIRST command you should type?
-- ls
-- pwd
-- whoami
-- clear
-:::
-
-## Try It Yourself
-
-Open your terminal (WSL2 Ubuntu) and run each command. Don't just read — type them yourself. Muscle memory matters.
-
-\`\`\`bash
-whoami
-pwd
-ls
-echo "I am learning Linux"
-clear
-\`\`\``,
-        aiPrompt: "Explain what a terminal is and why hackers prefer it over GUI interfaces.",
-        labUrl: "",
-        labTitle: "",
-        interviewQuestion: "What is the first command you run after gaining access to a target system?",
-        interviewAnswer: "whoami — I need to know what user account I'm running as. If I'm root, I have full control. If I'm a low-privilege user, I need to enumerate for privilege escalation vectors.",
-        quiz: [
-          { question: "What does whoami return?", options: ["Your IP address", "Your current username", "Your home directory", "Your OS version"], correctAnswerIndex: 1, difficulty: "beginner", explanation: "whoami returns the username of the current user.", certTags: ["Linux+"] },
-          { question: "What does pwd stand for?", options: ["Password Directory", "Print Working Directory", "Previous Working Disk", "Program Working Data"], correctAnswerIndex: 1, difficulty: "beginner", explanation: "pwd stands for Print Working Directory — it shows where you are.", certTags: ["Linux+"] },
-          { question: "What command lists files in the current directory?", options: ["dir", "list", "ls", "show"], correctAnswerIndex: 2, difficulty: "beginner", explanation: "ls lists files and directories in the current location.", certTags: ["Linux+"] },
-          { question: "What does echo $USER display?", options: ["The word USER", "Your username", "Your IP address", "Nothing"], correctAnswerIndex: 1, difficulty: "beginner", explanation: "$USER is an environment variable containing your username. echo prints it.", certTags: ["Linux+"] },
-          { question: "What is the difference between a terminal and a shell?", options: ["They are the same thing", "Terminal displays output, shell interprets commands", "Shell displays output, terminal interprets commands", "Terminal is for Windows, shell is for Linux"], correctAnswerIndex: 1, difficulty: "intermediate", explanation: "The terminal is the display window. The shell (bash, zsh) interprets and executes your commands.", certTags: ["Linux+"] },
-          { question: "Why do hackers prefer the terminal over GUI?", options: ["It looks cooler", "It's faster, more powerful, and works on any system including remote servers", "GUI doesn't exist on Linux", "Terminal has more colors"], correctAnswerIndex: 1, difficulty: "beginner", explanation: "Terminal is faster, automatable, and works on remote systems where no GUI is available.", certTags: ["Security+"] },
-          { question: "What does /home/user represent?", options: ["A file called user", "The user directory inside the home directory", "A network path", "A Windows path"], correctAnswerIndex: 1, difficulty: "beginner", explanation: "/home/user is a path — home is a directory, user is a directory inside it.", certTags: ["Linux+"] },
-          { question: "What is the root of the Linux filesystem?", options: ["C:\\", "/home", "/", "~"], correctAnswerIndex: 2, difficulty: "beginner", explanation: "/ is the root — the top of the entire filesystem. Everything is under it.", certTags: ["Linux+"] }
-        ]
-      },
-      {
-        id: "weLINUXd02",
-        title: "Project 2: Files & Directories — Building Your Lab",
-        description: "Navigate the filesystem, create directories, move and delete files. Build your pentest workspace.",
-        type: "practice",
-        duration: "30 min",
-        content: `:::objectives
-- Navigate the Linux filesystem using cd and understand absolute vs relative paths
-- Create, move, copy, and delete files and directories
-- Build a pentest workspace directory structure
-:::
-
-## Navigating the Filesystem: cd
-
-**cd** (Change Directory) moves you between directories.
-
-\`\`\`bash
-cd /home/user
-pwd
-\`\`\`
-
-Output: \`/home/user\`
-
-**Absolute vs Relative paths:**
-
-| Type | Example | Meaning |
-|------|---------|---------|
-| Absolute | \`cd /etc\` | Starts from root — always works |
-| Relative | \`cd Documents\` | From current location |
-| Home | \`cd ~\` or just \`cd\` | Go to your home directory |
-| Up | \`cd ..\` | Go up one level |
-| Back | \`cd -\` | Go to previous directory |
-
-:::checkpoint
-What does \`cd ..\` do?
-- Go to the home directory
-- Go up one directory level
-- Go to the root directory
-- Delete the current directory
-:::
-
-## Listing Files in Detail: ls -la
-
-\`\`\`bash
-ls -la
-\`\`\`
-
-Output:
-\`\`\`
-total 32
-drwxr-xr-x 4 user user 4096 Jul  7 10:00 .
-drwxr-xr-x 3 root root 4096 Jul  7 09:00 ..
--rw-r--r-- 1 user user  220 Jul  7 09:00 .bash_history
--rw-r--r-- 1 user user 3771 Jul  7 09:00 .bashrc
-drwxr-xr-x 2 user user 4096 Jul  7 10:00 Documents
-drwxr-xr-x 2 user user 4096 Jul  7 10:00 Downloads
--rw-r--r-- 1 user user  807 Jul  7 09:00 .profile
-\`\`\`
-
-**Breaking it down:**
-- \`-l\` = long format (shows permissions, owner, size, date)
-- \`-a\` = all files (including hidden files starting with \`.\`)
-- Hidden files like \`.bashrc\` contain user configuration — often interesting targets
-
-:::checkpoint
-What flag shows hidden files in ls?
-- -h
-- -a
-- -s
-- -x
-:::
-
-## Creating Directories: mkdir
-
-\`\`\`bash
-mkdir -p ~/pentest/{tools,loot,notes,scans}
-\`\`\`
-
-**Breaking it down:**
-- \`mkdir\` = make directory
-- \`-p\` = create parent directories if they don't exist
-- \`~/pentest/\` = in your home directory
-- \`{tools,loot,notes,scans}\` = create all four at once (brace expansion)
-
-This creates your pentest workspace:
-\`\`\`
-~/pentest/
-├── tools/
-├── loot/
-├── notes/
-└── scans/
-\`\`\`
-
-:::checkpoint
-What does the -p flag do in mkdir?
-- Makes the directory private
-- Creates parent directories if they don't exist
-- Prints the path after creation
-- Prompts for confirmation
-:::
-
-## Creating Files: touch
-
-\`\`\`bash
-touch ~/pentest/notes/targets.txt
-ls ~/pentest/notes/
-\`\`\`
-
-Output: \`targets.txt\`
-
-**touch** creates an empty file. It's also used to update the timestamp of an existing file.
-
-## Copying Files: cp
-
-\`\`\`bash
-cp ~/pentest/notes/targets.txt ~/pentest/notes/targets_backup.txt
-ls ~/pentest/notes/
-\`\`\`
-
-Output: \`targets.txt  targets_backup.txt\`
-
-**cp** copies files. Use \`-r\` for directories:
-\`\`\`bash
-cp -r ~/pentest/notes ~/pentest/notes_backup
-\`\`\`
-
-## Moving/Renaming: mv
-
-\`\`\`bash
-mv ~/pentest/notes/targets_backup.txt ~/pentest/loot/targets_copy.txt
-\`\`\`
-
-**mv** moves or renames files. If the destination is a different directory, it moves. If it's the same directory with a different name, it renames.
-
-## Deleting Files: rm
-
-\`\`\`bash
-rm ~/pentest/loot/targets_copy.txt
-\`\`\`
-
-**rm** deletes files. Use \`-r\` for directories:
-\`\`\`bash
-rm -r ~/pentest/notes_backup
-\`\`\`
-
-:::warning
-\`rm -rf /\` deletes everything on the system. Always double-check your rm commands. There is no undo.
-:::
-
-## Your Pentest Workspace
-
-Build this structure now:
-
-\`\`\`bash
-mkdir -p ~/pentest/{tools,loot,notes,scans}
-touch ~/pentest/notes/targets.txt
-touch ~/pentest/notes/scope.txt
-touch ~/pentest/scans/nmap_quick.txt
-ls -la ~/pentest/
-\`\`\`
-
-:::checkpoint
-What command creates multiple directories at once?
-- mkdir tools loot notes scans
-- mkdir -p {tools,loot,notes,scans}
-- mkdir --all tools loot notes scans
-- mkdir -r tools loot notes scans
-:::`,
-        aiPrompt: "Explain the Linux directory structure and why organizing files matters for penetration testing.",
-        labUrl: "",
-        labTitle: "",
-        interviewQuestion: "How do you organize your files during a penetration test?",
-        interviewAnswer: "I create a structured workspace with separate directories for tools, loot (captured data), notes, and scan results. This keeps the engagement organized and makes report writing easier.",
-        quiz: [
-          { question: "What does cd .. do?", options: ["Go home", "Go up one level", "Go to root", "Delete directory"], correctAnswerIndex: 1, difficulty: "beginner", explanation: ".. means parent directory. cd .. goes up one level.", certTags: ["Linux+"] },
-          { question: "What flag shows hidden files?", options: ["-h", "-a", "-s", "-x"], correctAnswerIndex: 1, difficulty: "beginner", explanation: "-a shows all files including hidden ones starting with a dot.", certTags: ["Linux+"] },
-          { question: "What does mkdir -p do?", options: ["Makes private directory", "Creates parent directories if needed", "Prints path", "Prompts for confirmation"], correctAnswerIndex: 1, difficulty: "beginner", explanation: "-p creates the full path including any missing parent directories.", certTags: ["Linux+"] },
-          { question: "How do you copy a directory?", options: ["cp dir", "cp -r dir", "cp --dir", "copy dir"], correctAnswerIndex: 1, difficulty: "beginner", explanation: "-r (recursive) is required to copy directories and their contents.", certTags: ["Linux+"] },
-          { question: "What does mv do?", options: ["Copy file", "Move or rename file", "Delete file", "Create file"], correctAnswerIndex: 1, difficulty: "beginner", explanation: "mv moves files between directories or renames them.", certTags: ["Linux+"] },
-          { question: "What is the danger of rm -rf /?", options: ["Nothing", "Deletes everything on the system", "Only deletes hidden files", "Creates a backup"], correctAnswerIndex: 1, difficulty: "intermediate", explanation: "rm -rf / recursively force-deletes everything from the root. There is no undo.", certTags: ["Security+"] },
-          { question: "What does touch do?", options: ["Deletes a file", "Creates an empty file or updates timestamp", "Copies a file", "Moves a file"], correctAnswerIndex: 1, difficulty: "beginner", explanation: "touch creates a new empty file or updates the modification time of an existing file.", certTags: ["Linux+"] },
-          { question: "What is ~/pentest/notes/targets.txt?", options: ["An absolute path", "A relative path", "A network path", "A Windows path"], correctAnswerIndex: 0, difficulty: "beginner", explanation: "~/pentest starts from home directory — this is an absolute path.", certTags: ["Linux+"] }
-        ]
-      },
-      {
-        id: "weLINUXd03",
-        title: "Project 3: Reading Files — Extracting Intelligence",
-        description: "Read files using cat, head, tail, wc, and file. Learn why reading files is the #1 hacker skill.",
-        type: "practice",
-        duration: "30 min",
-        content: `:::objectives
-- Read files using cat, head, tail, and less
-- Count lines, words, and characters with wc
-- Identify file types with file command
-- Understand why reading files is critical for hackers
-:::
-
-## Why Reading Files Matters
-
-During a pentest, you spend most of your time reading files: configuration files (database passwords), log files (user activity), /etc/passwd (user accounts), SSH keys (access), and more.
-
-If you can't read files quickly, you can't hack.
-
-## Reading Entire Files: cat
-
-\`\`\`bash
-cat /etc/hostname
-\`\`\`
-
-Output: \`kali\`
-
-**cat** prints the entire file to the screen. Use it for small files.
-
-:::warning
-Don't use cat on large files — it will flood your screen. Use head, tail, or less instead.
-:::
-
-## Reading the First Lines: head
-
-\`\`\`bash
-head -5 /etc/passwd
-\`\`\`
-
-Output:
-\`\`\`
-root:x:0:0:root:/root:/bin/bash
-daemon:x:1:1:daemon:/usr/sbin:/usr/sbin/nologin
-bin:x:2:2:bin:/bin:/usr/sbin/nologin
-sys:x:3:3:sys:/dev:/usr/sbin/nologin
-sync:x:4:65534:sync:/bin:/bin/sync
-\`\`\`
-
-**head** shows the first N lines. Default is 10. Use \`-n\` to specify.
-
-## Reading the Last Lines: tail
-
-\`\`\`bash
-tail -3 /etc/passwd
-\`\`\`
-
-Output:
-\`\`\`
-nobody:x:65534:65534:nobody:/nonexistent:/usr/sbin/nologin
-systemd-network:x:100:102::/run/systemd:/usr/sbin/nologin
-user:x:1000:1000::/home/user:/bin/bash
-\`\`\`
-
-**tail** shows the last N lines. Essential for monitoring log files in real-time:
-\`\`\`bash
-tail -f /var/log/auth.log
-\`\`\`
-
-The \`-f\` flag follows the file — new lines appear as they're added. Perfect for watching login attempts in real-time.
-
-:::checkpoint
-What command shows the last 10 lines of a file?
-- head -10
-- tail -10
-- cat -10
-- last -10
-:::
-
-## Counting Lines, Words, Characters: wc
-
-\`\`\`bash
-wc -l /etc/passwd
-\`\`\`
-
-Output: \`35 /etc/passwd\`
-
-**wc** counts lines (\`-l\`), words (\`-w\`), and characters (\`-c\`). Use it to understand file size and content.
-
-\`\`\`bash
-wc -l /etc/passwd /etc/shadow /etc/hosts
-\`\`\`
-
-:::checkpoint
-What does wc -l count?
-- Characters
-- Words
-- Lines
-- Files
-:::
-
-## Identifying File Types: file
-
-\`\`\`bash
-file /bin/bash
-\`\`\`
-
-Output: \`/bin/bash: ELF 64-bit LSB executable, x86-64, version 1 (SYSV), dynamically linked, interpreter /lib64/ld-linux-x86-64.so.2\`
-
-**file** tells you what type a file is — executable, text, image, archive, etc. Essential for identifying suspicious files on a compromised system.
-
-\`\`\`bash
-file /etc/passwd
-file /tmp/suspicious.exe
-file /var/log/auth.log
-\`\`\`
-
-:::checkpoint
-What command identifies a file's type?
-- type
-- file
-- identify
-- what
-:::
-
-## Practical Exercise: Read /etc/passwd
-
-\`\`\`bash
-cat /etc/passwd
-\`\`\`
-
-Each line is a user account:
-\`\`\`
-root:x:0:0:root:/root:/bin/bash
-user:x:1000:1000::/home/user:/bin/bash
-\`\`\`
-
-Format: \`username:password:UID:GID:comment:home:shell\`
-
-- \`x\` in password field means password is in /etc/shadow
-- UID 0 = root
-- UID 1000+ = normal users
-- \`/bin/bash\` = user has a shell (can log in)
-- \`/usr/sbin/nologin\` = user cannot log in
-
-:::checkpoint
-In /etc/passwd, what does UID 0 indicate?
-- A regular user
-- The root user
-- A system user
-- A deleted user
-:::`,
-        aiPrompt: "Explain why reading files is the most important skill for a hacker and give examples of files that contain sensitive information.",
-        labUrl: "",
-        labTitle: "",
-        interviewQuestion: "What files do you check first when you gain access to a Linux system?",
-        interviewAnswer: "I check /etc/passwd for user accounts, /etc/shadow for password hashes (if root), .bash_history for command history, SSH keys in ~/.ssh/, and config files in /etc/ for credentials.",
-        quiz: [
-          { question: "What does cat do?", options: ["Deletes a file", "Prints entire file to screen", "Copies a file", "Creates a file"], correctAnswerIndex: 1, difficulty: "beginner", explanation: "cat prints the entire contents of a file to the screen.", certTags: ["Linux+"] },
-          { question: "What command shows the last 10 lines of a file?", options: ["head -10", "tail -10", "cat -10", "last -10"], correctAnswerIndex: 1, difficulty: "beginner", explanation: "tail shows the last N lines of a file.", certTags: ["Linux+"] },
-          { question: "What does wc -l count?", options: ["Characters", "Words", "Lines", "Files"], correctAnswerIndex: 2, difficulty: "beginner", explanation: "-l flag counts lines.", certTags: ["Linux+"] },
-          { question: "What command identifies a file's type?", options: ["type", "file", "identify", "what"], correctAnswerIndex: 1, difficulty: "beginner", explanation: "file command analyzes the file content and reports its type.", certTags: ["Linux+"] },
-          { question: "In /etc/passwd, what does UID 0 indicate?", options: ["Regular user", "Root user", "System user", "Deleted user"], correctAnswerIndex: 1, difficulty: "intermediate", explanation: "UID 0 is always the root (superuser) account.", certTags: ["Security+"] },
-          { question: "What does tail -f do?", options: ["Show first lines", "Follow file in real-time", "Find text in file", "Format file output"], correctAnswerIndex: 1, difficulty: "intermediate", explanation: "-f follows the file — new lines appear as they're added. Used for monitoring logs.", certTags: ["Linux+"] },
-          { question: "What does /bin/bash in /etc/passwd indicate?", options: ["User has a shell and can log in", "User is root", "User has no password", "User is deleted"], correctAnswerIndex: 0, difficulty: "intermediate", explanation: "/bin/bash means the user has an interactive shell and can log in.", certTags: ["Security+"] },
-          { question: "What does x in the password field of /etc/passwd mean?", options: ["Password is empty", "Password is stored in /etc/shadow", "Account is disabled", "Account is root"], correctAnswerIndex: 1, difficulty: "intermediate", explanation: "x means the actual password hash is in /etc/shadow, not in /etc/passwd.", certTags: ["Security+"] }
-        ]
-      },
-      {
-        id: "weLINUXd04",
-        title: "Project 4: Searching — Finding Needles in Haystacks",
-        description: "Search inside files with grep, find files by name/size/type with find, and locate executables with which.",
-        type: "practice",
-        duration: "30 min",
-        content: `:::objectives
-- Search inside files using grep with basic patterns
-- Find files by name, size, type, and permissions using find
-- Locate executables with which and type
-- Understand why search skills are critical for hackers
-:::
-
-## Why Search Matters
-
-During a pentest, you need to find:
-- Passwords in configuration files
-- Sensitive data in web application code
-- Exploitable files on the target system
-- Log entries indicating attacks
-
-The faster you can search, the faster you can hack.
-
-## Searching Inside Files: grep
-
-\`\`\`bash
-grep "root" /etc/passwd
-\`\`\`
-
-Output: \`root:x:0:0:root:/root:/bin/bash\`
-
-**grep** searches for text patterns inside files. It prints every line that matches.
-
-\`\`\`bash
-# Count matching lines
-grep -c "error" /var/log/syslog
-
-# Show line numbers
-grep -n "password" /etc/ssh/sshd_config
-
-# Case-insensitive search
-grep -i "error" /var/log/syslog
-
-# Recursive search (all files in directory)
-grep -r "password" /etc/ 2>/dev/null
-\`\`\`
-
-:::checkpoint
-What does grep -r do?
-- Reverse the search
-- Search recursively through all files in a directory
-- Return only the first match
-- Remove matching lines
-:::
-
-## Finding Files: find
-
-\`\`\`bash
-# Find files by name
-find / -name "*.conf" -type f 2>/dev/null
-
-# Find files by size (larger than 10MB)
-find / -size +10M -type f 2>/dev/null
-
-# Find files by permission (SUID)
-find / -perm -4000 -type f 2>/dev/null
-
-# Find files modified in the last 24 hours
-find / -mtime -1 -type f 2>/dev/null
-\`\`\`
-
-**Breaking it down:**
-- \`/\` = start from root (search entire system)
-- \`-name\` = match filename pattern
-- \`-type f\` = only files (not directories)
-- \`2>/dev/null\` = suppress error messages
-
-:::checkpoint
-What does 2>/dev/null do in a find command?
-- Saves output to a file
-- Suppresses error messages
-- Shows only errors
-- Redirects to /dev/null
-:::
-
-## Locating Executables: which
-
-\`\`\`bash
-which nmap
-\`\`\`
-
-Output: \`/usr/bin/nmap\`
-
-**which** tells you the full path of a command. Use it to:
-- Verify a tool is installed
-- Find where a binary is located
-- Check if a command is in your PATH
-
-\`\`\`bash
-which python3
-which sqlmap
-which metasploit
-\`\`\`
-
-## Practical Exercise: Find SSH Config
-
-\`\`\`bash
-# Find SSH configuration
-find / -name "sshd_config" -type f 2>/dev/null
-
-# Read it
-cat /etc/ssh/sshd_config
-
-# Search for password authentication setting
-grep "PasswordAuthentication" /etc/ssh/sshd_config
-\`\`\`
-
-:::checkpoint
-What is the correct command to find all .log files in /var/log?
-- find /var/log -name "*.log"
-- grep "*.log" /var/log
-- ls *.log /var/log
-- which *.log
-:::`,
-        aiPrompt: "Explain the difference between grep and find commands and when to use each one.",
-        labUrl: "",
-        labTitle: "",
-        interviewQuestion: "How do you search for sensitive information on a compromised Linux system?",
-        interviewAnswer: "I use grep -r to search recursively for keywords like password, secret, key, token in config files. I use find to locate files by permission (SUID), size, or modification time. I check /etc/shadow, .bash_history, and SSH keys.",
-        quiz: [
-          { question: "What does grep do?", options: ["Find files by name", "Search text patterns inside files", "Delete files", "Create files"], correctAnswerIndex: 1, difficulty: "beginner", explanation: "grep searches for text patterns inside files and prints matching lines.", certTags: ["Linux+"] },
-          { question: "What does grep -r do?", options: ["Reverse search", "Search recursively through directories", "Return first match only", "Remove matches"], correctAnswerIndex: 1, difficulty: "beginner", explanation: "-r searches all files in a directory and its subdirectories.", certTags: ["Linux+"] },
-          { question: "What does find / -name '*.conf' do?", options: ["Create a config file", "Find all .conf files starting from root", "Delete config files", "Edit config files"], correctAnswerIndex: 1, difficulty: "beginner", explanation: "find searches for files by name pattern starting from the specified directory.", certTags: ["Linux+"] },
-          { question: "What does 2>/dev/null do?", options: ["Save output to file", "Suppress error messages", "Show only errors", "Redirect stdout"], correctAnswerIndex: 1, difficulty: "intermediate", explanation: "2>/dev/null redirects stderr (error messages) to the null device, suppressing them.", certTags: ["Linux+"] },
-          { question: "What does which nmap return?", options: ["nmap version", "Full path to nmap binary", "nmap help text", "nmap scan results"], correctAnswerIndex: 1, difficulty: "beginner", explanation: "which returns the full path of an executable in your PATH.", certTags: ["Linux+"] },
-          { question: "What find flag searches for SUID files?", options: ["-suid", "-perm -4000", "-type suid", "-exec"], correctAnswerIndex: 1, difficulty: "intermediate", explanation: "-perm -4000 finds files with the SUID permission bit set.", certTags: ["Security+"] },
-          { question: "What does grep -i do?", options: ["Inverse match", "Case-insensitive search", "Include hidden files", "Incremental search"], correctAnswerIndex: 1, difficulty: "beginner", explanation: "-i makes the search case-insensitive.", certTags: ["Linux+"] },
-          { question: "How do you find files modified in the last 24 hours?", options: ["find / -mtime -1", "find / -newer 1", "find / -changed 24h", "find / -recent"], correctAnswerIndex: 0, difficulty: "intermediate", explanation: "-mtime -1 finds files modified less than 1 day ago.", certTags: ["Linux+"] }
-        ]
-      },
-      {
-        id: "weLINUXd05",
-        title: "Project 5: Permissions — Who Can Do What",
-        description: "Understand Linux permissions (rwx), ownership (user/group), and why SUID binaries are the #1 privilege escalation vector.",
-        type: "practice",
-        duration: "30 min",
-        content: `:::objectives
-- Read and interpret Linux permission strings (rwxr-xr-x)
-- Change permissions with chmod and ownership with chown
-- Understand SUID/SGID and why they matter for privilege escalation
-- Find SUID binaries that can be exploited
-:::
-
-## How Linux Permissions Work
-
-Every file has three permission levels:
-
-| Level | Who | Abbreviation |
-|-------|-----|-------------|
-| Owner | The user who owns the file | u |
-| Group | Users in the file's group | g |
-| Others | Everyone else | o |
-
-Each level has three permissions:
-
-| Permission | Symbol | Number | For Files | For Directories |
-|-----------|--------|--------|-----------|-----------------|
-| Read | r | 4 | View contents | List contents |
-| Write | w | 2 | Modify file | Create/delete files |
-| Execute | x | 1 | Run as program | Enter directory |
-
-## Reading Permissions: ls -la
-
-\`\`\`bash
-ls -la /etc/passwd
-\`\`\`
-
-Output: \`-rw-r--r-- 1 root root 1869 Jul  7 09:00 /etc/passwd\`
-
-Breaking down \`-rw-r--r--\`:
-| Position | Meaning |
-|----------|---------|
-| - | Regular file (d = directory, l = link) |
-| rw- | Owner: read + write |
-| r-- | Group: read only |
-| r-- | Others: read only |
-
-:::checkpoint
-What does rwx mean in Linux permissions?
-- Read, Write, Execute
-- Run, Work, Exit
-- Root, Write, Execute
-- Read, Write, Exit
-:::
-
-## Changing Permissions: chmod
-
-**Numeric mode:**
-\`\`\`bash
-chmod 755 script.sh
-\`\`\`
-
-755 = rwxr-xr-x (owner: all, group: read+execute, others: read+execute)
-
-| Number | Permission |
-|--------|-----------|
-| 7 | rwx (4+2+1) |
-| 6 | rw- (4+2) |
-| 5 | r-x (4+1) |
-| 4 | r-- (4) |
-| 0 | --- (none) |
-
-**Symbolic mode:**
-\`\`\`bash
-chmod +x script.sh    # Add execute for everyone
-chmod u+w script.sh   # Add write for owner only
-chmod g-r file.txt    # Remove read for group
-\`\`\`
-
-:::checkpoint
-What does chmod 755 set?
-- rwxr-xr-x
-- rwxrwxrwx
-- rw-r--r--
-- rwx------
-:::
-
-## Changing Ownership: chown
-
-\`\`\`bash
-sudo chown root:root script.sh
-\`\`\`
-
-**chown** changes the owner and group. Format: \`owner:group\`
-
-## SUID — The Privilege Escalation Vector
-
-The SUID bit makes a program run with the FILE OWNER's privileges, not the user running it.
-
-\`\`\`bash
-ls -la /usr/bin/passwd
-\`\`\`
-
-Output: \`-rwsr-xr-x 1 root root 68208 Jul  7 10:00 /usr/bin/passwd\`
-
-Notice the \`s\` in \`rws\` — that's the SUID bit. When you run passwd, it runs as root (the file owner) even though you're a normal user.
-
-**Why this matters for hackers:** If a SUID binary is owned by root AND has a vulnerability, you can get root.
-
-\`\`\`bash
-# Find all SUID binaries
-find / -perm -4000 -type f 2>/dev/null
-\`\`\`
-
-:::checkpoint
-What does the SUID bit (s in rws) do?
-- Makes the file read-only
-- Runs the program with the file owner's privileges
-- Prevents the file from being deleted
-- Encrypts the file
-:::
-
-## Practical Exercise
-
-\`\`\`bash
-# Create a script
-echo '#!/bin/bash' > ~/test.sh
-echo 'echo "Hello from $(whoami)"' >> ~/test.sh
-
-# Make it executable
-chmod +x ~/test.sh
-
-# Run it
-./test.sh
-
-# Find SUID binaries
-find / -perm -4000 -type f 2>/dev/null
-\`\`\``,
-        aiPrompt: "Explain Linux permissions and why SUID binaries are a security risk.",
-        labUrl: "",
-        labTitle: "",
-        interviewQuestion: "How do you find and exploit SUID binaries for privilege escalation?",
-        interviewAnswer: "I use find / -perm -4000 -type f to find SUID binaries. Then I check GTFOBins for exploitation methods. Common targets include find, vim, python, nmap — all can spawn a root shell if they have SUID set.",
-        quiz: [
-          { question: "What does rwx mean?", options: ["Read, Write, Execute", "Run, Work, Exit", "Root, Write, Execute", "Read, Write, Exit"], correctAnswerIndex: 0, difficulty: "beginner", explanation: "rwx = Read, Write, Execute — the three basic permissions.", certTags: ["Linux+"] },
-          { question: "What does chmod 755 set?", options: ["rwxr-xr-x", "rwxrwxrwx", "rw-r--r--", "rwx------"], correctAnswerIndex: 0, difficulty: "beginner", explanation: "7=rwx, 5=r-x. So 755 = rwxr-xr-x.", certTags: ["Linux+"] },
-          { question: "What does the SUID bit do?", options: ["Makes file read-only", "Runs with file owner's privileges", "Prevents deletion", "Encrypts file"], correctAnswerIndex: 1, difficulty: "intermediate", explanation: "SUID makes the program execute with the file owner's (usually root) privileges.", certTags: ["Security+"] },
-          { question: "How do you find SUID files?", options: ["find / -perm -4000", "ls -la /suid", "grep suid /etc", "which suid"], correctAnswerIndex: 0, difficulty: "intermediate", explanation: "find / -perm -4000 searches for files with the SUID permission bit.", certTags: ["OSCP"] },
-          { question: "What does the 's' in rws indicate?", options: ["Secure file", "SUID bit set", "Shared file", "System file"], correctAnswerIndex: 1, difficulty: "intermediate", explanation: "The s in the execute position means the SUID bit is set.", certTags: ["Security+"] },
-          { question: "What is the numeric value for rwx?", options: ["7", "6", "5", "4"], correctAnswerIndex: 0, difficulty: "beginner", explanation: "r=4, w=2, x=1. 4+2+1=7.", certTags: ["Linux+"] },
-          { question: "What does chown root:root file do?", options: ["Delete the file", "Change owner and group to root", "Make file executable", "Create a copy"], correctAnswerIndex: 1, difficulty: "beginner", explanation: "chown changes file ownership. root:root = owner:group.", certTags: ["Linux+"] },
-          { question: "Why are SUID binaries dangerous?", options: ["They use more memory", "They can be exploited for privilege escalation", "They slow down the system", "They delete files"], correctAnswerIndex: 1, difficulty: "intermediate", explanation: "SUID binaries run as root. If exploitable, they give attackers root access.", certTags: ["Security+"] }
-        ]
-      },
-      {
-        id: "weLINUXd06",
-        title: "Project 6: Processes — What's Running",
-        description: "View running processes with ps and top, kill processes, and understand process states. Learn to identify suspicious processes.",
-        type: "practice",
-        duration: "30 min",
-        content: `:::objectives
-- View running processes with ps aux and top
-- Understand process states (R, S, D, Z, T)
-- Kill processes with kill and killall
-- Identify suspicious processes on a compromised system
-:::
-
-## What Is a Process?
-
-A process is a running instance of a program. Every command you run creates a process. Every service on a system is a process. Hackers need to understand processes to:
-- Find running services to exploit
-- Kill malware or suspicious processes
-- Understand what's consuming resources
-- Maintain persistence (run malicious processes)
-
-## Viewing Processes: ps aux
-
-\`\`\`bash
-ps aux
-\`\`\`
-
-Output:
-\`\`\`
-USER       PID %CPU %MEM    VSZ   RSS TTY      STAT START   TIME COMMAND
-root         1  0.0  0.4 169848 10044 ?        Ss   09:30   0:02 /sbin/init
-root       456  0.0  0.0  72308  4096 ?        Ss   09:30   0:00 /usr/sbin/sshd
-user      1234  0.1  0.2  45678  5678 pts/0    Ss+  10:00   0:00 bash
-user      1300  0.0  0.1  23456  3456 pts/1    Ss+  10:05   0:00 bash
-root      1400  0.0  0.3  78901  6789 ?        Ss   09:31   0:00 /usr/sbin/sshd
-\`\`\`
-
-**Breaking it down:**
-| Column | Meaning |
-|--------|---------|
-| USER | Who owns the process |
-| PID | Process ID (unique number) |
-| %CPU | CPU usage percentage |
-| %MEM | Memory usage percentage |
-| STAT | Process state |
-| COMMAND | The command that started it |
-
-:::checkpoint
-What does PID mean?
-- Process Identifier
-- Program Internal Data
-- Process Input Device
-- Program Installation Date
-:::
-
-## Process States
-
-| State | Meaning | What It Means |
-|-------|---------|---------------|
-| R | Running | Currently executing |
-| S | Sleeping | Waiting for something (normal) |
-| D | Uninterruptible sleep | Waiting for I/O (cannot be killed) |
-| Z | Zombie | Finished but parent hasn't cleaned up |
-| T | Stopped | Paused by signal |
-
-:::checkpoint
-What does a zombie (Z) process indicate?
-- A malicious process
-- A process that finished but parent hasn't cleaned it up
-- A process consuming all memory
-- A root process
-:::
-
-## Real-Time Monitoring: top
-
-\`\`\`bash
-top
-\`\`\`
-
-**top** shows processes in real-time, sorted by CPU usage. Press:
-- \`q\` to quit
-- \`k\` to kill a process (enter PID)
-- \`M\` to sort by memory
-- \`P\` to sort by CPU
-
-## Killing Processes: kill
-
-\`\`\`bash
-kill 1234           # Send SIGTERM (graceful)
-kill -9 1234        # Send SIGKILL (force)
-killall firefox     # Kill by name
-\`\`\`
-
-| Signal | Number | Effect |
-|--------|--------|--------|
-| SIGTERM | 15 | Graceful shutdown (can be caught) |
-| SIGKILL | 9 | Force kill (cannot be caught) |
-| SIGHUP | 1 | Restart/reload |
-
-:::warning
-SIGKILL (-9) should be a last resort. It doesn't allow the process to clean up.
-:::
-
-## Finding Suspicious Processes
-
-Look for:
-- Unusual process names (random strings, misspellings)
-- Processes running as root that shouldn't be
-- High CPU/memory usage from unknown processes
-- Processes with network connections to unknown IPs
-- Processes running from /tmp or /dev/shm
-
-\`\`\`bash
-# Find processes running from /tmp
-ls -la /proc/*/exe 2>/dev/null | grep /tmp
-
-# Find processes with network connections
-ss -tulnp
-\`\`\``,
-        aiPrompt: "Explain how to identify and handle suspicious processes on a compromised Linux system.",
-        labUrl: "",
-        labTitle: "",
-        interviewQuestion: "How do you identify a suspicious process on a Linux system?",
-        interviewAnswer: "I check ps aux for unusual names, high resource usage, and processes running from /tmp or /dev/shm. I check /proc/PID/exe for the binary path, lsof -p PID for open files, and ss -tulnp for network connections.",
-        quiz: [
-          { question: "What does PID mean?", options: ["Process Identifier", "Program Internal Data", "Process Input Device", "Program Installation Date"], correctAnswerIndex: 0, difficulty: "beginner", explanation: "PID = Process ID, a unique number for each running process.", certTags: ["Linux+"] },
-          { question: "What does a zombie (Z) process indicate?", options: ["Malicious process", "Finished but parent hasn't cleaned up", "High memory usage", "Root process"], correctAnswerIndex: 1, difficulty: "intermediate", explanation: "Zombie processes have exited but their parent hasn't called wait() to collect their status.", certTags: ["Linux+"] },
-          { question: "What signal does kill -9 send?", options: ["SIGTERM", "SIGKILL", "SIGHUP", "SIGSTOP"], correctAnswerIndex: 1, difficulty: "beginner", explanation: "-9 sends SIGKILL, which force-kills the process immediately.", certTags: ["Linux+"] },
-          { question: "What command shows processes in real-time?", options: ["ps aux", "top", "ls proc", "who"], correctAnswerIndex: 1, difficulty: "beginner", explanation: "top displays processes in real-time, sorted by CPU usage.", certTags: ["Linux+"] },
-          { question: "What does STAT 'Ss' mean?", options: ["Stopped, secure", "Sleeping, session leader", "System, suspended", "Started, stopped"], correctAnswerIndex: 1, difficulty: "intermediate", explanation: "S = sleeping, s = session leader. This is normal for most processes.", certTags: ["Linux+"] },
-          { question: "How do you force kill PID 1234?", options: ["kill 1234", "kill -9 1234", "kill -TERM 1234", "killall 1234"], correctAnswerIndex: 1, difficulty: "beginner", explanation: "-9 sends SIGKILL, which cannot be caught or ignored.", certTags: ["Linux+"] },
-          { question: "What is a suspicious process indicator?", options: ["Running as user", "Running from /tmp", "Using 0% CPU", "Sleeping state"], correctAnswerIndex: 1, difficulty: "intermediate", explanation: "Processes running from /tmp or /dev/shm are often malicious — these are writable directories.", certTags: ["Security+"] },
-          { question: "What does ss -tulnp show?", options: ["File contents", "Listening network ports and processes", "CPU usage", "Memory usage"], correctAnswerIndex: 1, difficulty: "intermediate", explanation: "ss shows socket statistics. -tulnp shows TCP/UDP listening ports with process names.", certTags: ["Security+"] }
-        ]
-      },
-      {
-        id: "weLINUXd07",
-        title: "Project 7: Pipes & Redirects — Chaining Commands",
-        description: "Chain commands together with pipes, redirect output to files, and build powerful one-liners for recon.",
-        type: "practice",
-        duration: "30 min",
-        content: `:::objectives
-- Chain commands using pipes (|) to process output
-- Redirect output to files with > and >>
-- Understand stderr vs stdout and how to redirect both
-- Build powerful one-liners for security reconnaissance
-:::
-
-## Pipes: Connecting Commands
-
-A pipe sends the output of one command as input to the next.
-
-\`\`\`bash
-ls -la | grep ".txt"
-\`\`\`
-
-Output: Only lines containing ".txt" from the ls output.
-
-**How it works:**
-1. \`ls -la\` produces a list of files
-2. \`|\` sends that list to grep
-3. \`grep ".txt"\` filters for lines containing ".txt"
-
-:::checkpoint
-What does a pipe (|) do?
-- Deletes the output
-- Sends output of one command to input of next
-- Saves output to a file
-- Runs commands in parallel
-:::
-
-## Building Recon Pipelines
-
-\`\`\`bash
-# Find failed SSH login attempts
-cat /var/log/auth.log | grep "Failed" | wc -l
-
-# Count unique attacking IPs
-grep "Failed" /var/log/auth.log | awk '{print $11}' | sort | uniq -c | sort -rn
-
-# Find large files
-find / -size +10M -type f 2>/dev/null | head -20
-\`\`\`
-
-:::checkpoint
-What does \`sort | uniq -c\` do?
-- Deletes duplicate lines
-- Sorts lines and counts unique occurrences
-- Finds unique files
-- Creates a backup
-:::
-
-## Output Redirection: > and >>
-
-\`\`\`bash
-# Overwrite file
-echo "Scan started" > scan_log.txt
-
-# Append to file
-echo "Scan completed" >> scan_log.txt
-
-# Redirect both stdout and stderr
-command > all.txt 2>&1
-
-# Suppress all output
-command > /dev/null 2>&1
-\`\`\`
-
-| Operator | Meaning |
-|----------|---------|
-| \`>\` | Redirect stdout to file (overwrite) |
-| \`>>\` | Redirect stdout to file (append) |
-| \`2>\` | Redirect stderr to file |
-| \`2>&1\` | Redirect stderr to stdout |
-| \`> /dev/null\` | Suppress output |
-
-:::checkpoint
-What does > do?
-- Appends to file
-- Overwrites file with output
-- Deletes the file
-- Creates a pipe
-:::
-
-## Practical Exercise: Log Analysis Pipeline
-
-\`\`\`bash
-# Find all failed SSH attempts, extract IPs, count and sort
-grep "Failed password" /var/log/auth.log | \\
-  awk '{print $11}' | \\
-  sort | \\
-  uniq -c | \\
-  sort -rn | \\
-  head -5
-\`\`\`
-
-This one-liner:
-1. Finds failed login attempts
-2. Extracts the IP address (field 11)
-3. Sorts the IPs
-4. Counts unique occurrences
-5. Sorts by count (highest first)
-6. Shows top 5
-
-:::checkpoint
-What does awk '{print $11}' do?
-- Print the 11th line
-- Print the 11th field/column
-- Print 11 copies
-- Delete the 11th field
-:::
-
-## Advanced awk — The Hacker's Report Engine
-
-awk is the most powerful text processing tool in Linux. Beyond basic field extraction, it can generate reports, count patterns, and detect anomalies.
-
-### Custom Field Separator: -F
-
-By default, awk splits on whitespace. Use -F to specify a delimiter:
-
-\`\`\`bash
-# Parse /etc/passwd (colon-separated)
-awk -F: '{print $1, $7}' /etc/passwd
-\`\`\`
-
-Output: Shows username and shell for each user.
-
-\`\`\`bash
-# Parse CSV files
-awk -F, '{print $2}' data.csv
-\`\`\`
-
-:::checkpoint
-What does awk -F: '{print $1}' /etc/passwd do?
-- Print the first line of passwd
-- Print the first field (username) using colon as separator
-- Print all fields
-- Delete the first field
-:::
-
-### BEGIN and END Blocks
-
-BEGIN runs before processing any lines. END runs after processing all lines. Use them for report headers and summaries.
-
-\`\`\`bash
-# Report with header and footer
-awk 'BEGIN { print "=== User Report ===" } 
-{print $1} 
-END { print "=== End Report ===" }' /etc/passwd
-\`\`\`
-
-**Practical example — Count lines with header:**
-\`\`\`bash
-awk 'BEGIN { count=0 } 
-{count++} 
-END { print "Total lines:", count }' /var/log/auth.log
-\`\`\`
-
-:::checkpoint
-When does a BEGIN block execute?
-- After each line
-- Before processing any lines
-- Only if the file is empty
-- At the end of processing
-:::
-
-### Conditional Logic in awk
-
-awk can filter lines based on conditions:
-
-\`\`\`bash
-# Show only lines containing "Failed"
-awk '/Failed/ {print $0}' /var/log/auth.log
-
-# Show lines where field 11 matches an IP pattern
-awk '$11 ~ /^[0-9]+\./ {print $11}' /var/log/auth.log
-
-# Count failed vs successful logins
-awk 'BEGIN {f=0; s=0} /Failed/ {f++} /Accepted/ {s++} END {print "Failed:", f, "Success:", s}' /var/log/auth.log
-\`\`\`
-
-### Formatted Output with printf
-
-printf gives you control over output formatting:
-
-\`\`\`bash
-# Formatted table
-awk -F: 'BEGIN {printf "%-20s %s\\n", "USERNAME", "SHELL"} 
-{printf "%-20s %s\\n", $1, $7}' /etc/passwd
-\`\`\`
-
-Output:
-\`\`\`
-USERNAME             SHELL
-root                 /bin/bash
-daemon               /usr/sbin/nologin
-user                 /bin/bash
-\`\`\`
-
-:::checkpoint
-What does printf "%-20s" do?
-- Print 20 characters, left-aligned
-- Print 20 characters, right-aligned
-- Print only 20 lines
-- Delete 20 characters
-:::
-
-## tee — Write to File AND Screen
-
-tee sends output to both a file and stdout simultaneously. Essential for logging while watching output.
-
-\`\`\`bash
-# Save scan results while viewing them
-nmap -sV 192.168.1.1 | tee scan_results.txt
-
-# Append to log while running
-echo "Scan started: $(date)" | tee -a scan_log.txt
-nmap -sV 192.168.1.1 | tee -a scan_log.txt
-\`\`\`
-
-:::checkpoint
-What does tee do differently from >?
-- Nothing, they are the same
-- tee writes to both file AND screen, > only writes to file
-- tee deletes the file first
-- tee only works with pipes
-:::
-
-## Practical Exercise: Build a Log Report
-
-\`\`\`bash
-# Generate a formatted report of failed logins
-grep "Failed" /var/log/auth.log | \\
-awk 'BEGIN {print "=== Failed Login Report ==="; print ""; count=0} 
-{count++; printf "%-5s %-15s %s\\n", count, $11, $0} 
-END {print ""; print "Total failed attempts:", count}' | \\
-tee report.txt
-\`\`\``,
-        aiPrompt: "Explain how pipes and redirects work in Linux and give examples of security-focused one-liners.",
-        labUrl: "",
-        labTitle: "",
-        interviewQuestion: "Write a one-liner to find the top 5 IPs with the most failed SSH login attempts.",
-        interviewAnswer: "grep 'Failed password' /var/log/auth.log | awk '{print $11}' | sort | uniq -c | sort -rn | head -5",
-        quiz: [
-          { question: "What does a pipe (|) do?", options: ["Deletes output", "Sends output to next command's input", "Saves to file", "Runs in parallel"], correctAnswerIndex: 1, difficulty: "beginner", explanation: "Pipes connect commands — stdout of one becomes stdin of next.", certTags: ["Linux+"] },
-          { question: "What does > do?", options: ["Append to file", "Overwrite file with output", "Delete file", "Create pipe"], correctAnswerIndex: 1, difficulty: "beginner", explanation: "> redirects stdout to a file, overwriting it.", certTags: ["Linux+"] },
-          { question: "What does >> do differently from >?", options: ["Nothing", "Appends instead of overwriting", "Deletes the file", "Creates a new file"], correctAnswerIndex: 1, difficulty: "beginner", explanation: ">> appends to the file. > overwrites it.", certTags: ["Linux+"] },
-          { question: "What does 2>&1 do?", options: ["Delete errors", "Redirect stderr to stdout", "Show only errors", "Redirect stdout to stderr"], correctAnswerIndex: 1, difficulty: "intermediate", explanation: "2>&1 redirects file descriptor 2 (stderr) to file descriptor 1 (stdout).", certTags: ["Linux+"] },
-          { question: "What does sort | uniq -c do?", options: ["Delete duplicates", "Sort and count unique lines", "Find unique files", "Create backup"], correctAnswerIndex: 1, difficulty: "intermediate", explanation: "sort orders lines, then uniq -c counts consecutive identical lines.", certTags: ["Linux+"] },
-          { question: "What does awk '{print $11}' do?", options: ["Print line 11", "Print the 11th field", "Print 11 copies", "Delete field 11"], correctAnswerIndex: 1, difficulty: "intermediate", explanation: "awk splits each line into fields. $11 is the 11th field.", certTags: ["Linux+"] },
-          { question: "What does /dev/null do?", options: ["Store data", "Discard all output", "Create a file", "Show errors"], correctAnswerIndex: 1, difficulty: "beginner", explanation: "/dev/null is the null device — writing to it discards the data.", certTags: ["Linux+"] },
-          { question: "What does awk -F: do?", options: ["Print field 1", "Use colon as field separator", "Filter lines", "Format output"], correctAnswerIndex: 1, difficulty: "intermediate", explanation: "-F sets the field separator. -F: means split on colons.", certTags: ["Linux+"] },
-          { question: "When does awk BEGIN block execute?", options: ["After each line", "Before processing any lines", "Only if file is empty", "At the end"], correctAnswerIndex: 1, difficulty: "intermediate", explanation: "BEGIN runs once before awk processes any input lines.", certTags: ["Linux+"] },
-          { question: "What does tee do differently from >?", options: ["Same thing", "Writes to both file AND screen", "Deletes file first", "Only works with pipes"], correctAnswerIndex: 1, difficulty: "intermediate", explanation: "tee sends output to both stdout and a file. > only redirects to file.", certTags: ["Linux+"] },
-          { question: "What does printf '%-20s' do?", options: ["Print 20 chars, left-aligned", "Print 20 chars, right-aligned", "Print only 20 lines", "Delete 20 chars"], correctAnswerIndex: 0, difficulty: "intermediate", explanation: "- means left-aligned, 20s means 20-character string field.", certTags: ["Linux+"] }
-        ]
-      },
-      {
-        id: "weLINUXd08",
-        title: "Project 8: Bash Scripting — Writing Your First Tools",
-        description: "Write bash scripts with variables, conditionals, and loops. Automate reconnaissance and build custom tools.",
-        type: "practice",
-        duration: "45 min",
-        content: `:::objectives
-- Write bash scripts with proper shebang and structure
-- Use variables, conditionals (if/else), and loops (for/while)
-- Accept command-line arguments
-- Build a simple recon script
-:::
-
-## What Is a Script?
-
-A script is a file containing commands that execute sequentially. Instead of typing 10 commands manually, you write them once and run the script.
-
-## Your First Script
-
-\`\`\`bash
-#!/bin/bash
-# This is a comment
-
-echo "Hello, $USER!"
-echo "Today is $(date +%A)"
-echo "You are in $(pwd)"
-\`\`\`
-
-**Breaking it down:**
-- \`#!/bin/bash\` — shebang line (tells the system to use bash)
-- \`#\` — comment (ignored by bash)
-- \`$USER\` — variable (your username)
-- \`$(date +%A)\` — command substitution (runs date, inserts output)
-
-Save it and make it executable:
-\`\`\`bash
-chmod +x hello.sh
-./hello.sh
-\`\`\`
-
-:::checkpoint
-What does #!/bin/bash do?
-- Comments out the line
-- Tells the system which interpreter to use
-- Sets the file permissions
-- Creates a variable
-:::
-
-## Variables
-
-\`\`\`bash
-#!/bin/bash
-
-TARGET="192.168.1.100"
-PORT=80
-echo "Scanning $TARGET on port $PORT"
-\`\`\`
-
-- No spaces around \`=\`
-- Use \`$VAR\` to access the value
-- Use \`"$VAR"\` in strings to preserve spaces
-
-:::checkpoint
-How do you assign a value to a variable in bash?
-- var = "value"
-- var="value"
-- $var="value"
-- set var "value"
-:::
-
-## Command-Line Arguments
-
-\`\`\`bash
-#!/bin/bash
-
-echo "Script name: $0"
-echo "First argument: $1"
-echo "Second argument: $2"
-echo "Number of arguments: $#"
-echo "All arguments: $@"
-\`\`\`
-
-Run it:
-\`\`\`bash
-./script.sh 192.168.1.100 80
-\`\`\`
-
-Output:
-\`\`\`
-Script name: ./script.sh
-First argument: 192.168.1.100
-Second argument: 80
-Number of arguments: 2
-All arguments: 192.168.1.100 80
-\`\`\`
-
-:::checkpoint
-What does $1 represent in a bash script?
-- The script name
-- The first argument
-- The number of arguments
-- All arguments
-:::
-
-## Conditionals: if/else
-
-\`\`\`bash
-#!/bin/bash
-
-if [ "$1" = "" ]; then
-    echo "Usage: $0 <target>"
-    exit 1
-fi
-
-echo "Scanning $1..."
-\`\`\`
-
-**Comparison operators:**
-| Operator | Meaning |
-|----------|---------|
-| \`-eq\` | Equal (numbers) |
-| \`-ne\` | Not equal |
-| \`-gt\` | Greater than |
-| \`-lt\` | Less than |
-| \`=\` | Equal (strings) |
-| \`-z\` | String is empty |
-
-:::checkpoint
-What does -z "$1" check?
-- If $1 is zero
-- If $1 is empty
-- If $1 is a number
-- If $1 exists
-:::
-
-## Loops: for
-
-\`\`\`bash
-#!/bin/bash
-
-for ip in 192.168.1.{1..10}; do
-    ping -c 1 $ip > /dev/null 2>&1
-    if [ $? -eq 0 ]; then
-        echo "$ip is alive"
-    fi
-done
-\`\`\`
-
-This loops through IPs 192.168.1.1 to 192.168.1.10, pings each one, and reports which are alive.
-
-:::checkpoint
-What does {1..10} generate?
-- Numbers 1 to 10
-- Files 1 to 10
-- Directories 1 to 10
-- Nothing
-:::
-
-## Your First Recon Script
-
-\`\`\`bash
-#!/bin/bash
-# recon.sh — Basic host reconnaissance
-
-TARGET=$1
-
-if [ -z "$TARGET" ]; then
-    echo "Usage: $0 <target>"
-    exit 1
-fi
-
-echo "=== Recon Report for $TARGET ==="
-echo "Date: $(date)"
-echo ""
-
-echo "--- Ping Test ---"
-ping -c 3 $TARGET
-
-echo ""
-echo "--- Open Ports ---"
-nmap -T4 --top-ports 20 $TARGET 2>/dev/null | grep "open"
-
-echo ""
-echo "--- DNS Info ---"
-host $TARGET 2>/dev/null
-\`\`\`
-
-\`\`\`bash
-chmod +x recon.sh
-./recon.sh 192.168.1.1
-\`\`\`
-
-## While Loops — Continuous Monitoring
-
-For loops iterate over a list. While loops repeat until a condition is false. Essential for monitoring scripts.
-
-\`\`\`bash
-# Simple while loop
-count=1
-while [ $count -le 5 ]; do
-    echo "Count: $count"
-    count=$((count + 1))
-done
-\`\`\`
-
-**Infinite loop with break condition:**
-\`\`\`bash
-while true; do
-    echo "Checking..."
-    # Your monitoring logic here
-    sleep 5  # Wait 5 seconds before checking again
-done
-\`\`\`
-
-**Read file line by line:**
-\`\`\`bash
-while read -r line; do
-    echo "Processing: $line"
-done < /etc/passwd
-\`\`\`
-
-:::checkpoint
-What does while true do?
-- Run once
-- Loop forever until manually stopped
-- Loop 10 times
-- Only run if condition is true
-:::
-
-## Functions — Reusable Code Blocks
-
-Functions let you organize code into reusable blocks. Essential for clean, maintainable scripts.
-
-\`\`\`bash
-#!/bin/bash
-
-# Define a function
-check_port() {
-    local target=$1
-    local port=$2
-    nc -z -w 1 $target $port 2>/dev/null
-    if [ $? -eq 0 ]; then
-        echo "Port $port is OPEN on $target"
-    else
-        echo "Port $port is CLOSED on $target"
-    fi
-}
-
-# Call the function
-check_port 192.168.1.1 22
-check_port 192.168.1.1 80
-\`\`\`
-
-**Key concepts:**
-- \`local\` — variable only exists inside the function
-- \`$1\`, \`$2\` — function arguments (not script arguments)
-- \`return\` — return a value (0-255)
-
-:::checkpoint
-What does local do in a bash function?
-- Makes the variable global
-- Makes the variable only exist inside the function
-- Deletes the variable
-- Prints the variable
-:::
-
-## Arithmetic — Counting and Comparing
-
-\`\`\`bash
-# Basic arithmetic
-count=$((count + 1))
-total=$((a + b))
-remainder=$((n % 2))
-
-# Comparison in if statements
-if [ $count -gt 10 ]; then
-    echo "Count is greater than 10"
-fi
-
-# Shorthand increment
-((count++))
-((total += 5))
-\`\`\`
-
-:::checkpoint
-What does $((count + 1)) do?
-- Print the string "count + 1"
-- Add 1 to the variable count
-- Create a new variable
-- Delete the variable
-:::
-
-## Color Output — Making Alerts Visible
-
-ANSI escape codes add color to terminal output. Essential for security tools that need to highlight critical findings.
-
-\`\`\`bash
-# Color codes
-RED='\\033[0;31m'
-GREEN='\\033[0;32m'
-YELLOW='\\033[1;33m'
-NC='\\033[0m'  # No Color (reset)
-
-echo -e "\${RED}CRITICAL: Root login detected!\${NC}"
-echo -e "\${GREEN}OK: No issues found\${NC}"
-echo -e "\${YELLOW}WARNING: Suspicious activity\${NC}"
-\`\`\`
-
-**Color reference:**
-| Code | Color |
-|------|-------|
-| \\033[0;31m | Red |
-| \\033[0;32m | Green |
-| \\033[1;33m | Yellow |
-| \\033[0;34m | Blue |
-| \\033[0m | Reset (no color) |
-
-:::checkpoint
-What does \\033[0m do?
-- Set text to red
-- Reset text color to default
-- Make text bold
-- Clear the screen
-:::
-
-## sleep — Waiting Between Checks
-
-\`\`\`bash
-sleep 5      # Wait 5 seconds
-sleep 1m     # Wait 1 minute
-sleep 0.5    # Wait half a second
-\`\`\`
-
-Used in monitoring loops to avoid overwhelming the system with checks.
-
-## case Statements — Menu Selection
-
-case is cleaner than multiple if/elif for matching a variable against known values.
-
-\`\`\`bash
-#!/bin/bash
-echo "Select scan type:"
-echo "1) Quick scan"
-echo "2) Full scan"
-echo "3) Stealth scan"
-read -p "Choice: " choice
-
-case $choice in
-    1) echo "Running quick scan..."; nmap -T4 --top-ports 100 $1 ;;
-    2) echo "Running full scan..."; nmap -T4 -p- $1 ;;
-    3) echo "Running stealth scan..."; nmap -sS -T2 $1 ;;
-    *) echo "Invalid choice"; exit 1 ;;
-esac
-\`\`\`
-
-:::checkpoint
-What does case $choice in do?
-- Create a loop
-- Match a variable against multiple patterns
-- Read user input
-- Delete a file
-:::
-
-## printf — Formatted Output
-
-printf gives precise control over output formatting. Essential for reports.
-
-\`\`\`bash
-# Formatted table
-printf "%-20s %-15s %s\\n" "USERNAME" "STATUS" "SHELL"
-printf "%-20s %-15s %s\\n" "root" "active" "/bin/bash"
-printf "%-20s %-15s %s\\n" "nobody" "inactive" "/usr/sbin/nologin"
-\`\`\`
-
-**Format specifiers:**
-| Specifier | Meaning |
-|-----------|---------|
-| %s | String |
-| %d | Integer |
-| %-20s | Left-aligned string, 20 chars wide |
-| %10s | Right-aligned string, 10 chars wide |
-
-## sudo -l — Checking Sudo Privileges
-
-\`\`\`bash
-sudo -l
-\`\`\`
-
-Output shows what commands you can run as root:
-\`\`\`
-User user may run the following commands on target:
-    (root) NOPASSWD: /usr/bin/nmap
-    (root) /usr/bin/vim
-\`\`\`
-
-If you see NOPASSWD, you can run that command as root without a password. Check GTFOBins (https://gtfobins.github.io/) for exploitation methods.
-
-:::checkpoint
-What does sudo -l show?
-- All users on the system
-- What commands you can run as root
-- The root password
-- System logs
-:::
-
-## nmap Advanced Flags
-
-\`\`\`bash
-nmap -sV -sC --top-ports 100 -oN scan.txt 192.168.1.1
-\`\`\`
-
-| Flag | Meaning |
-|------|---------|
-| -sV | Service version detection |
-| -sC | Run default scripts |
-| --top-ports 100 | Scan the 100 most common ports |
-| -p- | Scan all 65535 ports |
-| -oN scan.txt | Save output in normal format |
-| -oX scan.xml | Save output in XML format |
-| -O | OS detection |
-| -T4 | Speed template (1=slow/stealth, 5=fast/noisy) |
-
-:::checkpoint
-What does nmap -sV do?
-- Scan all ports
-- Detect service versions
-- Run stealth scan
-- Save results to file
-:::
-
-## read — User Input
-
-\`\`\`bash
-read -p "Enter target IP: " target
-echo "Scanning $target..."
-\`\`\`
-
-- \`-p\` shows a prompt before reading
-- Input is stored in the variable after -p
-
-## Practical Exercise: Complete Recon Script
-
-\`\`\`bash
-#!/bin/bash
-# full_recon.sh — Complete recon with functions and color
-
-RED='\\033[0;31m'
-GREEN='\\033[0;32m'
-YELLOW='\\033[1;33m'
-NC='\\033[0m'
-
-TARGET=$1
-
-if [ -z "$TARGET" ]; then
-    echo "Usage: $0 <target>"
-    exit 1
-fi
-
-echo -e "\${GREEN}=== Recon Report for \$TARGET ===\${NC}"
-echo "Date: \$(date)"
-
-echo -e "\\n\${YELLOW}--- Open Ports ---\${NC}"
-nmap -sV --top-ports 20 \$TARGET 2>/dev/null | grep "open"
-
-echo -e "\\n\${YELLOW}--- Listening Services ---\${NC}"
-ss -tlnp 2>/dev/null | grep LISTEN
-
-echo -e "\\n\${YELLOW}--- SUID Binaries ---\${NC}"
-find / -perm -4000 -type f 2>/dev/null | head -5
-
-echo -e "\\n\${GREEN}=== Scan Complete ===\${NC}"
-\`\`\``,
-        aiPrompt: "Explain how bash scripts work and why automation is important for security professionals.",
-        labUrl: "",
-        labTitle: "",
-        interviewQuestion: "Write a bash script that pings a list of IPs and reports which are alive.",
-        interviewAnswer: "for ip in $(cat ips.txt); do ping -c 1 $ip > /dev/null 2>&1 && echo $ip is alive; done",
-        quiz: [
-          { question: "What does #!/bin/bash do?", options: ["Comments out the line", "Tells the system which interpreter to use", "Sets permissions", "Creates a variable"], correctAnswerIndex: 1, difficulty: "beginner", explanation: "The shebang line tells the OS to use bash to execute the script.", certTags: ["Linux+"] },
-          { question: "How do you assign a variable in bash?", options: ["var = 'value'", "var='value'", "$var='value'", "set var 'value'"], correctAnswerIndex: 1, difficulty: "beginner", explanation: "No spaces around = when assigning variables in bash.", certTags: ["Linux+"] },
-          { question: "What does $1 represent?", options: ["Script name", "First argument", "Number of arguments", "All arguments"], correctAnswerIndex: 1, difficulty: "beginner", explanation: "$1 is the first command-line argument passed to the script.", certTags: ["Linux+"] },
-          { question: "What does -z '$1' check?", options: ["If $1 is zero", "If $1 is empty", "If $1 is a number", "If $1 exists"], correctAnswerIndex: 1, difficulty: "beginner", explanation: "-z tests if the string is empty (zero length).", certTags: ["Linux+"] },
-          { question: "What does {1..10} generate?", options: ["Numbers 1 to 10", "Files 1 to 10", "Directories 1 to 10", "Nothing"], correctAnswerIndex: 0, difficulty: "beginner", explanation: "Brace expansion generates a sequence: {1..10} = 1 2 3 4 5 6 7 8 9 10.", certTags: ["Linux+"] },
-          { question: "What does $? contain?", options: ["The last command's exit code", "The current directory", "The number of arguments", "The script name"], correctAnswerIndex: 0, difficulty: "intermediate", explanation: "$? holds the exit code of the last command. 0 = success, non-zero = failure.", certTags: ["Linux+"] },
-          { question: "What does exit 1 do?", options: ["Exits with success", "Exits with error", "Pauses the script", "Loops the script"], correctAnswerIndex: 1, difficulty: "beginner", explanation: "exit 1 exits the script with error code 1 (failure). exit 0 = success.", certTags: ["Linux+"] },
-          { question: "What is command substitution?", options: ["Running a command in background", "$(command) inserts command output into a string", "Deleting a command", "Saving a command to file"], correctAnswerIndex: 1, difficulty: "intermediate", explanation: "$(command) runs the command and inserts its output. date +%A in $(date +%A) inserts the day name.", certTags: ["Linux+"] }
-        ]
-      },
-      {
-        id: "weLINUXd09",
-        title: "Project 9: Log Analysis — Reading the Battlefield",
-        description: "Analyze auth.log, syslog, and application logs to detect attacks, find patterns, and extract indicators of compromise.",
-        type: "practice",
-        duration: "30 min",
-        content: `:::objectives
-- Understand Linux log file locations and types
-- Parse auth.log for failed logins and successful authentications
-- Extract indicators of compromise (IOCs) from logs
-- Build log analysis pipelines for security monitoring
-:::
-
-## Why Log Analysis Matters
-
-Logs are the primary source of evidence in security investigations. Every attack leaves traces in logs:
-- Failed login attempts (brute force)
-- Successful logins from unusual IPs (compromise)
-- Process creation (malware execution)
-- File modifications (data tampering)
-
-If you can't read logs, you can't detect attacks.
-
-## Linux Log Locations
-
-| File | Content |
-|------|---------|
-| /var/log/auth.log | Authentication events (SSH, sudo, login) |
-| /var/log/syslog | System messages |
-| /var/log/kern.log | Kernel messages |
-| /var/log/apache2/access.log | Web server requests |
-| /var/log/apache2/error.log | Web server errors |
-
-## Reading auth.log
-
-\`\`\`bash
-tail -20 /var/log/auth.log
-\`\`\`
-
-A typical failed SSH login:
-\`\`\`
-Jun 15 03:22:14 server sshd[12345]: Failed password for invalid user admin from 10.0.0.50 port 22 ssh2
-\`\`\`
-
-:::checkpoint
-What log file contains SSH login attempts?
-- /var/log/syslog
-- /var/log/auth.log
-- /var/log/messages
-- /var/log/ssh.log
-:::
-
-## Detecting Brute Force Attacks
-
-\`\`\`bash
-# Count failed login attempts
-grep -c "Failed password" /var/log/auth.log
-
-# Find attacking IPs
-grep "Failed password" /var/log/auth.log | awk '{print $11}' | sort | uniq -c | sort -rn
-
-# Find successful logins (potential compromise)
-grep "Accepted" /var/log/auth.log
-
-# Find successful logins from specific IP
-grep "Accepted" /var/log/auth.log | grep "10.0.0.50"
-\`\`\`
-
-:::checkpoint
-What does grep -c do?
-- Show matching lines
-- Count matching lines
-- Delete matching lines
-- Copy matching lines
-:::
-
-## Building a Log Analysis Report
-
-\`\`\`bash
-#!/bin/bash
-# log_analysis.sh — Quick security log analysis
-
-echo "=== Security Log Analysis ==="
-echo "Date: $(date)"
-echo ""
-
-echo "--- Failed Login Attempts ---"
-grep -c "Failed password" /var/log/auth.log
-
-echo ""
-echo "--- Top 5 Attacking IPs ---"
-grep "Failed password" /var/log/auth.log | awk '{print $11}' | sort | uniq -c | sort -rn | head -5
-
-echo ""
-echo "--- Successful Logins ---"
-grep "Accepted" /var/log/auth.log | awk '{print $9, $11}' | sort -u
-
-echo ""
-echo "--- Users Targeted ---"
-grep "Failed password" /var/log/auth.log | awk '{print $9}' | sort | uniq -c | sort -rn
-\`\`\`
-
-:::checkpoint
-What does awk '{print $11}' extract from a log line?
-- The timestamp
-- The IP address (11th field)
-- The username
-- The port number
-:::
-
-## Practical Exercise
-
-\`\`\`bash
-# Analyze your own auth.log
-cat /var/log/auth.log | head -20
-
-# Count failed attempts
-grep -c "Failed" /var/log/auth.log
-
-# Find the most common attacking IP
-grep "Failed" /var/log/auth.log | awk '{print $11}' | sort | uniq -c | sort -rn | head -1
-
-# Find successful logins
-grep "Accepted" /var/log/auth.log
-\`\`\``,
-        aiPrompt: "Explain how to analyze Linux log files to detect security incidents.",
-        labUrl: "",
-        labTitle: "",
-        interviewQuestion: "How do you detect a brute force attack from Linux logs?",
-        interviewAnswer: "I grep auth.log for 'Failed password', extract source IPs with awk, count occurrences with sort | uniq -c, and sort by frequency. If one IP has many failures, it's likely brute force. I also check for successful logins from that IP.",
-        quiz: [
-          { question: "What log file contains SSH login attempts?", options: ["/var/log/syslog", "/var/log/auth.log", "/var/log/messages", "/var/log/ssh.log"], correctAnswerIndex: 1, difficulty: "beginner", explanation: "auth.log contains authentication events including SSH.", certTags: ["Security+"] },
-          { question: "What does grep -c do?", options: ["Show matching lines", "Count matching lines", "Delete matches", "Copy matches"], correctAnswerIndex: 1, difficulty: "beginner", explanation: "-c counts the number of matching lines.", certTags: ["Linux+"] },
-          { question: "What does awk '{print $11}' extract?", options: ["Timestamp", "IP address", "Username", "Port"], correctAnswerIndex: 1, difficulty: "intermediate", explanation: "In auth.log, the 11th field is typically the source IP address.", certTags: ["Security+"] },
-          { question: "What does sort | uniq -c | sort -rn do?", options: ["Delete duplicates", "Count unique values and sort by frequency", "Find unique files", "Create backup"], correctAnswerIndex: 1, difficulty: "intermediate", explanation: "sort orders lines, uniq -c counts consecutive identical lines, sort -rn sorts numerically in reverse.", certTags: ["Linux+"] },
-          { question: "What indicates a successful login in auth.log?", options: ["Failed password", "Accepted password", "Connection closed", "Invalid user"], correctAnswerIndex: 1, difficulty: "beginner", explanation: "Accepted password indicates a successful authentication.", certTags: ["Security+"] },
-          { question: "What is an IOC?", options: ["Input/Output Control", "Indicator of Compromise", "Internal Operating Command", "Internet Open Connection"], correctAnswerIndex: 1, difficulty: "beginner", explanation: "IOC = Indicator of Compromise — evidence that a system has been breached.", certTags: ["Security+"] },
-          { question: "How do you find successful logins from a specific IP?", options: ["grep 'Accepted' auth.log | grep 'IP'", "find auth.log IP", "awk IP auth.log", "tail IP auth.log"], correctAnswerIndex: 0, difficulty: "beginner", explanation: "Chain two greps: first for Accepted, then for the IP.", certTags: ["Security+"] },
-          { question: "What is the purpose of log analysis in security?", options: ["Delete old logs", "Detect attacks and extract IOCs", "Compress log files", "Create new logs"], correctAnswerIndex: 1, difficulty: "beginner", explanation: "Log analysis detects attacks, extracts IOCs, and supports incident response.", certTags: ["Security+"] }
-        ]
-      },
-      {
-        id: "weLINUXd10",
-        title: "Project 10: System Recon — Know Your Target",
-        description: "Perform full system enumeration: OS version, users, network, services, scheduled tasks. The first step of any pentest.",
-        type: "practice",
-        duration: "30 min",
-        content: `:::objectives
-- Enumerate system information (OS, kernel, hostname)
-- Enumerate users and groups
-- Enumerate network configuration and listening ports
-- Enumerate services and scheduled tasks
-- Build a complete system recon script
-:::
-
-## Why System Recon Matters
-
-The first thing a hacker does after gaining access: enumerate the system. You need to know:
-- What OS and version (find kernel exploits)
-- Who has accounts (find targets)
-- What's running (find attack surface)
-- What's scheduled (find persistence opportunities)
-
-## System Information
-
-\`\`\`bash
-hostname                    # Computer name
-uname -a                    # Full kernel info
-cat /etc/os-release         # OS distribution
-uptime                      # How long the system has been running
-\`\`\`
-
-:::checkpoint
-What command shows the kernel version?
-- hostname
-- uname -a
-- cat /etc/hosts
-- id
-:::
-
-## Users and Groups
-
-\`\`\`bash
-id                          # Current user's UID, GID, groups
-whoami                      # Current username
-cat /etc/passwd             # All users
-cat /etc/group              # All groups
-last                        # Recent login history
-\`\`\`
-
-**Users with shells (can log in):**
-\`\`\`bash
-grep -v "nologin\|false" /etc/passwd
-\`\`\`
-
-:::checkpoint
-What file contains user account information?
-- /etc/shadow
-- /etc/passwd
-- /etc/group
-- /etc/users
-:::
-
-## Network Configuration
-
-\`\`\`bash
-ip addr                     # Network interfaces and IPs
-ip route                    # Routing table
-ss -tlnp                    # Listening ports with process names
-cat /etc/resolv.conf        # DNS servers
-\`\`\`
-
-:::checkpoint
-What command shows listening ports?
-- ip addr
-- ss -tlnp
-- cat /etc/passwd
-- uname -a
-:::
-
-## Services and Processes
-
-\`\`\`bash
-systemctl list-units --type=service --state=running
-ps aux
-\`\`\`
-
-## Scheduled Tasks
-
-\`\`\`bash
-crontab -l                  # Current user's cron jobs
-ls -la /etc/cron*           # System cron directories
-cat /etc/crontab            # System crontab
-\`\`\`
-
-## Full Recon Script
-
-\`\`\`bash
-#!/bin/bash
-# full_recon.sh — Complete system enumeration
-
-echo "=========================================="
-echo " SYSTEM RECONNAISSANCE REPORT"
-echo " Date: $(date)"
-echo "=========================================="
-
-echo ""
-echo "--- System Info ---"
-echo "Hostname: $(hostname)"
-echo "Kernel: $(uname -r)"
-echo "OS: $(cat /etc/os-release | grep PRETTY_NAME | cut -d= -f2)"
-echo "Uptime: $(uptime -p)"
-
-echo ""
-echo "--- User Info ---"
-echo "Current user: $(whoami)"
-echo "UID: $(id -u)"
-echo "Groups: $(id -Gn)"
-echo ""
-echo "Users with shells:"
-grep -v "nologin\|false\|sync" /etc/passwd | cut -d: -f1
-
-echo ""
-echo "--- Network ---"
-echo "Interfaces:"
-ip addr show | grep "inet " | awk '{print $2}'
-echo ""
-echo "Listening ports:"
-ss -tlnp 2>/dev/null | grep LISTEN
-
-echo ""
-echo "--- Cron Jobs ---"
-crontab -l 2>/dev/null || echo "No user crontab"
-ls -la /etc/cron.d/ 2>/dev/null
-
-echo ""
-echo "--- SUID Files ---"
-find / -perm -4000 -type f 2>/dev/null | head -10
-\`\`\`
-
-:::checkpoint
-What is the first thing you do after gaining access to a Linux system?
-- Delete logs
-- Change passwords
-- Enumerate the system
-- Install backdoors
-:::`,
-        aiPrompt: "Explain the methodology for system enumeration on a compromised Linux host.",
-        labUrl: "",
-        labTitle: "",
-        interviewQuestion: "What information do you gather when you first access a Linux system during a pentest?",
-        interviewAnswer: "I gather OS/kernel version for exploit matching, user accounts for lateral movement, network interfaces for pivoting, listening ports for services, cron jobs for persistence opportunities, and SUID binaries for privilege escalation.",
-        quiz: [
-          { question: "What command shows the kernel version?", options: ["hostname", "uname -a", "cat /etc/hosts", "id"], correctAnswerIndex: 1, difficulty: "beginner", explanation: "uname -a shows full kernel information including version.", certTags: ["Linux+"] },
-          { question: "What file contains user accounts?", options: ["/etc/shadow", "/etc/passwd", "/etc/group", "/etc/users"], correctAnswerIndex: 1, difficulty: "beginner", explanation: "/etc/passwd contains user account information.", certTags: ["Linux+"] },
-          { question: "What command shows listening ports?", options: ["ip addr", "ss -tlnp", "cat /etc/passwd", "uname -a"], correctAnswerIndex: 1, difficulty: "beginner", explanation: "ss -tlnp shows TCP listening ports with process names.", certTags: ["Security+"] },
-          { question: "What does id show?", options: ["IP address", "UID, GID, and group memberships", "Hostname", "Kernel version"], correctAnswerIndex: 1, difficulty: "beginner", explanation: "id shows user ID, group ID, and all group memberships.", certTags: ["Linux+"] },
-          { question: "What is the first step after gaining access?", options: ["Delete logs", "Change passwords", "Enumerate the system", "Install backdoors"], correctAnswerIndex: 2, difficulty: "intermediate", explanation: "Always enumerate first — you need to understand the system before acting.", certTags: ["OSCP"] },
-          { question: "What does crontab -l show?", options: ["Current directory", "Scheduled tasks for current user", "Running processes", "Network connections"], correctAnswerIndex: 1, difficulty: "beginner", explanation: "crontab -l lists the current user's scheduled cron jobs.", certTags: ["Linux+"] },
-          { question: "Why check /etc/os-release?", options: ["Get IP address", "Identify OS distribution and version", "Find users", "Check network"], correctAnswerIndex: 1, difficulty: "beginner", explanation: "/etc/os-release contains the OS name and version — needed for exploit matching.", certTags: ["Security+"] },
-          { question: "What does uptime show?", options: ["Current time", "How long the system has been running", "User accounts", "Network status"], correctAnswerIndex: 1, difficulty: "beginner", explanation: "uptime shows how long the system has been running since last reboot.", certTags: ["Linux+"] }
-        ]
-      },
-    ]
-  },
-  {
-    id: "weekLINUXproj",
-    title: "Linux Projects",
-    durationText: "Week L - 4 Projects",
-    focus: "Build real security tools using everything you learned in the Linux tutorials",
-    output: "4 portfolio-ready scripts: recon tool, intrusion detector, privesc checker, network analyzer",
-    topics: [
-      {
-        id: "proj-linux-recon",
-        title: "Project: Automated Recon Tool",
-        description: "Build a bash script that automatically enumerates a target system — ports, services, SUID binaries, users, cron jobs. The first tool every hacker writes.",
-        type: "project",
-        duration: "2-3 hours",
-        content: `:::objectives
-- Build a modular bash script using functions
-- Enumerate system information: ports, services, users, SUID files, cron jobs
-- Generate a formatted report using printf
-- Handle errors and edge cases
-:::
-
-## Your Mission
-
-Build a recon script that takes a target IP as input and automatically enumerates the system. This is the first tool every penetration tester writes — it saves hours of manual work.
-
-## Requirements
-
-Your script must:
-
-1. Accept a target IP as \`$1\` — show usage message if missing
-2. Use **functions** for each check (one function per enumeration vector)
-3. Check at least 5 of these:
-   - Open ports (nmap -sV --top-ports 20)
-   - Listening services (ss -tlnp)
-   - SUID binaries (find / -perm -4000)
-   - Users with shells (grep -v nologin /etc/passwd)
-   - Cron jobs (crontab -l, ls -la /etc/cron*)
-   - Network interfaces (ip addr)
-   - Kernel version (uname -a)
-4. Output results to a **report file** with timestamp
-5. Use **printf** for formatted output (aligned columns)
-6. Use **color** for section headers (green for OK, yellow for findings)
-7. Handle errors gracefully (suppress stderr with 2>/dev/null)
-
-## Hints
-
-\`\`\`bash
-# Function template
-check_ports() {
-    local target=$1
-    echo -e "\\033[1;33m--- Open Ports ---\\033[0m"
-    nmap -sV --top-ports 20 $target 2>/dev/null | grep "open"
-}
-
-# Report header with printf
-printf "%-20s %s\\n" "CHECK" "RESULT"
-printf "%-20s %s\\n" "---" "---"
-
-# Save to file while displaying
-./recon.sh 192.168.1.1 | tee report.txt
-\`\`\`
-
-## Checklist
-
-- [ ] Script accepts target as argument
-- [ ] Usage message if no argument
-- [ ] Functions for each check
-- [ ] At least 5 enumeration vectors
-- [ ] Formatted report output
-- [ ] Color-coded sections
-- [ ] Error handling (2>/dev/null)
-- [ ] Results saved to file
-`,
-        aiPrompt: "Explain the methodology for automated system enumeration during a penetration test.",
-        labUrl: "",
-        labTitle: "",
-        interviewQuestion: "How would you build an automated recon script for a penetration test?",
-        interviewAnswer: "I'd build a modular bash script with separate functions for each check: port scanning with nmap, SUID binary enumeration with find, user enumeration from /etc/passwd, cron job listing, and network interface discovery. Each function outputs formatted results, and I pipe everything to a timestamped report file.",
-        quiz: [
-          { question: "Why use functions in a recon script?", options: ["To make it longer", "To organize code and make it reusable", "To slow down execution", "To hide the code"], correctAnswerIndex: 1, difficulty: "beginner", explanation: "Functions organize code into reusable blocks, making scripts easier to read and maintain.", certTags: ["Linux+"] },
-          { question: "What nmap flag detects service versions?", options: ["-sS", "-sV", "-O", "-p-"], correctAnswerIndex: 1, difficulty: "beginner", explanation: "-sV detects service versions running on open ports.", certTags: ["Security+"] },
-          { question: "What does find / -perm -4000 find?", options: ["Hidden files", "SUID binaries", "Large files", "Recent files"], correctAnswerIndex: 1, difficulty: "intermediate", explanation: "-perm -4000 finds files with the SUID permission bit set.", certTags: ["Security+"] },
-          { question: "What does local do in a bash function?", options: ["Makes variable global", "Restricts variable to function scope", "Deletes the variable", "Prints the variable"], correctAnswerIndex: 1, difficulty: "intermediate", explanation: "local restricts a variable to the function scope.", certTags: ["Linux+"] },
-          { question: "What does tee do?", options: ["Delete output", "Write to file AND screen", "Only write to file", "Only show on screen"], correctAnswerIndex: 1, difficulty: "beginner", explanation: "tee sends output to both stdout and a file.", certTags: ["Linux+"] },
-          { question: "What does printf '%-20s' do?", options: ["Print 20 chars, left-aligned", "Print 20 chars, right-aligned", "Print 20 lines", "Delete 20 chars"], correctAnswerIndex: 0, difficulty: "intermediate", explanation: "- means left-aligned, 20s means 20-character string field.", certTags: ["Linux+"] },
-          { question: "What does 2>/dev/null do?", options: ["Save errors to file", "Suppress error messages", "Show only errors", "Redirect stdout"], correctAnswerIndex: 1, difficulty: "beginner", explanation: "2>/dev/null suppresses error messages by sending them to the null device.", certTags: ["Linux+"] },
-          { question: "What does ss -tlnp show?", options: ["File contents", "Listening ports with processes", "CPU usage", "User accounts"], correctAnswerIndex: 1, difficulty: "intermediate", explanation: "ss -tlnp shows TCP listening ports with process names.", certTags: ["Security+"] }
-        ]
-      },
-      {
-        id: "proj-linux-intrusion",
-        title: "Project: Real-Time Intrusion Detector",
-        description: "Build a script that monitors auth.log in real-time, detects brute force attacks, and alerts when thresholds are exceeded. The foundation of every SOC tool.",
-        type: "project",
-        duration: "2-3 hours",
-        content: `:::objectives
-- Monitor log files in real-time using tail -f
-- Count failed login attempts per IP using awk and arithmetic
-- Alert with color-coded output when thresholds are exceeded
-- Log alerts to a file for later analysis
-:::
-
-## Your Mission
-
-Build a real-time intrusion detection script that monitors SSH login attempts and alerts on suspicious activity. This is what SOC analysts use every day.
-
-## Requirements
-
-Your script must:
-
-1. Monitor \`/var/log/auth.log\` in real-time using \`tail -f\`
-2. **Count** failed login attempts per IP address
-3. **Alert** when an IP exceeds 5 failed attempts (color: red)
-4. **Log** successful logins as potential compromises (color: yellow)
-5. Run continuously until killed (Ctrl+C)
-6. Save all alerts to a log file with timestamps
-7. Use **color output** for different alert levels
-
-## Hints
-
-\`\`\`bash
-# Real-time monitoring
-tail -f /var/log/auth.log | while read -r line; do
-    # Process each line
-    if echo "$line" | grep -q "Failed"; then
-        # Extract IP
-        ip=$(echo "$line" | awk '{print $11}')
-        # Count and alert
-        count=$((count + 1))
-        if [ $count -gt 5 ]; then
-            echo -e "\\033[0;31mALERT: $ip has $count failed attempts\\033[0m"
-        fi
-    fi
-done
-
-# Color codes
-RED='\\033[0;31m'
-GREEN='\\033[0;32m'
-YELLOW='\\033[1;33m'
-NC='\\033[0m'
-
-# Log with timestamp
-echo "$(date): ALERT - $ip" >> alerts.log
-\`\`\`
-
-## Checklist
-
-- [ ] Uses tail -f for real-time monitoring
-- [ ] Counts failed logins per IP
-- [ ] Alerts when threshold exceeded (5+ attempts)
-- [ ] Color-coded output (red for alerts, yellow for warnings)
-- [ ] Logs alerts to file with timestamps
-- [ ] Runs continuously until killed
-- [ ] Handles Ctrl+C gracefully
-`,
-        aiPrompt: "Explain how real-time log monitoring works in a SOC environment.",
-        labUrl: "",
-        labTitle: "",
-        interviewQuestion: "How would you build a real-time SSH brute force detector?",
-        interviewAnswer: "I'd use tail -f to monitor auth.log in real-time, pipe each line through a while read loop, grep for 'Failed password', extract the source IP with awk, count occurrences per IP, and alert when a threshold is exceeded. I'd color-code alerts and log them to a file with timestamps.",
-        quiz: [
-          { question: "What does tail -f do?", options: ["Show last lines", "Follow file in real-time", "Find text in file", "Format file output"], correctAnswerIndex: 1, difficulty: "beginner", explanation: "-f follows the file — new lines appear as they're added.", certTags: ["Linux+"] },
-          { question: "What does while read -r line do?", options: ["Read one line", "Read file line by line in a loop", "Delete lines", "Count lines"], correctAnswerIndex: 1, difficulty: "intermediate", explanation: "while read processes a file line by line in a loop.", certTags: ["Linux+"] },
-          { question: "What does $((count + 1)) do?", options: ["Print count", "Add 1 to count", "Delete count", "Create variable"], correctAnswerIndex: 1, difficulty: "beginner", explanation: "$(( )) performs arithmetic. count + 1 increments the counter.", certTags: ["Linux+"] },
-          { question: "What does \\033[0;31m do?", options: ["Set text to red", "Reset color", "Clear screen", "Print newline"], correctAnswerIndex: 0, difficulty: "intermediate", explanation: "0;31m is the ANSI escape code for red text.", certTags: ["Linux+"] },
-          { question: "What does awk '{print $11}' extract?", options: ["Line 11", "11th field (source IP)", "11th file", "11th character"], correctAnswerIndex: 1, difficulty: "intermediate", explanation: "In auth.log, field 11 is typically the source IP address.", certTags: ["Security+"] },
-          { question: "How do you save alerts to a file?", options: ["echo alert > file", "echo alert >> file", "echo alert | file", "echo alert - file"], correctAnswerIndex: 1, difficulty: "beginner", explanation: ">> appends to the file. > would overwrite it.", certTags: ["Linux+"] },
-          { question: "What does sleep 5 do?", options: ["Wait 5 seconds", "Sleep for 5 minutes", "Pause the script forever", "Delete 5 files"], correctAnswerIndex: 0, difficulty: "beginner", explanation: "sleep 5 pauses execution for 5 seconds.", certTags: ["Linux+"] },
-          { question: "How do you stop a tail -f process?", options: ["Ctrl+C", "Ctrl+Z", "exit", "kill"], correctAnswerIndex: 0, difficulty: "beginner", explanation: "Ctrl+C sends SIGINT, stopping the process.", certTags: ["Linux+"] }
-        ]
-      },
-      {
-        id: "proj-linux-privesc",
-        title: "Project: Privilege Escalation Checker",
-        description: "Build a script that checks a system for privilege escalation vectors — SUID binaries, sudo misconfigs, writable files, cron jobs. What every pentester runs first.",
-        type: "project",
-        duration: "2-3 hours",
-        content: `:::objectives
-- Check SUID/SGID binaries using find
-- Parse sudo -l output for exploitable commands
-- Find writable sensitive files
-- Check cron job permissions
-- Generate a color-coded risk report
-:::
-
-## Your Mission
-
-Build a privilege escalation checker that scans a system for common escalation vectors. This is the first tool you run after gaining access to a target.
-
-## Requirements
-
-Your script must:
-
-1. Check **SUID/SGID binaries** (find / -perm -4000)
-2. Check **sudo privileges** (sudo -l)
-3. Check **writable sensitive files** (find / -writable)
-4. Check **cron job permissions** (ls -la /etc/cron*)
-5. Check **kernel version** for known exploits (uname -r)
-6. Use **color-coded risk levels**:
-   - Red: Critical (SUID binary with known exploit)
-   - Yellow: Warning (writable file, suspicious cron)
-   - Green: OK (no issues found)
-7. Use **case statements** for risk level selection
-8. Output a summary with total findings count
-
-## Hints
-
-\`\`\`bash
-# SUID check
-find / -perm -4000 -type f 2>/dev/null | while read -r binary; do
-    echo -e "\\033[0;31mSUID: $binary\\033[0m"
-done
-
-# Sudo check
-sudo -l 2>/dev/null | grep "NOPASSWD"
-
-# Writable files
-find /etc -writable -type f 2>/dev/null
-
-# Risk levels with case
-risk_level() {
-    case $1 in
-        critical) echo -e "\\033[0;31mCRITICAL\\033[0m" ;;
-        warning)  echo -e "\\033[1;33mWARNING\\033[0m" ;;
-        ok)       echo -e "\\033[0;32mOK\\033[0m" ;;
-    esac
-}
-
-# GTFOBins URL pattern
-echo "Check: https://gtfobins.github.io/gtfobins/$binary/"
-\`\`\`
-
-## Checklist
-
-- [ ] Checks SUID/SGID binaries
-- [ ] Checks sudo -l output
-- [ ] Checks writable sensitive files
-- [ ] Checks cron job permissions
-- [ ] Checks kernel version
-- [ ] Color-coded risk levels
-- [ ] Summary with findings count
-- [ ] References GTFOBins for SUID binaries
-`,
-        aiPrompt: "Explain the methodology for privilege escalation enumeration on a Linux system.",
-        labUrl: "",
-        labTitle: "",
-        interviewQuestion: "How do you check for privilege escalation vectors on a Linux system?",
-        interviewAnswer: "I run find / -perm -4000 to find SUID binaries, sudo -l to check for NOPASSWD entries, find / -writable to find writable sensitive files, and check /etc/cron* for writable cron scripts. I cross-reference SUID binaries with GTFOBins and check the kernel version for known exploits.",
-        quiz: [
-          { question: "What does sudo -l show?", options: ["All users", "Your sudo privileges", "Root password", "System logs"], correctAnswerIndex: 1, difficulty: "beginner", explanation: "sudo -l shows what commands you can run with sudo.", certTags: ["Security+"] },
-          { question: "What is GTFOBins?", options: ["A password cracker", "A list of exploitable Unix binaries", "A network scanner", "A firewall tool"], correctAnswerIndex: 1, difficulty: "intermediate", explanation: "GTFOBins documents how to exploit legitimate binaries for privilege escalation.", certTags: ["Security+"] },
-          { question: "What does find / -perm -4000 find?", options: ["Hidden files", "SUID binaries", "Large files", "Recent files"], correctAnswerIndex: 1, difficulty: "intermediate", explanation: "-perm -4000 finds files with the SUID bit set.", certTags: ["Security+"] },
-          { question: "What does NOPASSWD mean in sudo -l?", options: ["Password is required", "No password needed for that command", "Account is disabled", "Password expired"], correctAnswerIndex: 1, difficulty: "intermediate", explanation: "NOPASSWD means you can run the command as root without entering a password.", certTags: ["Security+"] },
-          { question: "What does case $1 in do?", options: ["Create a loop", "Match variable against patterns", "Read input", "Delete a file"], correctAnswerIndex: 1, difficulty: "intermediate", explanation: "case matches a variable against multiple patterns, like a switch statement.", certTags: ["Linux+"] },
-          { question: "What does find / -writable find?", options: ["Executable files", "Files you can write to", "Hidden files", "Large files"], correctAnswerIndex: 1, difficulty: "intermediate", explanation: "-writable finds files that the current user can write to.", certTags: ["Security+"] },
-          { question: "What color indicates critical findings?", options: ["Green", "Yellow", "Red", "Blue"], correctAnswerIndex: 2, difficulty: "beginner", explanation: "Red indicates critical findings that need immediate attention.", certTags: ["Security+"] },
-          { question: "What does uname -r show?", options: ["Hostname", "Kernel version", "IP address", "User count"], correctAnswerIndex: 1, difficulty: "beginner", explanation: "uname -r shows the kernel release version.", certTags: ["Linux+"] }
-        ]
-      },
-      {
-        id: "proj-linux-network",
-        title: "Project: Network Forensics Analyzer",
-        description: "Build a script that analyzes network traffic logs, extracts IPs, counts connections, and detects port scan patterns. The analyst's eyes on the network.",
-        type: "project",
-        duration: "2-3 hours",
-        content: `:::objectives
-- Parse network log files using awk with custom field separators
-- Extract and count unique source IPs using associative arrays
-- Detect port scan patterns (one IP hitting many ports)
-- Generate a formatted report with top talkers
-:::
-
-## Your Mission
-
-Build a network forensics analyzer that reads firewall or access logs and extracts intelligence. This is what network analysts use to detect intrusions.
-
-## Requirements
-
-Your script must:
-
-1. Accept a **log file** as input (\$1)
-2. Extract **unique source IPs** from the log
-3. Count **connections per IP**
-4. Detect **port scan patterns** (1 IP hitting 10+ different ports)
-5. Show **top 10 talkers** sorted by connection count
-6. Use **awk BEGIN/END blocks** for report headers and summaries
-7. Use **printf** for formatted table output
-8. Output a **summary report** with total connections, unique IPs, and scan alerts
-
-## Hints
-
-\`\`\`bash
-# Extract IPs (field 1 typically)
-awk '{print $1}' firewall.log | sort | uniq -c | sort -rn | head -10
-
-# Associative arrays in awk for counting
-awk '{ip[$1]++} END {for (i in ip) print ip[i], i}' firewall.log
-
-# BEGIN/END for report framing
-awk 'BEGIN {print "=== Network Report ==="} 
-{print} 
-END {print "=== End ==="}' firewall.log
-
-# Detect port scans (IP hitting many ports)
-awk '{ip[$1":"$5]++} 
-END {
-    for (key in ip) {
-        split(key, parts, ":")
-        ports[parts[1]]++
-    }
-    for (ip in ports) {
-        if (ports[ip] > 10) print "SCAN DETECTED:", ip, ports[ip], "ports"
-    }
-}' firewall.log
-
-# Formatted table
-printf "%-20s %-10s %s\\n" "IP" "CONNECTIONS" "STATUS"
-printf "%-20s %-10s %s\\n" "192.168.1.100" "1547" "SUSPICIOUS"
-\`\`\`
-
-## Checklist
-
-- [ ] Accepts log file as argument
-- [ ] Extracts unique source IPs
-- [ ] Counts connections per IP
-- [ ] Detects port scan patterns (10+ ports from same IP)
-- [ ] Shows top 10 talkers
-- [ ] Uses awk BEGIN/END blocks
-- [ ] Formatted table output with printf
-- [ ] Summary report with totals
-`,
-        aiPrompt: "Explain how to analyze network logs to detect intrusions and suspicious activity.",
-        labUrl: "",
-        labTitle: "",
-        interviewQuestion: "How would you analyze firewall logs to detect a port scan?",
-        interviewAnswer: "I'd use awk to extract source IPs and destination ports, then use associative arrays to count unique ports per IP. If one IP hits more than 10 different ports in a short time, it's likely a port scan. I'd output the top talkers sorted by connection count.",
-        quiz: [
-          { question: "What does awk '{print $1}' do?", options: ["Print first line", "Print first field", "Print all fields", "Delete first field"], correctAnswerIndex: 1, difficulty: "beginner", explanation: "$1 is the first field (typically source IP in log files).", certTags: ["Linux+"] },
-          { question: "What does sort | uniq -c | sort -rn do?", options: ["Delete duplicates", "Count unique values and sort by frequency", "Find unique files", "Create backup"], correctAnswerIndex: 1, difficulty: "intermediate", explanation: "sort orders lines, uniq -c counts, sort -rn sorts numerically in reverse.", certTags: ["Linux+"] },
-          { question: "What is an awk associative array?", options: ["A regular array", "An array indexed by strings instead of numbers", "A deleted array", "A sorted array"], correctAnswerIndex: 1, difficulty: "advanced", explanation: "Associative arrays use strings as keys (like ip[$1]++).", certTags: ["Linux+"] },
-          { question: "What does awk BEGIN block do?", options: ["Run after each line", "Run before processing any lines", "Run only if empty", "Run at the end"], correctAnswerIndex: 1, difficulty: "intermediate", explanation: "BEGIN runs once before awk processes any input.", certTags: ["Linux+"] },
-          { question: "What does head -10 do?", options: ["Show first 10 lines", "Show last 10 lines", "Delete 10 lines", "Count 10 lines"], correctAnswerIndex: 0, difficulty: "beginner", explanation: "head -10 shows the first 10 lines of output.", certTags: ["Linux+"] },
-          { question: "What indicates a port scan?", options: ["One connection to one port", "One IP hitting many different ports", "Many IPs to one port", "No connections"], correctAnswerIndex: 1, difficulty: "intermediate", explanation: "A port scan is when one IP probes many different ports.", certTags: ["Security+"] },
-          { question: "What does printf '%-20s' do?", options: ["Print 20 chars, left-aligned", "Print 20 chars, right-aligned", "Print 20 lines", "Delete 20 chars"], correctAnswerIndex: 0, difficulty: "intermediate", explanation: "- means left-aligned, 20s means 20-character string.", certTags: ["Linux+"] },
-          { question: "What does awk 'END {}' do?", options: ["Run at start", "Run after all input processed", "Run on each line", "Delete output"], correctAnswerIndex: 1, difficulty: "intermediate", explanation: "END runs once after all input lines have been processed.", certTags: ["Linux+"] }
-        ]
-      },
-    ]
-  },
-  {
     id: "week00",
     title: "What a Computer Is",
     durationText: "Week 0 - Days 0-3",
     focus: "Set up your lab environment and understand how computers work at a fundamental level",
     output: "Fully configured WSL2 Ubuntu environment with all security tools installed, and understand the input-process-output cycle",
     topics: [
-      {
-        id: "we00d00",
-        title: "Your Toolkit Setup (Do This First)",
-        description: "Install WSL2, Ubuntu, and all security tools before starting Day 1. This is your lab environment.",
-        type: "learn",
-        duration: "1-2 hours",
-        content: `:::objectives
-- Install WSL2 and Ubuntu on Windows
-- Install Windows-native security tools (Burp Suite, Wireshark, Nmap, VS Code)
-- Install Linux security tools in Ubuntu (nmap, sqlmap, metasploit, etc.)
-- Verify everything works before proceeding to Day 1
-:::
-
-## Why Set Up First?
-
-You will use these tools every single day for the next 60 weeks. Getting them installed now means you can focus on learning instead of troubleshooting installations mid-lesson.
-
-:::warning
-Complete this setup BEFORE moving to Day 1. Every subsequent lesson assumes these tools are ready.
-:::
-
-## Step 1: WSL2 + Ubuntu (10 minutes)
-
-Open **PowerShell as Administrator** (right-click Start button, select "Windows Terminal (Admin)"):
-
-\`\`\`powershell
-wsl --install
-\`\`\`
-
-**Restart your PC** when prompted. After restart:
-
-1. Open the **Start Menu**
-2. Click **Ubuntu** (it will open a terminal)
-3. Wait for the first-time setup to complete
-4. Enter a **username** (lowercase, no spaces)
-5. Enter a **password** (typing will not show characters - this is normal Linux behavior)
-
-You should see something like:
-
-\`\`\`
-Welcome to Ubuntu 24.04 LTS (GNU/Linux 5.15.0-91-generic x86_64)
-
- * Documentation:  https://help.ubuntu.com
- * Management:     https://landscape.canonical.com
- * Support:        https://ubuntu.com/advantage
-
-Last login: Mon Jun 22 10:30:45 2026
-username@desktop:~$
-\`\`\`
-
-:::checkpoint
-If you see the \`$\` prompt with your username, WSL2 is working. Type \`exit\` to close Ubuntu.
-:::
-
-## Step 2: Windows Native Tools
-
-Install these on **Windows** (not inside Ubuntu):
-
-| Tool | Purpose | Download |
-|------|---------|----------|
-| **Burp Suite Community** | Web application testing proxy | https://portswigger.net/burp/communitydownload |
-| **Wireshark** | Packet capture and analysis | https://www.wireshark.org/download.html |
-| **Nmap** | Network port scanner | https://nmap.org/download.html |
-| **VS Code** | Code editor with terminal | https://code.visualstudio.com |
-
-:::info
-Burp Suite is the industry-standard tool for web application security testing. You will use it extensively in Weeks 21-29.
-:::
-
-## Step 3: WSL2 Ubuntu Tools
-
-Open **Ubuntu** from the Start Menu and paste these commands one at a time:
-
-\`\`\`bash
-# Update package lists and upgrade existing packages
-sudo apt update && sudo apt upgrade -y
-\`\`\`
-
-Then install all security tools:
-
-\`\`\`bash
-sudo apt install -y nmap metasploit-framework sqlmap hashcat john \
-  nikto hydra gobuster dirb netcat curl wget python3 python3-pip \
-  git wireshark net-tools dnsutils traceroute whois
-\`\`\`
-
-This installs:
-
-| Tool | What It Does |
-|------|-------------|
-| **nmap** | Network port scanner |
-| **metasploit-framework** | Exploitation framework |
-| **sqlmap** | Automated SQL injection |
-| **hashcat** | GPU password cracker |
-| **john** | Password cracker |
-| **nikto** | Web server scanner |
-| **hydra** | Brute-force login tool |
-| **gobuster** | Directory brute-forcer |
-| **dirb** | Directory scanner |
-| **netcat** | TCP/UDP connections (Swiss army knife) |
-| **curl/wget** | HTTP requests from command line |
-| **python3** | Programming language for automation |
-| **git** | Version control |
-| **wireshark** | Packet analysis |
-| **dnsutils** | dig, nslookup (DNS tools) |
-| **traceroute** | Network path tracing |
-| **whois** | Domain registration lookup |
-
-## Step 4: Verify Installation
-
-Run these checks in Ubuntu:
-
-\`\`\`bash
-# Check each tool
-nmap --version
-msfconsole --version
-sqlmap --version
-python3 --version
-git --version
-\`\`\`
-
-:::checkpoint
-All commands should return version numbers. If any fail, re-run the apt install command for that specific tool.
-:::
-
-## Step 5: Access Windows Files from Ubuntu
-
-WSL2 automatically mounts your Windows drives:
-
-| Windows Path | Ubuntu Path |
-|-------------|-------------|
-| C:\\Users\\you\\Desktop | /mnt/c/Users/you/Desktop |
-| D:\\Projects | /mnt/d/Projects |
-
-Test it:
-
-\`\`\`bash
-# List your Windows Desktop contents
-ls /mnt/c/Users/*/Desktop
-\`\`\`
-
-## You Are Ready
-
-Your lab environment is now fully configured. Every tool you need for the next 60 weeks is installed. Proceed to Day 1 to start learning.
-`,
-        aiPrompt: "Explain the purpose of each security tool in the toolkit and what it will be used for in a cybersecurity career.",
-        labUrl: "",
-        labTitle: "",
-        interviewQuestion: "What is WSL2 and why do cybersecurity professionals use it?",
-        interviewAnswer: "WSL2 (Windows Subsystem for Linux 2) lets you run a full Linux kernel inside Windows without dual-booting or virtual machines. Cybersecurity professionals use it because most security tools (nmap, metasploit, sqlmap, hashcat) are native to Linux and run more reliably there. WSL2 also shares the Windows network stack, so you can scan Windows-hosted targets from Linux tools.",
-        quiz: [
-          {
-            question: "What does WSL2 stand for?",
-            options: ["Windows Security Layer 2", "Windows Subsystem for Linux 2", "Wireless Security Logger 2", "Web Server Linux 2"],
-            correctAnswerIndex: 1,
-            difficulty: "beginner",
-            explanation: "WSL2 stands for Windows Subsystem for Linux 2. It lets you run a full Linux environment inside Windows.",
-            certTags: ["Security+"]
-          },
-          {
-            question: "Which tool is used for web application proxy testing?",
-            options: ["Nmap", "Wireshark", "Burp Suite", "John the Ripper"],
-            correctAnswerIndex: 2,
-            difficulty: "beginner",
-            explanation: "Burp Suite is the industry-standard proxy tool for intercepting and testing web application traffic.",
-            certTags: ["Security+"]
-          },
-          {
-            question: "What does nmap scan?",
-            options: ["Hard drives for malware", "Network ports and services", "Windows Registry", "Email attachments"],
-            correctAnswerIndex: 1,
-            difficulty: "beginner",
-            explanation: "Nmap (Network Mapper) scans network ports to discover which services are running on a target machine.",
-            certTags: ["Security+"]
-          },
-          {
-            question: "How do you access Windows files from Ubuntu in WSL2?",
-            options: ["Copy them to Ubuntu manually", "Use the /mnt/ mount point", "They are not accessible", "Use a shared network folder"],
-            correctAnswerIndex: 1,
-            difficulty: "beginner",
-            explanation: "WSL2 automatically mounts Windows drives under /mnt/. C: becomes /mnt/c/, D: becomes /mnt/d/, etc.",
-            certTags: ["A+"]
-          },
-          {
-            question: "Which command updates all Ubuntu packages?",
-            options: ["sudo apt update && sudo apt upgrade -y", "sudo apt install all", "sudo update ubuntu", "sudo apt refresh"],
-            correctAnswerIndex: 0,
-            difficulty: "beginner",
-            explanation: "apt update refreshes package lists, apt upgrade -y installs all available updates without prompting.",
-            certTags: ["Linux+"]
-          },
-          {
-            question: "What is sqlmap used for?",
-            options: ["Network mapping", "SQL injection testing", "Password cracking", "Packet capture"],
-            correctAnswerIndex: 1,
-            difficulty: "beginner",
-            explanation: "sqlmap is an automated tool for detecting and exploiting SQL injection vulnerabilities in web applications.",
-            certTags: ["Security+"]
-          },
-          {
-            question: "Why do cybersecurity professionals prefer Linux tools?",
-            options: ["Linux is faster than Windows", "Most security tools are native to Linux and run more reliably there", "Linux has no viruses", "Windows does not support networking"],
-            correctAnswerIndex: 1,
-            difficulty: "beginner",
-            explanation: "Most security tools (nmap, metasploit, hashcat) were built for Linux first. Linux also gives more control over networking and system configurations.",
-            certTags: ["Security+"]
-          },
-          {
-            question: "What does Wireshark capture?",
-            options: ["Hard drive contents", "Network packets", "CPU usage", "Keyboard input"],
-            correctAnswerIndex: 1,
-            difficulty: "beginner",
-            explanation: "Wireshark captures and analyzes network packets, letting you inspect traffic at the protocol level.",
-            certTags: ["Network+"]
-          }
-        ]
-      },
       {
         id: "we00d01",
         title: "The Input-Processing-Storage-Output Cycle",
@@ -4658,7 +2096,7 @@ MFA requires two or more verification factors:
   },
   {
     id: "week03",
-    title: "Operating System Basics",
+    title: "Windows Fundamentals",
     durationText: "Week 3 - Days 1–3",
     focus: "Navigate and manage Windows and Linux operating systems",
     output: "Use Windows system tools, understand Linux basics, and manage system resources",
@@ -5100,1139 +2538,2351 @@ regedit
           }
         ]
       },
-      {
-        id: "we03d03",
-        title: "Linux Introduction - Terminal, Commands, Directory Structure",
-        description: "Get comfortable with the Linux terminal. Learn essential commands, understand the filesystem hierarchy, and navigate with confidence.",
-        type: "learn",
-        duration: "50 min",
-        content: `## The Linux Terminal
-
-### Opening a Terminal
-- **Ubuntu/Debian**: Ctrl+Alt+T
-- **Kali Linux**: Click terminal icon
-- **SSH**: \`ssh user@hostname\` (remote access)
-
-### The Prompt
-\`\`\`
-username@hostname:~$
-|        |        | |
-|        |        | +-- Current directory ($ = user, # = root)
-|        |        +---- Hostname
-|        +------------- Username
-\`\`\`
-
-## Essential Commands
-
-### Navigation
-\`\`\`bash
-pwd                     # Print working directory
-ls                      # List files in current directory
-ls -la                  # List all files (including hidden) with details
-ls -lh                  # Human-readable file sizes
-cd /path/to/dir         # Change directory
-cd ..                   # Go up one directory
-cd ~                    # Go to home directory
-cd -                    # Go to previous directory
-\`\`\`
-
-**Understanding \`ls -la\` output**:
-\`\`\`
--rw-r--r-- 1 user group 4096 Jan 22 10:30 file.txt
-| |  |  |     |     |     |       |           |
-| |  |  |     |     |     |       |           +-- Filename
-| |  |  |     |     |     |       +-- Date/time
-| |  |  |     |     |     +-- File size
-| |  |  |     |     +-- Group owner
-| |  |  |     +-- User owner
-| +--+-+-- Permissions (user/group/other)
-+-- File type (- file, d directory, l link)
-\`\`\`
-
-### File Operations
-\`\`\`bash
-touch file.txt                  # Create empty file
-cp file.txt backup.txt          # Copy file
-cp -r dir1/ dir2/               # Copy directory recursively
-mv old.txt new.txt              # Rename or move
-rm file.txt                     # Delete file
-rm -i file.txt                  # Delete with confirmation
-mkdir projects                  # Create directory
-mkdir -p a/b/c                  # Create nested directories
-rmdir emptydir                  # Remove empty directory
-\`\`\`
-
-### Viewing Files
-\`\`\`bash
-cat file.txt                    # Display entire file
-less file.txt                   # Page through file (q to quit)
-head -n 20 file.txt             # First 20 lines
-tail -n 20 file.txt             # Last 20 lines
-tail -f /var/log/syslog         # Follow log in real-time
-wc -l file.txt                  # Count lines
-\`\`\`
-
-### Searching
-\`\`\`bash
-grep "search term" file.txt     # Search in file
-grep -r "search" /path/         # Recursive search
-find / -name "*.conf"           # Find files by name
-find / -type f -size +100M      # Find files >100MB
-which python3                   # Find command location
-\`\`\`
-
-### Permissions (Linux)
-
-**Three permission types**: r (read=4), w (write=2), x (execute=1)
-**Three levels**: User (u), Group (g), Other (o)
-
-\`\`\`bash
-chmod 755 script.sh             # rwxr-xr-x (owner: full, others: read+execute)
-chmod 644 file.txt              # rw-r--r-- (owner: read+write, others: read)
-chmod +x script.sh              # Make executable
-chown user:group file.txt       # Change ownership
-\`\`\`
-
-**Permission numeric values**:
-\`\`\`
-7 = rwx (4+2+1) = full access
-6 = rw- (4+2+0) = read + write
-5 = r-x (4+0+1) = read + execute
-4 = r-- (4+0+0) = read only
-0 = --- (0+0+0) = no access
-\`\`\`
-
-### System Information
-\`\`\`bash
-uname -a                         # Kernel and OS info
-hostname                         # Computer name
-whoami                           # Current user
-id                               # User ID, group ID, groups
-uptime                           # How long running
-free -h                          # RAM usage
-df -h                            # Disk usage
-du -sh /path                     # Directory size
-lscpu                            # CPU information
-\`\`\`
-
-### Process Management
-\`\`\`bash
-ps aux                           # List all running processes
-top                              # Real-time process monitor
-kill PID                         # Send SIGTERM
-kill -9 PID                      # Force kill (SIGKILL)
-\`\`\`
-
-### Networking
-\`\`\`bash
-ip addr show                     # Show IP addresses
-ping google.com                  # Test connectivity
-curl -I https://example.com      # Fetch HTTP headers
-ss -tuln                         # Show listening ports
-\`\`\`
-
-:::tip
-**Getting help**: Use \`man command\` for full manual. Use \`command --help\` for quick info. Use \`apropos keyword\` to search commands by description.
-:::
-
-:::warning
-**Be careful with root**: Commands prefixed with \`sudo\` run with root privileges. A typo with sudo can delete critical system files.
-:::`,
-        aiPrompt: "",
-        labUrl: "",
-        labTitle: "",
-        interviewQuestion: "Explain the difference between 'chmod 755' and 'chmod 644' on a file.",
-        interviewAnswer: "chmod 755 gives the owner full access (read+write+execute) and others read+execute. Use this for scripts and programs. chmod 644 gives owner read+write and others read-only. Use this for regular files like documents and config files. 755 on a regular file is a security risk.",
-        quiz: [
-          {
-            question: "What does 'ls -la' do?",
-            options: [
-              "Lists files in long format including hidden files",
-              "Lists only hidden files",
-              "Lists files sorted by size",
-              "Lists files recursively"
-            ],
-            correctAnswerIndex: 0,
-            difficulty: "beginner",
-            explanation: "ls -l shows detailed format, -a shows all files including hidden ones."
-          },
-          {
-            question: "What permission does 'chmod 644' set?",
-            options: [
-              "Owner: rwx, Group: rwx, Other: rwx",
-              "Owner: rw-, Group: r--, Other: r--",
-              "Owner: r-x, Group: r-x, Other: r-x",
-              "Owner: ---, Group: ---, Other: ---"
-            ],
-            correctAnswerIndex: 1,
-            difficulty: "intermediate",
-            explanation: "6 = rw-, 4 = r--. Owner can read and write; group and others can only read."
-          },
-          {
-            question: "Which command shows the current working directory?",
-            options: [
-              "ls",
-              "cd",
-              "pwd",
-              "dir"
-            ],
-            correctAnswerIndex: 2,
-            difficulty: "beginner",
-            explanation: "pwd (print working directory) shows your current location."
-          },
-          {
-            question: "What does 'cd -' do?",
-            options: [
-              "Goes to root directory",
-              "Goes to home directory",
-              "Goes to the previous directory",
-              "Clears the terminal"
-            ],
-            correctAnswerIndex: 2,
-            difficulty: "intermediate",
-            explanation: "cd - toggles between current and previous working directory."
-          },
-          {
-            question: "How do you view the last 30 lines of a log in real-time?",
-            options: [
-              "cat /var/log/syslog",
-              "head -30 /var/log/syslog",
-              "tail -f /var/log/syslog",
-              "less /var/log/syslog"
-            ],
-            correctAnswerIndex: 2,
-            difficulty: "intermediate",
-            explanation: "tail -f follows a file, displaying new lines as they're added."
-          },
-          {
-            question: "What is the difference between 'rm' and 'rmdir'?",
-            options: [
-              "They are the same",
-              "rm deletes files; rmdir deletes only empty directories",
-              "rm is safe; rmdir is dangerous",
-              "rmdir requires root; rm does not"
-            ],
-            correctAnswerIndex: 1,
-            difficulty: "beginner",
-            explanation: "rmdir only removes empty directories. rm removes files."
-          },
-          {
-            question: "What does 'grep -r' do?",
-            options: [
-              "Removes all occurrences of a pattern",
-              "Searches recursively through all files in a directory",
-              "Reverses grep output",
-              "Runs grep with root privileges"
-            ],
-            correctAnswerIndex: 1,
-            difficulty: "intermediate",
-            explanation: "grep -r searches through all files in the directory and subdirectories."
-          },
-          {
-            question: "How do you make a shell script executable?",
-            options: [
-              "chmod 644 script.sh",
-              "chmod 755 script.sh",
-              "chmod 400 script.sh",
-              "chmod 200 script.sh"
-            ],
-            correctAnswerIndex: 1,
-            difficulty: "intermediate",
-            explanation: "chmod 755 grants read, write, and execute permissions to the owner, and read/execute to group and others. This is the standard way to make a script executable while maintaining reasonable security."
-          },
-          {
-            question: "What does 'ps aux' display?",
-            options: [
-              "IP addresses",
-              "All running processes with detailed information",
-              "Disk usage statistics",
-              "Network connections"
-            ],
-            correctAnswerIndex: 1,
-            difficulty: "beginner",
-            explanation: "ps aux lists all running processes with user, CPU, memory info."
-          },
-          {
-            question: "What is the purpose of 'sudo'?",
-            options: [
-              "Switch to a different user",
-              "Execute a command with superuser (root) privileges",
-              "Shut down the computer",
-              "Search for files"
-            ],
-            correctAnswerIndex: 1,
-            difficulty: "beginner",
-            explanation: "sudo (SuperUser Do) runs a command with root privileges."
-          },
-          {
-            question: "What does 'ss -tuln' show?",
-            options: [
-              "System statistics",
-              "TCP/UDP listening ports with numeric addresses",
-              "SSH connections",
-              "Disk usage"
-            ],
-            correctAnswerIndex: 1,
-            difficulty: "intermediate",
-            explanation: "ss shows socket statistics: -t TCP, -u UDP, -l listening, -n numeric."
-          },
-          {
-            question: "What does 'du -sh /var/log' display?",
-            options: [
-              "List of all files in /var/log",
-              "Total size of /var/log in human-readable format",
-              "Number of files in /var/log",
-              "Permissions of /var/log"
-            ],
-            correctAnswerIndex: 1,
-            difficulty: "beginner",
-            explanation: "du with -s (summary) and -h (human-readable) shows total directory size."
-          }
-        ]
-      }
-    ]
+      ]
   },
   {
     id: "week04",
-    title: "First Command Line Skills",
-    durationText: "Week 4 - Days 1–3",
-    focus: "Build practical command line proficiency through hands-on exercises",
-    output: "Navigate filesystems, manipulate files, write simple scripts, and combine commands from the terminal",
+    title: "Linux Fundamentals",
+    durationText: "Week 4 - 10 Tutorials",
+    focus: "Master Linux from absolute beginner to intermediate level through hands-on projects",
+    output: "Ability to navigate, read, search, script, and analyze systems on Linux — the hacker's primary tool",
     topics: [
       {
         id: "we04d01",
-        title: "Navigation Commands - cd, ls, pwd, mkdir, touch",
-        description: "Master filesystem navigation in the terminal. Create directories, generate files, and build muscle memory with path manipulation.",
+        title: "Project 1: Hello Terminal — Your First Commands",
+        description: "Learn what a terminal is, why hackers use it, and your first 5 commands: whoami, pwd, ls, echo, clear.",
         type: "practice",
-        duration: "50 min",
-        content: `## Practice: Filesystem Navigation
-
-### Creating a Practice Environment
-
-\`\`\`bash
-mkdir -p ~/cyberlab/{tools,notes,scripts,logs}
-touch ~/cyberlab/notes/readme.txt
-touch ~/cyberlab/scripts/scan.sh
-touch ~/cyberlab/logs/access.log
-\`\`\`
-
-### Navigation Drills
-
-**Exercise 1**: Navigate to each directory
-\`\`\`bash
-cd ~/cyberlab
-pwd                     # /home/username/cyberlab
-cd tools
-pwd                     # /home/username/cyberlab/tools
-cd ..                   # Back to parent
-pwd                     # /home/username/cyberlab
-cd ~/cyberlab/logs
-pwd                     # /home/username/cyberlab/logs
-cd -                    # Back to previous directory
-\`\`\`
-
-**Exercise 2**: List contents with different options
-\`\`\`bash
-cd ~/cyberlab
-ls                      # Basic listing
-ls -l                   # Long format (permissions, owner, size, date)
-ls -la                  # Include hidden files
-ls -lh                  # Human-readable sizes
-ls -ltr                 # Sort by modification time, newest last
-ls -lR                  # Recursive (show subdirectory contents)
-\`\`\`
-
-**Exercise 3**: Create files with touch
-\`\`\`bash
-touch newfile.txt                   # Create empty file
-touch file{1..5}.txt                # Create file1.txt through file5.txt
-ls -la                              # Verify files were created
-\`\`\`
-
-**Exercise 4**: Create nested directories
-\`\`\`bash
-mkdir -p level1/level2/level3       # Create entire path at once
-mkdir -p project/{src,tests,docs}   # Create sibling directories
-tree ~/cyberlab                     # Visual directory tree
-\`\`\`
-
-### Path Types
-
-**Absolute paths** start from root (/):
-\`\`\`bash
-cd /home/username/cyberlab
-cd /var/log
-\`\`\`
-
-**Relative paths** start from current location:
-\`\`\`bash
-cd ../..                    # Go up two directories
-cd ./scripts                # Go into scripts in current directory
-cd ~/Documents              # ~ expands to home directory
-\`\`\`
-
-### Tab Completion
-
-The single most important terminal skill:
-\`\`\`bash
-cd /ho<Tab>                # Auto-completes to /home/
-cd /home/use<Tab>           # Auto-completes to /home/username/
-cat /etc/ho<Tab>            # Auto-completes to /etc/hostname
-ls -l /etc/net<Tab>         # Shows all matches if ambiguous
-\`\`\`
-
-:::checkpoint
-**Speed challenge**: Time yourself:
-1. Create /tmp/practice
-2. Navigate into it
-3. Create 5 files (test1.txt through test5.txt)
-4. List them with details
-5. Navigate back to home
-
-Target: under 30 seconds.
+        duration: "30 min",
+        content: `:::objectives
+- Understand what a terminal is and why hackers prefer it over GUI
+- Learn the difference between shell, terminal, and command line
+- Execute your first 5 Linux commands with confidence
 :::
 
-:::tip
-**Pro tip**: Press up arrow to cycle through previous commands. Press Ctrl+R to search command history.
-:::`,
-        aiPrompt: "",
+## What Is a Terminal?
+
+A terminal is a text-based interface to your computer. Instead of clicking icons, you type commands. Every hacker uses the terminal because it's faster, more powerful, and works on any system — including remote servers you've compromised.
+
+**Three things people confuse:**
+
+| Term | What It Is | Example |
+|------|-----------|---------|
+| Terminal | The window that displays text | Windows Terminal, GNOME Terminal |
+| Shell | The program that interprets your commands | bash, zsh, fish |
+| Command Line | The interface where you type | The \`$\` prompt |
+
+When you type \`whoami\`, the terminal sends it to the shell (bash), bash executes it, and the terminal displays the output.
+
+## Your First Command: whoami
+
+The first thing a hacker does after gaining access to a system: find out who they are.
+
+\`\`\`bash
+whoami
+\`\`\`
+
+Output: \`user\`
+
+This tells you the username of the current user. If you're \`root\`, you have full control. If you're \`www-data\` or \`nobody\`, you need to escalate privileges.
+
+:::checkpoint
+What does \`whoami\` return?
+- Your IP address
+- Your current username
+- Your home directory
+- Your operating system
+:::
+
+## Where Am I? pwd
+
+\`\`\`bash
+pwd
+\`\`\`
+
+Output: \`/home/user\`
+
+**pwd** stands for "Print Working Directory." It shows your current location in the filesystem. Every hacker needs to know where they are — especially when navigating a compromised system.
+
+The path \`/home/user\` means you're in the \`user\` directory inside \`/home\`. The \`/\` at the beginning is the root of the entire filesystem.
+
+:::checkpoint
+What does \`pwd\` stand for?
+- Password Directory
+- Print Working Directory
+- Previous Working Disk
+- Program Working Data
+:::
+
+## What's Here? ls
+
+\`\`\`bash
+ls
+\`\`\`
+
+Output: \`Documents  Downloads  scripts  notes.txt\`
+
+**ls** lists the files and directories in your current location. This is how you see what's available — configuration files, scripts, databases, credentials.
+
+:::checkpoint
+What command lists files in the current directory?
+- dir
+- list
+- ls
+- show
+:::
+
+## Say Something: echo
+
+\`\`\`bash
+echo "Hello World"
+\`\`\`
+
+Output: \`Hello World\`
+
+**echo** prints text to the screen. It's also used to display variable values:
+
+\`\`\`bash
+echo $USER
+\`\`\`
+
+Output: \`user\`
+
+The \`$\` before \`USER\` means it's a variable. \`$USER\` contains your username. Hackers use \`echo\` to test scripts, display environment variables, and create files.
+
+## Clear the Screen: clear
+
+\`\`\`bash
+clear
+\`\`\`
+
+This clears the terminal. When your screen is full of output from previous commands, \`clear\` gives you a fresh start. Shortcut: \`Ctrl+L\`.
+
+## Your First 5 Commands — Summary
+
+| Command | What It Does | Why Hackers Use It |
+|---------|-------------|-------------------|
+| \`whoami\` | Shows current username | First command after gaining access |
+| \`pwd\` | Shows current directory | Know where you are on the target |
+| \`ls\` | Lists files | Find config files, scripts, credentials |
+| \`echo\` | Prints text/variables | Test scripts, check environment |
+| \`clear\` | Clears screen | Clean up after messy output |
+
+:::checkpoint
+You've gained access to a target machine. What's the FIRST command you should type?
+- ls
+- pwd
+- whoami
+- clear
+:::
+
+## Try It Yourself
+
+Open your terminal (WSL2 Ubuntu) and run each command. Don't just read — type them yourself. Muscle memory matters.
+
+\`\`\`bash
+whoami
+pwd
+ls
+echo "I am learning Linux"
+clear
+\`\`\``,
+        aiPrompt: "Explain what a terminal is and why hackers prefer it over GUI interfaces.",
         labUrl: "",
         labTitle: "",
-        interviewQuestion: "What is the difference between an absolute path and a relative path?",
-        interviewAnswer: "An absolute path starts from root (/) and specifies the full location - like /home/user/documents. A relative path starts from the current working directory - like ../documents. Absolute paths always work regardless of where you are.",
+        interviewQuestion: "What is the first command you run after gaining access to a target system?",
+        interviewAnswer: "whoami — I need to know what user account I'm running as. If I'm root, I have full control. If I'm a low-privilege user, I need to enumerate for privilege escalation vectors.",
         quiz: [
-          {
-            question: "What does 'mkdir -p a/b/c' do?",
-            options: [
-              "Creates only the 'c' directory",
-              "Creates directories a, a/b, and a/b/c in one command",
-              "Creates three separate directories named a, b, and c",
-              "Fails if directory 'a' already exists"
-            ],
-            correctAnswerIndex: 1,
-            difficulty: "beginner",
-            explanation: "The -p flag creates parent directories as needed."
-          },
-          {
-            question: "What happens when you press Tab twice?",
-            options: [
-              "Inserts a tab character",
-              "Lists all possible completions for the current command or path",
-              "Clears the terminal",
-              "Closes the terminal"
-            ],
-            correctAnswerIndex: 1,
-            difficulty: "beginner",
-            explanation: "Double-tab shows all possible completions when the shell can't uniquely determine your input."
-          },
-          {
-            question: "What does 'cd -' do?",
-            options: [
-              "Goes to root directory",
-              "Goes to home directory",
-              "Toggles between current and previous directory",
-              "Deletes the current directory"
-            ],
-            correctAnswerIndex: 2,
-            difficulty: "intermediate",
-            explanation: "cd - switches to the previous working directory."
-          },
-          {
-            question: "What does 'touch file.txt' do if the file already exists?",
-            options: [
-              "Creates a backup copy",
-              "Deletes the file",
-              "Updates the file's modification timestamp without changing contents",
-              "Throws an error"
-            ],
-            correctAnswerIndex: 2,
-            difficulty: "intermediate",
-            explanation: "touch updates the access and modification timestamps. If the file doesn't exist, it creates an empty file."
-          },
-          {
-            question: "Which command shows a visual directory tree?",
-            options: [
-              "ls -R",
-              "find . -type d",
-              "tree",
-              "du -a"
-            ],
-            correctAnswerIndex: 2,
-            difficulty: "beginner",
-            explanation: "tree displays directories and files in a tree-like format. Install with 'sudo apt install tree' if not available."
-          },
-          {
-            question: "What does 'cd ..' do?",
-            options: [
-              "Goes to the home directory",
-              "Goes up one directory level",
-              "Lists parent directory contents",
-              "Creates a new directory"
-            ],
-            correctAnswerIndex: 1,
-            difficulty: "beginner",
-            explanation: "cd .. moves to the parent directory of your current location."
-          },
-          {
-            question: "What does the '~' symbol represent in a Linux path?",
-            options: [
-              "The root directory (/)",
-              "The current user's home directory",
-              "The previous directory",
-              "The temporary directory"
-            ],
-            correctAnswerIndex: 1,
-            difficulty: "beginner",
-            explanation: "~ expands to the current user's home directory (e.g., /home/username)."
-          },
-          {
-            question: "What does 'ls -lh' show that 'ls -l' does not?",
-            options: [
-              "Hidden files",
-              "File sizes in human-readable format (KB, MB, GB)",
-              "File permissions",
-              "File ownership"
-            ],
-            correctAnswerIndex: 1,
-            difficulty: "beginner",
-            explanation: "The -h flag formats file sizes in human-readable units instead of raw bytes."
-          },
-          {
-            question: "What is the difference between an absolute and relative path?",
-            options: [
-              "Absolute paths are shorter",
-              "Absolute starts from root (/); relative starts from current directory",
-              "Relative paths always start with ~",
-              "Absolute paths don't work in scripts"
-            ],
-            correctAnswerIndex: 1,
-            difficulty: "intermediate",
-            explanation: "Absolute paths specify the full location from root. Relative paths are relative to where you currently are."
-          },
-          {
-            question: "What does 'mkdir -p project/{src,tests,docs}' create?",
-            options: [
-              "One directory named 'src,tests,docs'",
-              "Three directories: project/src, project/tests, project/docs",
-              "One directory named 'project' with curly brace files",
-              "An error - curly braces aren't valid"
-            ],
-            correctAnswerIndex: 1,
-            difficulty: "intermediate",
-            explanation: "Brace expansion creates multiple directories. Combined with -p, it creates the parent 'project' and all three subdirectories."
-          },
-          {
-            question: "What does 'touch file{1..5}.txt' create?",
-            options: [
-              "One file named 'file{1..5}.txt'",
-              "Five files: file1.txt through file5.txt",
-              "A directory named file{1..5}.txt",
-              "An error - brace expansion doesn't work in bash"
-            ],
-            correctAnswerIndex: 1,
-            difficulty: "intermediate",
-            explanation: "Brace expansion {1..5} generates the sequence file1.txt file2.txt file3.txt file4.txt file5.txt, creating five separate files."
-          },
-          {
-            question: "What does Ctrl+R do in the terminal?",
-            options: [
-              "Clears the screen",
-              "Restarts the terminal",
-              "Searches backward through command history",
-              "Redo last command"
-            ],
-            correctAnswerIndex: 2,
-            difficulty: "intermediate",
-            explanation: "Ctrl+R initiates reverse incremental search through command history."
-          }
+          { question: "What does whoami return?", options: ["Your IP address", "Your current username", "Your home directory", "Your OS version"], correctAnswerIndex: 1, difficulty: "beginner", explanation: "whoami returns the username of the current user.", certTags: ["Linux+"] },
+          { question: "What does pwd stand for?", options: ["Password Directory", "Print Working Directory", "Previous Working Disk", "Program Working Data"], correctAnswerIndex: 1, difficulty: "beginner", explanation: "pwd stands for Print Working Directory — it shows where you are.", certTags: ["Linux+"] },
+          { question: "What command lists files in the current directory?", options: ["dir", "list", "ls", "show"], correctAnswerIndex: 2, difficulty: "beginner", explanation: "ls lists files and directories in the current location.", certTags: ["Linux+"] },
+          { question: "What does echo $USER display?", options: ["The word USER", "Your username", "Your IP address", "Nothing"], correctAnswerIndex: 1, difficulty: "beginner", explanation: "$USER is an environment variable containing your username. echo prints it.", certTags: ["Linux+"] },
+          { question: "What is the difference between a terminal and a shell?", options: ["They are the same thing", "Terminal displays output, shell interprets commands", "Shell displays output, terminal interprets commands", "Terminal is for Windows, shell is for Linux"], correctAnswerIndex: 1, difficulty: "intermediate", explanation: "The terminal is the display window. The shell (bash, zsh) interprets and executes your commands.", certTags: ["Linux+"] },
+          { question: "Why do hackers prefer the terminal over GUI?", options: ["It looks cooler", "It's faster, more powerful, and works on any system including remote servers", "GUI doesn't exist on Linux", "Terminal has more colors"], correctAnswerIndex: 1, difficulty: "beginner", explanation: "Terminal is faster, automatable, and works on remote systems where no GUI is available.", certTags: ["Security+"] },
+          { question: "What does /home/user represent?", options: ["A file called user", "The user directory inside the home directory", "A network path", "A Windows path"], correctAnswerIndex: 1, difficulty: "beginner", explanation: "/home/user is a path — home is a directory, user is a directory inside it.", certTags: ["Linux+"] },
+          { question: "What is the root of the Linux filesystem?", options: ["C:\\", "/home", "/", "~"], correctAnswerIndex: 2, difficulty: "beginner", explanation: "/ is the root — the top of the entire filesystem. Everything is under it.", certTags: ["Linux+"] }
         ]
       },
       {
         id: "we04d02",
-        title: "File Operations - cp, mv, rm, cat, less, head, tail",
-        description: "Practice copying, moving, deleting, and viewing files from the command line with real-world exercises.",
+        title: "Project 2: Files & Directories — Building Your Lab",
+        description: "Navigate the filesystem, create directories, move and delete files. Build your pentest workspace.",
         type: "practice",
-        duration: "50 min",
-        content: `## Practice: File Operations
+        duration: "30 min",
+        content: `:::objectives
+- Navigate the Linux filesystem using cd and understand absolute vs relative paths
+- Create, move, copy, and delete files and directories
+- Build a pentest workspace directory structure
+:::
 
-### Setting Up Practice Files
+## Navigating the Filesystem: cd
+
+**cd** (Change Directory) moves you between directories.
+
 \`\`\`bash
-mkdir -p ~/filelab/{source,backup,logs}
-echo "Line 1: System started" > ~/filelab/logs/syslog.txt
-echo "Line 2: User login" >> ~/filelab/logs/syslog.txt
-echo "Line 3: File access" >> ~/filelab/logs/syslog.txt
-echo "Line 4: Error occurred" >> ~/filelab/logs/syslog.txt
-echo "Line 5: System shutdown" >> ~/filelab/logs/syslog.txt
-echo "Important configuration data" > ~/filelab/source/config.txt
+cd /home/user
+pwd
 \`\`\`
 
-### Exercise 1: Copy Operations
+Output: \`/home/user\`
+
+**Absolute vs Relative paths:**
+
+| Type | Example | Meaning |
+|------|---------|---------|
+| Absolute | \`cd /etc\` | Starts from root — always works |
+| Relative | \`cd Documents\` | From current location |
+| Home | \`cd ~\` or just \`cd\` | Go to your home directory |
+| Up | \`cd ..\` | Go up one level |
+| Back | \`cd -\` | Go to previous directory |
+
+:::checkpoint
+What does \`cd ..\` do?
+- Go to the home directory
+- Go up one directory level
+- Go to the root directory
+- Delete the current directory
+:::
+
+## Listing Files in Detail: ls -la
+
 \`\`\`bash
-# Copy a file
-cp ~/filelab/source/config.txt ~/filelab/backup/config.txt
-
-# Copy with a new name
-cp ~/filelab/source/config.txt ~/filelab/backup/config.backup.txt
-
-# Copy entire directory recursively
-cp -r ~/filelab/source/ ~/filelab/source_copy/
-
-# Copy with verbose output (see what's happening)
-cp -v ~/filelab/source/*.txt ~/filelab/backup/
-
-# Copy preserving permissions and timestamps
-cp -p ~/filelab/source/config.txt ~/filelab/backup/
-
-# Interactive copy (asks before overwriting)
-cp -i ~/filelab/source/config.txt ~/filelab/backup/
+ls -la
 \`\`\`
 
-### Exercise 2: Move and Rename
-\`\`\`bash
-# Rename a file
-mv ~/filelab/source/config.txt ~/filelab/source/configuration.txt
-
-# Move a file
-mv ~/filelab/source/configuration.txt ~/filelab/backup/
-
-# Move multiple files
-mv ~/filelab/backup/*.txt ~/filelab/logs/
-
-# Move with verbose output
-mv -v ~/filelab/logs/*.txt ~/filelab/backup/
+Output:
+\`\`\`
+total 32
+drwxr-xr-x 4 user user 4096 Jul  7 10:00 .
+drwxr-xr-x 3 root root 4096 Jul  7 09:00 ..
+-rw-r--r-- 1 user user  220 Jul  7 09:00 .bash_history
+-rw-r--r-- 1 user user 3771 Jul  7 09:00 .bashrc
+drwxr-xr-x 2 user user 4096 Jul  7 10:00 Documents
+drwxr-xr-x 2 user user 4096 Jul  7 10:00 Downloads
+-rw-r--r-- 1 user user  807 Jul  7 09:00 .profile
 \`\`\`
 
-### Exercise 3: Delete Operations
+**Breaking it down:**
+- \`-l\` = long format (shows permissions, owner, size, date)
+- \`-a\` = all files (including hidden files starting with \`.\`)
+- Hidden files like \`.bashrc\` contain user configuration — often interesting targets
+
+:::checkpoint
+What flag shows hidden files in ls?
+- -h
+- -a
+- -s
+- -x
+:::
+
+## Creating Directories: mkdir
+
 \`\`\`bash
-# Delete a single file
-rm ~/filelab/backup/config.backup.txt
+mkdir -p ~/pentest/{tools,loot,notes,scans}
+\`\`\`
 
-# Delete with confirmation
-rm -i ~/filelab/logs/syslog.txt
+**Breaking it down:**
+- \`mkdir\` = make directory
+- \`-p\` = create parent directories if they don't exist
+- \`~/pentest/\` = in your home directory
+- \`{tools,loot,notes,scans}\` = create all four at once (brace expansion)
 
-# Delete all .txt files in a directory
-rm ~/filelab/logs/*.txt
+This creates your pentest workspace:
+\`\`\`
+~/pentest/
+├── tools/
+├── loot/
+├── notes/
+└── scans/
+\`\`\`
 
-# Delete empty directory
-rmdir ~/filelab/empty_dir
+:::checkpoint
+What does the -p flag do in mkdir?
+- Makes the directory private
+- Creates parent directories if they don't exist
+- Prints the path after creation
+- Prompts for confirmation
+:::
 
-# Force delete directory with contents (DANGEROUS)
-# rm -rf ~/filelab/source_copy/
+## Creating Files: touch
+
+\`\`\`bash
+touch ~/pentest/notes/targets.txt
+ls ~/pentest/notes/
+\`\`\`
+
+Output: \`targets.txt\`
+
+**touch** creates an empty file. It's also used to update the timestamp of an existing file.
+
+## Copying Files: cp
+
+\`\`\`bash
+cp ~/pentest/notes/targets.txt ~/pentest/notes/targets_backup.txt
+ls ~/pentest/notes/
+\`\`\`
+
+Output: \`targets.txt  targets_backup.txt\`
+
+**cp** copies files. Use \`-r\` for directories:
+\`\`\`bash
+cp -r ~/pentest/notes ~/pentest/notes_backup
+\`\`\`
+
+## Moving/Renaming: mv
+
+\`\`\`bash
+mv ~/pentest/notes/targets_backup.txt ~/pentest/loot/targets_copy.txt
+\`\`\`
+
+**mv** moves or renames files. If the destination is a different directory, it moves. If it's the same directory with a different name, it renames.
+
+## Deleting Files: rm
+
+\`\`\`bash
+rm ~/pentest/loot/targets_copy.txt
+\`\`\`
+
+**rm** deletes files. Use \`-r\` for directories:
+\`\`\`bash
+rm -r ~/pentest/notes_backup
 \`\`\`
 
 :::warning
-**Never run \`rm -rf /\`** - this deletes your entire filesystem. Always double-check paths before recursive deletes.
+\`rm -rf /\` deletes everything on the system. Always double-check your rm commands. There is no undo.
 :::
 
-### Exercise 4: Viewing Files
+## Your Pentest Workspace
+
+Build this structure now:
+
 \`\`\`bash
-# View entire file
-cat ~/filelab/backup/syslog.txt
-
-# View with line numbers
-cat -n ~/filelab/backup/syslog.txt
-
-# View first 3 lines
-head -n 3 ~/filelab/backup/syslog.txt
-
-# View last 3 lines
-tail -n 3 ~/filelab/backup/syslog.txt
-
-# Follow file in real-time (Ctrl+C to stop)
-tail -f ~/filelab/backup/syslog.txt
-
-# Page through file (q to quit, /search, n for next match)
-less ~/filelab/backup/syslog.txt
-
-# Count lines, words, characters
-wc -l ~/filelab/backup/syslog.txt
-wc -w ~/filelab/backup/syslog.txt
-wc -c ~/filelab/backup/syslog.txt
+mkdir -p ~/pentest/{tools,loot,notes,scans}
+touch ~/pentest/notes/targets.txt
+touch ~/pentest/notes/scope.txt
+touch ~/pentest/scans/nmap_quick.txt
+ls -la ~/pentest/
 \`\`\`
 
-### Exercise 5: Combining Operations
-\`\`\`bash
-# Find and view a specific file
-cat ~/filelab/backup/config.txt
-
-# View the 3rd line of a file
-head -n 3 ~/filelab/backup/syslog.txt | tail -n 1
-
-# View lines containing "Error"
-grep "Error" ~/filelab/backup/syslog.txt
-
-# View lines with line numbers containing "Error"
-grep -n "Error" ~/filelab/backup/syslog.txt
-
-# Sort file contents
-sort ~/filelab/backup/syslog.txt
-
-# Remove duplicate lines
-sort ~/filelab/backup/syslog.txt | uniq
-\`\`\`
-
-:::tip
-**Pro tip**: Use \`!!\` to repeat the last command. Use \`!$\` to use the last argument. Use \`history | grep cp\` to find previous copy commands.
+:::checkpoint
+What command creates multiple directories at once?
+- mkdir tools loot notes scans
+- mkdir -p {tools,loot,notes,scans}
+- mkdir --all tools loot notes scans
+- mkdir -r tools loot notes scans
 :::`,
-        aiPrompt: "",
+        aiPrompt: "Explain the Linux directory structure and why organizing files matters for penetration testing.",
         labUrl: "",
         labTitle: "",
-        interviewQuestion: "What is the difference between 'cp' and 'mv' when the source and destination are on the same filesystem?",
-        interviewAnswer: "On the same filesystem, 'mv' is essentially instant - it just changes the file's directory entry (inode pointer). 'cp' must read and write the entire file contents, which takes time proportional to file size. On different filesystems, 'mv' also copies the data, making it similar to 'cp' + 'rm'.",
+        interviewQuestion: "How do you organize your files during a penetration test?",
+        interviewAnswer: "I create a structured workspace with separate directories for tools, loot (captured data), notes, and scan results. This keeps the engagement organized and makes report writing easier.",
         quiz: [
-          {
-            question: "What does 'cp -r' do?",
-            options: [
-              "Copies a file recursively",
-              "Copies a directory and all its contents recursively",
-              "Removes files while copying",
-              "Replaces files without asking"
-            ],
-            correctAnswerIndex: 1,
-            difficulty: "beginner",
-            explanation: "The -r flag tells cp to copy directories and all their contents recursively."
-          },
-          {
-            question: "What is the difference between 'mv' and 'cp'?",
-            options: [
-              "They are the same command",
-              "mv moves/renames; cp creates a copy and leaves the original",
-              "mv is faster than cp",
-              "cp works on directories; mv does not"
-            ],
-            correctAnswerIndex: 1,
-            difficulty: "beginner",
-            explanation: "mv relocates files (or renames them). cp creates a copy and leaves the original in place."
-          },
-          {
-            question: "What does 'head -n 5 file.txt' show?",
-            options: [
-              "The last 5 lines",
-              "The first 5 lines",
-              "Lines 5 through 10",
-              "The file size"
-            ],
-            correctAnswerIndex: 1,
-            difficulty: "beginner",
-            explanation: "head -n 5 displays the first 5 lines of the file."
-          },
-          {
-            question: "What does 'wc -l' count?",
-            options: [
-              "The number of words",
-              "The number of characters",
-              "The number of lines",
-              "The number of files"
-            ],
-            correctAnswerIndex: 2,
-            difficulty: "beginner",
-            explanation: "wc -l counts the number of lines in a file."
-          },
-          {
-            question: "What is the purpose of 'tail -f'?",
-            options: [
-              "Shows the last 10 lines and exits",
-              "Follows a file and displays new lines as they're added in real-time",
-              "Forces deletion of a file",
-              "Finds files matching a pattern"
-            ],
-            correctAnswerIndex: 1,
-            difficulty: "intermediate",
-            explanation: "tail -f follows the file, continuously displaying new lines as they're appended. Used for monitoring logs."
-          },
-          {
-            question: "What does 'rm -i' do differently from 'rm'?",
-            options: [
-              "It recursively deletes directories",
-              "It asks for confirmation before each deletion",
-              "It moves files to trash instead of deleting",
-              "It only removes empty files"
-            ],
-            correctAnswerIndex: 1,
-            difficulty: "beginner",
-            explanation: "The -i flag makes rm interactive, prompting for confirmation before each deletion."
-          },
-          {
-            question: "How do you view the last line of a file?",
-            options: [
-              "head -n 1 file.txt",
-              "tail -n 1 file.txt",
-              "cat file.txt | last",
-              "view file.txt"
-            ],
-            correctAnswerIndex: 1,
-            difficulty: "beginner",
-            explanation: "tail -n 1 shows the last line of the file."
-          },
-          {
-            question: "What does 'cat -n' do?",
-            options: [
-              "Concatenates two files",
-              "Displays the file with line numbers",
-              "Creates a new file named 'n'",
-              "Shows only numbered lines"
-            ],
-            correctAnswerIndex: 1,
-            difficulty: "beginner",
-            explanation: "cat -n displays the file content with each line prefixed by its line number."
-          },
-          {
-            question: "What does 'cp -p' preserve that plain 'cp' does not?",
-            options: [
-              "The file content",
-              "File permissions and timestamps",
-              "The file name",
-              "The file location"
-            ],
-            correctAnswerIndex: 1,
-            difficulty: "intermediate",
-            explanation: "cp -p preserves file permissions, ownership, and timestamps from the source."
-          },
-          {
-            question: "How do you search for 'Error' in a file using grep?",
-            options: [
-              "grep 'Error' file.txt",
-              "grep -r 'Error' file.txt",
-              "grep -n 'Error' file.txt",
-              "find 'Error' file.txt"
-            ],
-            correctAnswerIndex: 2,
-            difficulty: "intermediate",
-            explanation: "grep -n 'Error' file.txt searches for the pattern and displays line numbers with each match. The -r flag is for recursive directory search, not needed for a single file."
-          },
-          {
-            question: "What does 'mv old.txt new.txt' do when old.txt and new.txt are in different directories?",
-            options: [
-              "Creates a symlink",
-              "Moves old.txt to the location of new.txt",
-              "Copies old.txt and renames it to new.txt",
-              "Swaps the contents of both files"
-            ],
-            correctAnswerIndex: 1,
-            difficulty: "intermediate",
-            explanation: "mv moves the file to the destination path with the specified name."
-          },
-          {
-            question: "What is 'less' used for?",
-            options: [
-              "Deleting files",
-              "Page through large files one screen at a time",
-              "Comparing two files",
-              "Finding files by size"
-            ],
-            correctAnswerIndex: 1,
-            difficulty: "beginner",
-            explanation: "less is a pager that displays file contents one screen at a time, allowing scrolling and searching."
-          }
+          { question: "What does cd .. do?", options: ["Go home", "Go up one level", "Go to root", "Delete directory"], correctAnswerIndex: 1, difficulty: "beginner", explanation: ".. means parent directory. cd .. goes up one level.", certTags: ["Linux+"] },
+          { question: "What flag shows hidden files?", options: ["-h", "-a", "-s", "-x"], correctAnswerIndex: 1, difficulty: "beginner", explanation: "-a shows all files including hidden ones starting with a dot.", certTags: ["Linux+"] },
+          { question: "What does mkdir -p do?", options: ["Makes private directory", "Creates parent directories if needed", "Prints path", "Prompts for confirmation"], correctAnswerIndex: 1, difficulty: "beginner", explanation: "-p creates the full path including any missing parent directories.", certTags: ["Linux+"] },
+          { question: "How do you copy a directory?", options: ["cp dir", "cp -r dir", "cp --dir", "copy dir"], correctAnswerIndex: 1, difficulty: "beginner", explanation: "-r (recursive) is required to copy directories and their contents.", certTags: ["Linux+"] },
+          { question: "What does mv do?", options: ["Copy file", "Move or rename file", "Delete file", "Create file"], correctAnswerIndex: 1, difficulty: "beginner", explanation: "mv moves files between directories or renames them.", certTags: ["Linux+"] },
+          { question: "What is the danger of rm -rf /?", options: ["Nothing", "Deletes everything on the system", "Only deletes hidden files", "Creates a backup"], correctAnswerIndex: 1, difficulty: "intermediate", explanation: "rm -rf / recursively force-deletes everything from the root. There is no undo.", certTags: ["Security+"] },
+          { question: "What does touch do?", options: ["Deletes a file", "Creates an empty file or updates timestamp", "Copies a file", "Moves a file"], correctAnswerIndex: 1, difficulty: "beginner", explanation: "touch creates a new empty file or updates the modification time of an existing file.", certTags: ["Linux+"] },
+          { question: "What is ~/pentest/notes/targets.txt?", options: ["An absolute path", "A relative path", "A network path", "A Windows path"], correctAnswerIndex: 0, difficulty: "beginner", explanation: "~/pentest starts from home directory — this is an absolute path.", certTags: ["Linux+"] }
         ]
       },
       {
         id: "we04d03",
-        title: "Simple Scripts and Combining Commands",
-        description: "Write basic shell scripts, chain commands together, and build practical automation for daily tasks.",
+        title: "Project 3: Reading Files — Extracting Intelligence",
+        description: "Read files using cat, head, tail, wc, and file. Learn why reading files is the #1 hacker skill.",
         type: "practice",
-        duration: "50 min",
-        content: `## Practice: Shell Scripts and Command Chaining
+        duration: "30 min",
+        content: `:::objectives
+- Read files using cat, head, tail, and less
+- Count lines, words, and characters with wc
+- Identify file types with file command
+- Understand why reading files is critical for hackers
+:::
 
-### Your First Script
+## Why Reading Files Matters
+
+During a pentest, you spend most of your time reading files: configuration files (database passwords), log files (user activity), /etc/passwd (user accounts), SSH keys (access), and more.
+
+If you can't read files quickly, you can't hack.
+
+## Reading Entire Files: cat
+
+\`\`\`bash
+cat /etc/hostname
+\`\`\`
+
+Output: \`kali\`
+
+**cat** prints the entire file to the screen. Use it for small files.
+
+:::warning
+Don't use cat on large files — it will flood your screen. Use head, tail, or less instead.
+:::
+
+## Reading the First Lines: head
+
+\`\`\`bash
+head -5 /etc/passwd
+\`\`\`
+
+Output:
+\`\`\`
+root:x:0:0:root:/root:/bin/bash
+daemon:x:1:1:daemon:/usr/sbin:/usr/sbin/nologin
+bin:x:2:2:bin:/bin:/usr/sbin/nologin
+sys:x:3:3:sys:/dev:/usr/sbin/nologin
+sync:x:4:65534:sync:/bin:/bin/sync
+\`\`\`
+
+**head** shows the first N lines. Default is 10. Use \`-n\` to specify.
+
+## Reading the Last Lines: tail
+
+\`\`\`bash
+tail -3 /etc/passwd
+\`\`\`
+
+Output:
+\`\`\`
+nobody:x:65534:65534:nobody:/nonexistent:/usr/sbin/nologin
+systemd-network:x:100:102::/run/systemd:/usr/sbin/nologin
+user:x:1000:1000::/home/user:/bin/bash
+\`\`\`
+
+**tail** shows the last N lines. Essential for monitoring log files in real-time:
+\`\`\`bash
+tail -f /var/log/auth.log
+\`\`\`
+
+The \`-f\` flag follows the file — new lines appear as they're added. Perfect for watching login attempts in real-time.
+
+:::checkpoint
+What command shows the last 10 lines of a file?
+- head -10
+- tail -10
+- cat -10
+- last -10
+:::
+
+## Counting Lines, Words, Characters: wc
+
+\`\`\`bash
+wc -l /etc/passwd
+\`\`\`
+
+Output: \`35 /etc/passwd\`
+
+**wc** counts lines (\`-l\`), words (\`-w\`), and characters (\`-c\`). Use it to understand file size and content.
+
+\`\`\`bash
+wc -l /etc/passwd /etc/shadow /etc/hosts
+\`\`\`
+
+:::checkpoint
+What does wc -l count?
+- Characters
+- Words
+- Lines
+- Files
+:::
+
+## Identifying File Types: file
+
+\`\`\`bash
+file /bin/bash
+\`\`\`
+
+Output: \`/bin/bash: ELF 64-bit LSB executable, x86-64, version 1 (SYSV), dynamically linked, interpreter /lib64/ld-linux-x86-64.so.2\`
+
+**file** tells you what type a file is — executable, text, image, archive, etc. Essential for identifying suspicious files on a compromised system.
+
+\`\`\`bash
+file /etc/passwd
+file /tmp/suspicious.exe
+file /var/log/auth.log
+\`\`\`
+
+:::checkpoint
+What command identifies a file's type?
+- type
+- file
+- identify
+- what
+:::
+
+## Practical Exercise: Read /etc/passwd
+
+\`\`\`bash
+cat /etc/passwd
+\`\`\`
+
+Each line is a user account:
+\`\`\`
+root:x:0:0:root:/root:/bin/bash
+user:x:1000:1000::/home/user:/bin/bash
+\`\`\`
+
+Format: \`username:password:UID:GID:comment:home:shell\`
+
+- \`x\` in password field means password is in /etc/shadow
+- UID 0 = root
+- UID 1000+ = normal users
+- \`/bin/bash\` = user has a shell (can log in)
+- \`/usr/sbin/nologin\` = user cannot log in
+
+:::checkpoint
+In /etc/passwd, what does UID 0 indicate?
+- A regular user
+- The root user
+- A system user
+- A deleted user
+:::`,
+        aiPrompt: "Explain why reading files is the most important skill for a hacker and give examples of files that contain sensitive information.",
+        labUrl: "",
+        labTitle: "",
+        interviewQuestion: "What files do you check first when you gain access to a Linux system?",
+        interviewAnswer: "I check /etc/passwd for user accounts, /etc/shadow for password hashes (if root), .bash_history for command history, SSH keys in ~/.ssh/, and config files in /etc/ for credentials.",
+        quiz: [
+          { question: "What does cat do?", options: ["Deletes a file", "Prints entire file to screen", "Copies a file", "Creates a file"], correctAnswerIndex: 1, difficulty: "beginner", explanation: "cat prints the entire contents of a file to the screen.", certTags: ["Linux+"] },
+          { question: "What command shows the last 10 lines of a file?", options: ["head -10", "tail -10", "cat -10", "last -10"], correctAnswerIndex: 1, difficulty: "beginner", explanation: "tail shows the last N lines of a file.", certTags: ["Linux+"] },
+          { question: "What does wc -l count?", options: ["Characters", "Words", "Lines", "Files"], correctAnswerIndex: 2, difficulty: "beginner", explanation: "-l flag counts lines.", certTags: ["Linux+"] },
+          { question: "What command identifies a file's type?", options: ["type", "file", "identify", "what"], correctAnswerIndex: 1, difficulty: "beginner", explanation: "file command analyzes the file content and reports its type.", certTags: ["Linux+"] },
+          { question: "In /etc/passwd, what does UID 0 indicate?", options: ["Regular user", "Root user", "System user", "Deleted user"], correctAnswerIndex: 1, difficulty: "intermediate", explanation: "UID 0 is always the root (superuser) account.", certTags: ["Security+"] },
+          { question: "What does tail -f do?", options: ["Show first lines", "Follow file in real-time", "Find text in file", "Format file output"], correctAnswerIndex: 1, difficulty: "intermediate", explanation: "-f follows the file — new lines appear as they're added. Used for monitoring logs.", certTags: ["Linux+"] },
+          { question: "What does /bin/bash in /etc/passwd indicate?", options: ["User has a shell and can log in", "User is root", "User has no password", "User is deleted"], correctAnswerIndex: 0, difficulty: "intermediate", explanation: "/bin/bash means the user has an interactive shell and can log in.", certTags: ["Security+"] },
+          { question: "What does x in the password field of /etc/passwd mean?", options: ["Password is empty", "Password is stored in /etc/shadow", "Account is disabled", "Account is root"], correctAnswerIndex: 1, difficulty: "intermediate", explanation: "x means the actual password hash is in /etc/shadow, not in /etc/passwd.", certTags: ["Security+"] }
+        ]
+      },
+      {
+        id: "we04d04",
+        title: "Project 4: Searching — Finding Needles in Haystacks",
+        description: "Search inside files with grep, find files by name/size/type with find, and locate executables with which.",
+        type: "practice",
+        duration: "30 min",
+        content: `:::objectives
+- Search inside files using grep with basic patterns
+- Find files by name, size, type, and permissions using find
+- Locate executables with which and type
+- Understand why search skills are critical for hackers
+:::
+
+## Why Search Matters
+
+During a pentest, you need to find:
+- Passwords in configuration files
+- Sensitive data in web application code
+- Exploitable files on the target system
+- Log entries indicating attacks
+
+The faster you can search, the faster you can hack.
+
+## Searching Inside Files: grep
+
+\`\`\`bash
+grep "root" /etc/passwd
+\`\`\`
+
+Output: \`root:x:0:0:root:/root:/bin/bash\`
+
+**grep** searches for text patterns inside files. It prints every line that matches.
+
+\`\`\`bash
+# Count matching lines
+grep -c "error" /var/log/syslog
+
+# Show line numbers
+grep -n "password" /etc/ssh/sshd_config
+
+# Case-insensitive search
+grep -i "error" /var/log/syslog
+
+# Recursive search (all files in directory)
+grep -r "password" /etc/ 2>/dev/null
+\`\`\`
+
+:::checkpoint
+What does grep -r do?
+- Reverse the search
+- Search recursively through all files in a directory
+- Return only the first match
+- Remove matching lines
+:::
+
+## Finding Files: find
+
+\`\`\`bash
+# Find files by name
+find / -name "*.conf" -type f 2>/dev/null
+
+# Find files by size (larger than 10MB)
+find / -size +10M -type f 2>/dev/null
+
+# Find files by permission (SUID)
+find / -perm -4000 -type f 2>/dev/null
+
+# Find files modified in the last 24 hours
+find / -mtime -1 -type f 2>/dev/null
+\`\`\`
+
+**Breaking it down:**
+- \`/\` = start from root (search entire system)
+- \`-name\` = match filename pattern
+- \`-type f\` = only files (not directories)
+- \`2>/dev/null\` = suppress error messages
+
+:::checkpoint
+What does 2>/dev/null do in a find command?
+- Saves output to a file
+- Suppresses error messages
+- Shows only errors
+- Redirects to /dev/null
+:::
+
+## Locating Executables: which
+
+\`\`\`bash
+which nmap
+\`\`\`
+
+Output: \`/usr/bin/nmap\`
+
+**which** tells you the full path of a command. Use it to:
+- Verify a tool is installed
+- Find where a binary is located
+- Check if a command is in your PATH
+
+\`\`\`bash
+which python3
+which sqlmap
+which metasploit
+\`\`\`
+
+## Practical Exercise: Find SSH Config
+
+\`\`\`bash
+# Find SSH configuration
+find / -name "sshd_config" -type f 2>/dev/null
+
+# Read it
+cat /etc/ssh/sshd_config
+
+# Search for password authentication setting
+grep "PasswordAuthentication" /etc/ssh/sshd_config
+\`\`\`
+
+:::checkpoint
+What is the correct command to find all .log files in /var/log?
+- find /var/log -name "*.log"
+- grep "*.log" /var/log
+- ls *.log /var/log
+- which *.log
+:::`,
+        aiPrompt: "Explain the difference between grep and find commands and when to use each one.",
+        labUrl: "",
+        labTitle: "",
+        interviewQuestion: "How do you search for sensitive information on a compromised Linux system?",
+        interviewAnswer: "I use grep -r to search recursively for keywords like password, secret, key, token in config files. I use find to locate files by permission (SUID), size, or modification time. I check /etc/shadow, .bash_history, and SSH keys.",
+        quiz: [
+          { question: "What does grep do?", options: ["Find files by name", "Search text patterns inside files", "Delete files", "Create files"], correctAnswerIndex: 1, difficulty: "beginner", explanation: "grep searches for text patterns inside files and prints matching lines.", certTags: ["Linux+"] },
+          { question: "What does grep -r do?", options: ["Reverse search", "Search recursively through directories", "Return first match only", "Remove matches"], correctAnswerIndex: 1, difficulty: "beginner", explanation: "-r searches all files in a directory and its subdirectories.", certTags: ["Linux+"] },
+          { question: "What does find / -name '*.conf' do?", options: ["Create a config file", "Find all .conf files starting from root", "Delete config files", "Edit config files"], correctAnswerIndex: 1, difficulty: "beginner", explanation: "find searches for files by name pattern starting from the specified directory.", certTags: ["Linux+"] },
+          { question: "What does 2>/dev/null do?", options: ["Save output to file", "Suppress error messages", "Show only errors", "Redirect stdout"], correctAnswerIndex: 1, difficulty: "intermediate", explanation: "2>/dev/null redirects stderr (error messages) to the null device, suppressing them.", certTags: ["Linux+"] },
+          { question: "What does which nmap return?", options: ["nmap version", "Full path to nmap binary", "nmap help text", "nmap scan results"], correctAnswerIndex: 1, difficulty: "beginner", explanation: "which returns the full path of an executable in your PATH.", certTags: ["Linux+"] },
+          { question: "What find flag searches for SUID files?", options: ["-suid", "-perm -4000", "-type suid", "-exec"], correctAnswerIndex: 1, difficulty: "intermediate", explanation: "-perm -4000 finds files with the SUID permission bit set.", certTags: ["Security+"] },
+          { question: "What does grep -i do?", options: ["Inverse match", "Case-insensitive search", "Include hidden files", "Incremental search"], correctAnswerIndex: 1, difficulty: "beginner", explanation: "-i makes the search case-insensitive.", certTags: ["Linux+"] },
+          { question: "How do you find files modified in the last 24 hours?", options: ["find / -mtime -1", "find / -newer 1", "find / -changed 24h", "find / -recent"], correctAnswerIndex: 0, difficulty: "intermediate", explanation: "-mtime -1 finds files modified less than 1 day ago.", certTags: ["Linux+"] }
+        ]
+      },
+      {
+        id: "we04d05",
+        title: "Project 5: Permissions — Who Can Do What",
+        description: "Understand Linux permissions (rwx), ownership (user/group), and why SUID binaries are the #1 privilege escalation vector.",
+        type: "practice",
+        duration: "30 min",
+        content: `:::objectives
+- Read and interpret Linux permission strings (rwxr-xr-x)
+- Change permissions with chmod and ownership with chown
+- Understand SUID/SGID and why they matter for privilege escalation
+- Find SUID binaries that can be exploited
+:::
+
+## How Linux Permissions Work
+
+Every file has three permission levels:
+
+| Level | Who | Abbreviation |
+|-------|-----|-------------|
+| Owner | The user who owns the file | u |
+| Group | Users in the file's group | g |
+| Others | Everyone else | o |
+
+Each level has three permissions:
+
+| Permission | Symbol | Number | For Files | For Directories |
+|-----------|--------|--------|-----------|-----------------|
+| Read | r | 4 | View contents | List contents |
+| Write | w | 2 | Modify file | Create/delete files |
+| Execute | x | 1 | Run as program | Enter directory |
+
+## Reading Permissions: ls -la
+
+\`\`\`bash
+ls -la /etc/passwd
+\`\`\`
+
+Output: \`-rw-r--r-- 1 root root 1869 Jul  7 09:00 /etc/passwd\`
+
+Breaking down \`-rw-r--r--\`:
+| Position | Meaning |
+|----------|---------|
+| - | Regular file (d = directory, l = link) |
+| rw- | Owner: read + write |
+| r-- | Group: read only |
+| r-- | Others: read only |
+
+:::checkpoint
+What does rwx mean in Linux permissions?
+- Read, Write, Execute
+- Run, Work, Exit
+- Root, Write, Execute
+- Read, Write, Exit
+:::
+
+## Changing Permissions: chmod
+
+**Numeric mode:**
+\`\`\`bash
+chmod 755 script.sh
+\`\`\`
+
+755 = rwxr-xr-x (owner: all, group: read+execute, others: read+execute)
+
+| Number | Permission |
+|--------|-----------|
+| 7 | rwx (4+2+1) |
+| 6 | rw- (4+2) |
+| 5 | r-x (4+1) |
+| 4 | r-- (4) |
+| 0 | --- (none) |
+
+**Symbolic mode:**
+\`\`\`bash
+chmod +x script.sh    # Add execute for everyone
+chmod u+w script.sh   # Add write for owner only
+chmod g-r file.txt    # Remove read for group
+\`\`\`
+
+:::checkpoint
+What does chmod 755 set?
+- rwxr-xr-x
+- rwxrwxrwx
+- rw-r--r--
+- rwx------
+:::
+
+## Changing Ownership: chown
+
+\`\`\`bash
+sudo chown root:root script.sh
+\`\`\`
+
+**chown** changes the owner and group. Format: \`owner:group\`
+
+## SUID — The Privilege Escalation Vector
+
+The SUID bit makes a program run with the FILE OWNER's privileges, not the user running it.
+
+\`\`\`bash
+ls -la /usr/bin/passwd
+\`\`\`
+
+Output: \`-rwsr-xr-x 1 root root 68208 Jul  7 10:00 /usr/bin/passwd\`
+
+Notice the \`s\` in \`rws\` — that's the SUID bit. When you run passwd, it runs as root (the file owner) even though you're a normal user.
+
+**Why this matters for hackers:** If a SUID binary is owned by root AND has a vulnerability, you can get root.
+
+\`\`\`bash
+# Find all SUID binaries
+find / -perm -4000 -type f 2>/dev/null
+\`\`\`
+
+:::checkpoint
+What does the SUID bit (s in rws) do?
+- Makes the file read-only
+- Runs the program with the file owner's privileges
+- Prevents the file from being deleted
+- Encrypts the file
+:::
+
+## Practical Exercise
+
+\`\`\`bash
+# Create a script
+echo '#!/bin/bash' > ~/test.sh
+echo 'echo "Hello from $(whoami)"' >> ~/test.sh
+
+# Make it executable
+chmod +x ~/test.sh
+
+# Run it
+./test.sh
+
+# Find SUID binaries
+find / -perm -4000 -type f 2>/dev/null
+\`\`\``,
+        aiPrompt: "Explain Linux permissions and why SUID binaries are a security risk.",
+        labUrl: "",
+        labTitle: "",
+        interviewQuestion: "How do you find and exploit SUID binaries for privilege escalation?",
+        interviewAnswer: "I use find / -perm -4000 -type f to find SUID binaries. Then I check GTFOBins for exploitation methods. Common targets include find, vim, python, nmap — all can spawn a root shell if they have SUID set.",
+        quiz: [
+          { question: "What does rwx mean?", options: ["Read, Write, Execute", "Run, Work, Exit", "Root, Write, Execute", "Read, Write, Exit"], correctAnswerIndex: 0, difficulty: "beginner", explanation: "rwx = Read, Write, Execute — the three basic permissions.", certTags: ["Linux+"] },
+          { question: "What does chmod 755 set?", options: ["rwxr-xr-x", "rwxrwxrwx", "rw-r--r--", "rwx------"], correctAnswerIndex: 0, difficulty: "beginner", explanation: "7=rwx, 5=r-x. So 755 = rwxr-xr-x.", certTags: ["Linux+"] },
+          { question: "What does the SUID bit do?", options: ["Makes file read-only", "Runs with file owner's privileges", "Prevents deletion", "Encrypts file"], correctAnswerIndex: 1, difficulty: "intermediate", explanation: "SUID makes the program execute with the file owner's (usually root) privileges.", certTags: ["Security+"] },
+          { question: "How do you find SUID files?", options: ["find / -perm -4000", "ls -la /suid", "grep suid /etc", "which suid"], correctAnswerIndex: 0, difficulty: "intermediate", explanation: "find / -perm -4000 searches for files with the SUID permission bit.", certTags: ["OSCP"] },
+          { question: "What does the 's' in rws indicate?", options: ["Secure file", "SUID bit set", "Shared file", "System file"], correctAnswerIndex: 1, difficulty: "intermediate", explanation: "The s in the execute position means the SUID bit is set.", certTags: ["Security+"] },
+          { question: "What is the numeric value for rwx?", options: ["7", "6", "5", "4"], correctAnswerIndex: 0, difficulty: "beginner", explanation: "r=4, w=2, x=1. 4+2+1=7.", certTags: ["Linux+"] },
+          { question: "What does chown root:root file do?", options: ["Delete the file", "Change owner and group to root", "Make file executable", "Create a copy"], correctAnswerIndex: 1, difficulty: "beginner", explanation: "chown changes file ownership. root:root = owner:group.", certTags: ["Linux+"] },
+          { question: "Why are SUID binaries dangerous?", options: ["They use more memory", "They can be exploited for privilege escalation", "They slow down the system", "They delete files"], correctAnswerIndex: 1, difficulty: "intermediate", explanation: "SUID binaries run as root. If exploitable, they give attackers root access.", certTags: ["Security+"] }
+        ]
+      },
+      {
+        id: "we04d06",
+        title: "Project 6: Processes — What's Running",
+        description: "View running processes with ps and top, kill processes, and understand process states. Learn to identify suspicious processes.",
+        type: "practice",
+        duration: "30 min",
+        content: `:::objectives
+- View running processes with ps aux and top
+- Understand process states (R, S, D, Z, T)
+- Kill processes with kill and killall
+- Identify suspicious processes on a compromised system
+:::
+
+## What Is a Process?
+
+A process is a running instance of a program. Every command you run creates a process. Every service on a system is a process. Hackers need to understand processes to:
+- Find running services to exploit
+- Kill malware or suspicious processes
+- Understand what's consuming resources
+- Maintain persistence (run malicious processes)
+
+## Viewing Processes: ps aux
+
+\`\`\`bash
+ps aux
+\`\`\`
+
+Output:
+\`\`\`
+USER       PID %CPU %MEM    VSZ   RSS TTY      STAT START   TIME COMMAND
+root         1  0.0  0.4 169848 10044 ?        Ss   09:30   0:02 /sbin/init
+root       456  0.0  0.0  72308  4096 ?        Ss   09:30   0:00 /usr/sbin/sshd
+user      1234  0.1  0.2  45678  5678 pts/0    Ss+  10:00   0:00 bash
+user      1300  0.0  0.1  23456  3456 pts/1    Ss+  10:05   0:00 bash
+root      1400  0.0  0.3  78901  6789 ?        Ss   09:31   0:00 /usr/sbin/sshd
+\`\`\`
+
+**Breaking it down:**
+| Column | Meaning |
+|--------|---------|
+| USER | Who owns the process |
+| PID | Process ID (unique number) |
+| %CPU | CPU usage percentage |
+| %MEM | Memory usage percentage |
+| STAT | Process state |
+| COMMAND | The command that started it |
+
+:::checkpoint
+What does PID mean?
+- Process Identifier
+- Program Internal Data
+- Process Input Device
+- Program Installation Date
+:::
+
+## Process States
+
+| State | Meaning | What It Means |
+|-------|---------|---------------|
+| R | Running | Currently executing |
+| S | Sleeping | Waiting for something (normal) |
+| D | Uninterruptible sleep | Waiting for I/O (cannot be killed) |
+| Z | Zombie | Finished but parent hasn't cleaned up |
+| T | Stopped | Paused by signal |
+
+:::checkpoint
+What does a zombie (Z) process indicate?
+- A malicious process
+- A process that finished but parent hasn't cleaned it up
+- A process consuming all memory
+- A root process
+:::
+
+## Real-Time Monitoring: top
+
+\`\`\`bash
+top
+\`\`\`
+
+**top** shows processes in real-time, sorted by CPU usage. Press:
+- \`q\` to quit
+- \`k\` to kill a process (enter PID)
+- \`M\` to sort by memory
+- \`P\` to sort by CPU
+
+## Killing Processes: kill
+
+\`\`\`bash
+kill 1234           # Send SIGTERM (graceful)
+kill -9 1234        # Send SIGKILL (force)
+killall firefox     # Kill by name
+\`\`\`
+
+| Signal | Number | Effect |
+|--------|--------|--------|
+| SIGTERM | 15 | Graceful shutdown (can be caught) |
+| SIGKILL | 9 | Force kill (cannot be caught) |
+| SIGHUP | 1 | Restart/reload |
+
+:::warning
+SIGKILL (-9) should be a last resort. It doesn't allow the process to clean up.
+:::
+
+## Finding Suspicious Processes
+
+Look for:
+- Unusual process names (random strings, misspellings)
+- Processes running as root that shouldn't be
+- High CPU/memory usage from unknown processes
+- Processes with network connections to unknown IPs
+- Processes running from /tmp or /dev/shm
+
+\`\`\`bash
+# Find processes running from /tmp
+ls -la /proc/*/exe 2>/dev/null | grep /tmp
+
+# Find processes with network connections
+ss -tulnp
+\`\`\``,
+        aiPrompt: "Explain how to identify and handle suspicious processes on a compromised Linux system.",
+        labUrl: "",
+        labTitle: "",
+        interviewQuestion: "How do you identify a suspicious process on a Linux system?",
+        interviewAnswer: "I check ps aux for unusual names, high resource usage, and processes running from /tmp or /dev/shm. I check /proc/PID/exe for the binary path, lsof -p PID for open files, and ss -tulnp for network connections.",
+        quiz: [
+          { question: "What does PID mean?", options: ["Process Identifier", "Program Internal Data", "Process Input Device", "Program Installation Date"], correctAnswerIndex: 0, difficulty: "beginner", explanation: "PID = Process ID, a unique number for each running process.", certTags: ["Linux+"] },
+          { question: "What does a zombie (Z) process indicate?", options: ["Malicious process", "Finished but parent hasn't cleaned up", "High memory usage", "Root process"], correctAnswerIndex: 1, difficulty: "intermediate", explanation: "Zombie processes have exited but their parent hasn't called wait() to collect their status.", certTags: ["Linux+"] },
+          { question: "What signal does kill -9 send?", options: ["SIGTERM", "SIGKILL", "SIGHUP", "SIGSTOP"], correctAnswerIndex: 1, difficulty: "beginner", explanation: "-9 sends SIGKILL, which force-kills the process immediately.", certTags: ["Linux+"] },
+          { question: "What command shows processes in real-time?", options: ["ps aux", "top", "ls proc", "who"], correctAnswerIndex: 1, difficulty: "beginner", explanation: "top displays processes in real-time, sorted by CPU usage.", certTags: ["Linux+"] },
+          { question: "What does STAT 'Ss' mean?", options: ["Stopped, secure", "Sleeping, session leader", "System, suspended", "Started, stopped"], correctAnswerIndex: 1, difficulty: "intermediate", explanation: "S = sleeping, s = session leader. This is normal for most processes.", certTags: ["Linux+"] },
+          { question: "How do you force kill PID 1234?", options: ["kill 1234", "kill -9 1234", "kill -TERM 1234", "killall 1234"], correctAnswerIndex: 1, difficulty: "beginner", explanation: "-9 sends SIGKILL, which cannot be caught or ignored.", certTags: ["Linux+"] },
+          { question: "What is a suspicious process indicator?", options: ["Running as user", "Running from /tmp", "Using 0% CPU", "Sleeping state"], correctAnswerIndex: 1, difficulty: "intermediate", explanation: "Processes running from /tmp or /dev/shm are often malicious — these are writable directories.", certTags: ["Security+"] },
+          { question: "What does ss -tulnp show?", options: ["File contents", "Listening network ports and processes", "CPU usage", "Memory usage"], correctAnswerIndex: 1, difficulty: "intermediate", explanation: "ss shows socket statistics. -tulnp shows TCP/UDP listening ports with process names.", certTags: ["Security+"] }
+        ]
+      },
+      {
+        id: "we04d07",
+        title: "Project 7: Pipes & Redirects — Chaining Commands",
+        description: "Chain commands together with pipes, redirect output to files, and build powerful one-liners for recon.",
+        type: "practice",
+        duration: "30 min",
+        content: `:::objectives
+- Chain commands using pipes (|) to process output
+- Redirect output to files with > and >>
+- Understand stderr vs stdout and how to redirect both
+- Build powerful one-liners for security reconnaissance
+:::
+
+## Pipes: Connecting Commands
+
+A pipe sends the output of one command as input to the next.
+
+\`\`\`bash
+ls -la | grep ".txt"
+\`\`\`
+
+Output: Only lines containing ".txt" from the ls output.
+
+**How it works:**
+1. \`ls -la\` produces a list of files
+2. \`|\` sends that list to grep
+3. \`grep ".txt"\` filters for lines containing ".txt"
+
+:::checkpoint
+What does a pipe (|) do?
+- Deletes the output
+- Sends output of one command to input of next
+- Saves output to a file
+- Runs commands in parallel
+:::
+
+## Building Recon Pipelines
+
+\`\`\`bash
+# Find failed SSH login attempts
+cat /var/log/auth.log | grep "Failed" | wc -l
+
+# Count unique attacking IPs
+grep "Failed" /var/log/auth.log | awk '{print $11}' | sort | uniq -c | sort -rn
+
+# Find large files
+find / -size +10M -type f 2>/dev/null | head -20
+\`\`\`
+
+:::checkpoint
+What does \`sort | uniq -c\` do?
+- Deletes duplicate lines
+- Sorts lines and counts unique occurrences
+- Finds unique files
+- Creates a backup
+:::
+
+## Output Redirection: > and >>
+
+\`\`\`bash
+# Overwrite file
+echo "Scan started" > scan_log.txt
+
+# Append to file
+echo "Scan completed" >> scan_log.txt
+
+# Redirect both stdout and stderr
+command > all.txt 2>&1
+
+# Suppress all output
+command > /dev/null 2>&1
+\`\`\`
+
+| Operator | Meaning |
+|----------|---------|
+| \`>\` | Redirect stdout to file (overwrite) |
+| \`>>\` | Redirect stdout to file (append) |
+| \`2>\` | Redirect stderr to file |
+| \`2>&1\` | Redirect stderr to stdout |
+| \`> /dev/null\` | Suppress output |
+
+:::checkpoint
+What does > do?
+- Appends to file
+- Overwrites file with output
+- Deletes the file
+- Creates a pipe
+:::
+
+## Practical Exercise: Log Analysis Pipeline
+
+\`\`\`bash
+# Find all failed SSH attempts, extract IPs, count and sort
+grep "Failed password" /var/log/auth.log | \\
+  awk '{print $11}' | \\
+  sort | \\
+  uniq -c | \\
+  sort -rn | \\
+  head -5
+\`\`\`
+
+This one-liner:
+1. Finds failed login attempts
+2. Extracts the IP address (field 11)
+3. Sorts the IPs
+4. Counts unique occurrences
+5. Sorts by count (highest first)
+6. Shows top 5
+
+:::checkpoint
+What does awk '{print $11}' do?
+- Print the 11th line
+- Print the 11th field/column
+- Print 11 copies
+- Delete the 11th field
+:::
+
+## Advanced awk — The Hacker's Report Engine
+
+awk is the most powerful text processing tool in Linux. Beyond basic field extraction, it can generate reports, count patterns, and detect anomalies.
+
+### Custom Field Separator: -F
+
+By default, awk splits on whitespace. Use -F to specify a delimiter:
+
+\`\`\`bash
+# Parse /etc/passwd (colon-separated)
+awk -F: '{print $1, $7}' /etc/passwd
+\`\`\`
+
+Output: Shows username and shell for each user.
+
+\`\`\`bash
+# Parse CSV files
+awk -F, '{print $2}' data.csv
+\`\`\`
+
+:::checkpoint
+What does awk -F: '{print $1}' /etc/passwd do?
+- Print the first line of passwd
+- Print the first field (username) using colon as separator
+- Print all fields
+- Delete the first field
+:::
+
+### BEGIN and END Blocks
+
+BEGIN runs before processing any lines. END runs after processing all lines. Use them for report headers and summaries.
+
+\`\`\`bash
+# Report with header and footer
+awk 'BEGIN { print "=== User Report ===" } 
+{print $1} 
+END { print "=== End Report ===" }' /etc/passwd
+\`\`\`
+
+**Practical example — Count lines with header:**
+\`\`\`bash
+awk 'BEGIN { count=0 } 
+{count++} 
+END { print "Total lines:", count }' /var/log/auth.log
+\`\`\`
+
+:::checkpoint
+When does a BEGIN block execute?
+- After each line
+- Before processing any lines
+- Only if the file is empty
+- At the end of processing
+:::
+
+### Conditional Logic in awk
+
+awk can filter lines based on conditions:
+
+\`\`\`bash
+# Show only lines containing "Failed"
+awk '/Failed/ {print $0}' /var/log/auth.log
+
+# Show lines where field 11 matches an IP pattern
+awk '$11 ~ /^[0-9]+\./ {print $11}' /var/log/auth.log
+
+# Count failed vs successful logins
+awk 'BEGIN {f=0; s=0} /Failed/ {f++} /Accepted/ {s++} END {print "Failed:", f, "Success:", s}' /var/log/auth.log
+\`\`\`
+
+### Formatted Output with printf
+
+printf gives you control over output formatting:
+
+\`\`\`bash
+# Formatted table
+awk -F: 'BEGIN {printf "%-20s %s\\n", "USERNAME", "SHELL"} 
+{printf "%-20s %s\\n", $1, $7}' /etc/passwd
+\`\`\`
+
+Output:
+\`\`\`
+USERNAME             SHELL
+root                 /bin/bash
+daemon               /usr/sbin/nologin
+user                 /bin/bash
+\`\`\`
+
+:::checkpoint
+What does printf "%-20s" do?
+- Print 20 characters, left-aligned
+- Print 20 characters, right-aligned
+- Print only 20 lines
+- Delete 20 characters
+:::
+
+## tee — Write to File AND Screen
+
+tee sends output to both a file and stdout simultaneously. Essential for logging while watching output.
+
+\`\`\`bash
+# Save scan results while viewing them
+nmap -sV 192.168.1.1 | tee scan_results.txt
+
+# Append to log while running
+echo "Scan started: $(date)" | tee -a scan_log.txt
+nmap -sV 192.168.1.1 | tee -a scan_log.txt
+\`\`\`
+
+:::checkpoint
+What does tee do differently from >?
+- Nothing, they are the same
+- tee writes to both file AND screen, > only writes to file
+- tee deletes the file first
+- tee only works with pipes
+:::
+
+## Practical Exercise: Build a Log Report
+
+\`\`\`bash
+# Generate a formatted report of failed logins
+grep "Failed" /var/log/auth.log | \\
+awk 'BEGIN {print "=== Failed Login Report ==="; print ""; count=0} 
+{count++; printf "%-5s %-15s %s\\n", count, $11, $0} 
+END {print ""; print "Total failed attempts:", count}' | \\
+tee report.txt
+\`\`\``,
+        aiPrompt: "Explain how pipes and redirects work in Linux and give examples of security-focused one-liners.",
+        labUrl: "",
+        labTitle: "",
+        interviewQuestion: "Write a one-liner to find the top 5 IPs with the most failed SSH login attempts.",
+        interviewAnswer: "grep 'Failed password' /var/log/auth.log | awk '{print $11}' | sort | uniq -c | sort -rn | head -5",
+        quiz: [
+          { question: "What does a pipe (|) do?", options: ["Deletes output", "Sends output to next command's input", "Saves to file", "Runs in parallel"], correctAnswerIndex: 1, difficulty: "beginner", explanation: "Pipes connect commands — stdout of one becomes stdin of next.", certTags: ["Linux+"] },
+          { question: "What does > do?", options: ["Append to file", "Overwrite file with output", "Delete file", "Create pipe"], correctAnswerIndex: 1, difficulty: "beginner", explanation: "> redirects stdout to a file, overwriting it.", certTags: ["Linux+"] },
+          { question: "What does >> do differently from >?", options: ["Nothing", "Appends instead of overwriting", "Deletes the file", "Creates a new file"], correctAnswerIndex: 1, difficulty: "beginner", explanation: ">> appends to the file. > overwrites it.", certTags: ["Linux+"] },
+          { question: "What does 2>&1 do?", options: ["Delete errors", "Redirect stderr to stdout", "Show only errors", "Redirect stdout to stderr"], correctAnswerIndex: 1, difficulty: "intermediate", explanation: "2>&1 redirects file descriptor 2 (stderr) to file descriptor 1 (stdout).", certTags: ["Linux+"] },
+          { question: "What does sort | uniq -c do?", options: ["Delete duplicates", "Sort and count unique lines", "Find unique files", "Create backup"], correctAnswerIndex: 1, difficulty: "intermediate", explanation: "sort orders lines, then uniq -c counts consecutive identical lines.", certTags: ["Linux+"] },
+          { question: "What does awk '{print $11}' do?", options: ["Print line 11", "Print the 11th field", "Print 11 copies", "Delete field 11"], correctAnswerIndex: 1, difficulty: "intermediate", explanation: "awk splits each line into fields. $11 is the 11th field.", certTags: ["Linux+"] },
+          { question: "What does /dev/null do?", options: ["Store data", "Discard all output", "Create a file", "Show errors"], correctAnswerIndex: 1, difficulty: "beginner", explanation: "/dev/null is the null device — writing to it discards the data.", certTags: ["Linux+"] },
+          { question: "What does awk -F: do?", options: ["Print field 1", "Use colon as field separator", "Filter lines", "Format output"], correctAnswerIndex: 1, difficulty: "intermediate", explanation: "-F sets the field separator. -F: means split on colons.", certTags: ["Linux+"] },
+          { question: "When does awk BEGIN block execute?", options: ["After each line", "Before processing any lines", "Only if file is empty", "At the end"], correctAnswerIndex: 1, difficulty: "intermediate", explanation: "BEGIN runs once before awk processes any input lines.", certTags: ["Linux+"] },
+          { question: "What does tee do differently from >?", options: ["Same thing", "Writes to both file AND screen", "Deletes file first", "Only works with pipes"], correctAnswerIndex: 1, difficulty: "intermediate", explanation: "tee sends output to both stdout and a file. > only redirects to file.", certTags: ["Linux+"] },
+          { question: "What does printf '%-20s' do?", options: ["Print 20 chars, left-aligned", "Print 20 chars, right-aligned", "Print only 20 lines", "Delete 20 chars"], correctAnswerIndex: 0, difficulty: "intermediate", explanation: "- means left-aligned, 20s means 20-character string field.", certTags: ["Linux+"] }
+        ]
+      },
+      {
+        id: "we04d08",
+        title: "Project 8: Bash Scripting — Writing Your First Tools",
+        description: "Write bash scripts with variables, conditionals, and loops. Automate reconnaissance and build custom tools.",
+        type: "practice",
+        duration: "45 min",
+        content: `:::objectives
+- Write bash scripts with proper shebang and structure
+- Use variables, conditionals (if/else), and loops (for/while)
+- Accept command-line arguments
+- Build a simple recon script
+:::
+
+## What Is a Script?
+
+A script is a file containing commands that execute sequentially. Instead of typing 10 commands manually, you write them once and run the script.
+
+## Your First Script
 
 \`\`\`bash
 #!/bin/bash
-# Save as ~/scripts/hello.sh
+# This is a comment
 
 echo "Hello, $USER!"
 echo "Today is $(date +%A)"
 echo "You are in $(pwd)"
-echo "Your home is $HOME"
 \`\`\`
 
-**Make it executable and run**:
+**Breaking it down:**
+- \`#!/bin/bash\` — shebang line (tells the system to use bash)
+- \`#\` — comment (ignored by bash)
+- \`$USER\` — variable (your username)
+- \`$(date +%A)\` — command substitution (runs date, inserts output)
+
+Save it and make it executable:
 \`\`\`bash
-chmod +x ~/scripts/hello.sh
-~/scripts/hello.sh
+chmod +x hello.sh
+./hello.sh
 \`\`\`
 
-### Script with User Input
+:::checkpoint
+What does #!/bin/bash do?
+- Comments out the line
+- Tells the system which interpreter to use
+- Sets the file permissions
+- Creates a variable
+:::
+
+## Variables
+
+\`\`\`bash
+#!/bin/bash
+
+TARGET="192.168.1.100"
+PORT=80
+echo "Scanning $TARGET on port $PORT"
+\`\`\`
+
+- No spaces around \`=\`
+- Use \`$VAR\` to access the value
+- Use \`"$VAR"\` in strings to preserve spaces
+
+:::checkpoint
+How do you assign a value to a variable in bash?
+- var = "value"
+- var="value"
+- $var="value"
+- set var "value"
+:::
+
+## Command-Line Arguments
 
 \`\`\`bash
 #!/bin/bash
-# Save as ~/scripts/greet.sh
-
-echo -n "Enter your name: "
-read name
-echo "Welcome to cybersecurity, $name!"
-echo "Your username is: $(whoami)"
-echo "Current time: $(date)"
-\`\`\`
-
-### Script with Conditionals
-
-\`\`\`bash
-#!/bin/bash
-# Save as ~/scripts/check_disk.sh
-
-USAGE=$(df -h / | tail -1 | awk '{print $5}' | tr -d '%')
-
-if [ "$USAGE" -gt 90 ]; then
-    echo "WARNING: Disk usage is at \${USAGE}%!"
-elif [ "$USAGE" -gt 70 ]; then
-    echo "CAUTION: Disk usage is at \${USAGE}%"
-else
-    echo "Disk usage is normal at \${USAGE}%"
-fi
-\`\`\`
-
-### Command Chaining
-
-**Semicolon (;)**: Run commands sequentially regardless of success
-\`\`\`bash
-echo "Step 1"; echo "Step 2"; echo "Step 3"
-\`\`\`
-
-**AND (&&)**: Run next command only if previous succeeded
-\`\`\`bash
-mkdir newdir && cd newdir && echo "Success!"
-\`\`\`
-
-**OR (||)**: Run next command only if previous failed
-\`\`\`bash
-cd /nonexistent || echo "Directory not found, creating it..."
-mkdir -p /tmp/newdir
-\`\`\`
-
-**Pipe (|)**: Send output of one command as input to another
-\`\`\`bash
-ls -la | grep ".txt"              # List only .txt files
-cat /etc/passwd | grep username   # Find a user
-ps aux | grep nginx               # Find nginx processes
-history | tail -20                # Show last 20 commands
-\`\`\`
-
-### Practical Script Examples
-
-**System info script**:
-\`\`\`bash
-#!/bin/bash
-# Save as ~/scripts/sysinfo.sh
-
-echo "=== System Information ==="
-echo "Hostname: $(hostname)"
-echo "OS: $(uname -o)"
-echo "Kernel: $(uname -r)"
-echo "Uptime: $(uptime -p)"
-echo ""
-echo "=== Resources ==="
-echo "CPU: $(lscpu | grep 'Model name' | cut -d: -f2 | xargs)"
-echo "RAM: $(free -h | grep Mem | awk '{print $2 " total, " $3 " used"}')"
-echo "Disk: $(df -h / | tail -1 | awk '{print $3 " used of " $2}')"
-\`\`\`
-
-**File search script**:
-\`\`\`bash
-#!/bin/bash
-# Save as ~/scripts/search_files.sh
-# Usage: ./search_files.sh <directory> <pattern>
-
-DIR=\${1:-.}
-PATTERN=\${2:-*}
-
-echo "Searching for '$PATTERN' in $DIR..."
-find "$DIR" -name "$PATTERN" -type f 2>/dev/null | head -20
-\`\`\`
-
-### Output Redirection
-\`\`\`bash
-command > file.txt         # Redirect stdout to file (overwrite)
-command >> file.txt        # Redirect stdout to file (append)
-command 2> errors.txt      # Redirect stderr to file
-command > all.txt 2>&1     # Redirect both stdout and stderr
-command > /dev/null 2>&1   # Suppress all output
-\`\`\`
-
-### Variables and Arguments
-\`\`\`bash
-#!/bin/bash
-# Script arguments: $0=script name, $1=first arg, $2=second arg
 
 echo "Script name: $0"
 echo "First argument: $1"
 echo "Second argument: $2"
 echo "Number of arguments: $#"
 echo "All arguments: $@"
+\`\`\`
 
-# Store output of a command
-DATE=\$(date +%Y-%m-%d)
-echo "Today's date: $DATE"
+Run it:
+\`\`\`bash
+./script.sh 192.168.1.100 80
+\`\`\`
 
-# Check if argument was provided
-if [ -z "$1" ]; then
-    echo "Usage: $0 <filename>"
-    exit 1
-fi
+Output:
+\`\`\`
+Script name: ./script.sh
+First argument: 192.168.1.100
+Second argument: 80
+Number of arguments: 2
+All arguments: 192.168.1.100 80
 \`\`\`
 
 :::checkpoint
-**Create a backup script**: Write a script that:
-1. Creates a timestamped backup directory
-2. Copies all .txt files from ~/documents to it
-3. Prints a summary of what was backed up
+What does $1 represent in a bash script?
+- The script name
+- The first argument
+- The number of arguments
+- All arguments
 :::
 
-:::tip
-**Debug scripts**: Add \`set -x\` at the top to see each command before it runs. Add \`set -e\` to stop on first error. Use \`bash -x script.sh\` to debug without modifying the file.
-:::`,
-        aiPrompt: "",
+## Conditionals: if/else
+
+\`\`\`bash
+#!/bin/bash
+
+if [ "$1" = "" ]; then
+    echo "Usage: $0 <target>"
+    exit 1
+fi
+
+echo "Scanning $1..."
+\`\`\`
+
+**Comparison operators:**
+| Operator | Meaning |
+|----------|---------|
+| \`-eq\` | Equal (numbers) |
+| \`-ne\` | Not equal |
+| \`-gt\` | Greater than |
+| \`-lt\` | Less than |
+| \`=\` | Equal (strings) |
+| \`-z\` | String is empty |
+
+:::checkpoint
+What does -z "$1" check?
+- If $1 is zero
+- If $1 is empty
+- If $1 is a number
+- If $1 exists
+:::
+
+## Loops: for
+
+\`\`\`bash
+#!/bin/bash
+
+for ip in 192.168.1.{1..10}; do
+    ping -c 1 $ip > /dev/null 2>&1
+    if [ $? -eq 0 ]; then
+        echo "$ip is alive"
+    fi
+done
+\`\`\`
+
+This loops through IPs 192.168.1.1 to 192.168.1.10, pings each one, and reports which are alive.
+
+:::checkpoint
+What does {1..10} generate?
+- Numbers 1 to 10
+- Files 1 to 10
+- Directories 1 to 10
+- Nothing
+:::
+
+## Your First Recon Script
+
+\`\`\`bash
+#!/bin/bash
+# recon.sh — Basic host reconnaissance
+
+TARGET=$1
+
+if [ -z "$TARGET" ]; then
+    echo "Usage: $0 <target>"
+    exit 1
+fi
+
+echo "=== Recon Report for $TARGET ==="
+echo "Date: $(date)"
+echo ""
+
+echo "--- Ping Test ---"
+ping -c 3 $TARGET
+
+echo ""
+echo "--- Open Ports ---"
+nmap -T4 --top-ports 20 $TARGET 2>/dev/null | grep "open"
+
+echo ""
+echo "--- DNS Info ---"
+host $TARGET 2>/dev/null
+\`\`\`
+
+\`\`\`bash
+chmod +x recon.sh
+./recon.sh 192.168.1.1
+\`\`\`
+
+## While Loops — Continuous Monitoring
+
+For loops iterate over a list. While loops repeat until a condition is false. Essential for monitoring scripts.
+
+\`\`\`bash
+# Simple while loop
+count=1
+while [ $count -le 5 ]; do
+    echo "Count: $count"
+    count=$((count + 1))
+done
+\`\`\`
+
+**Infinite loop with break condition:**
+\`\`\`bash
+while true; do
+    echo "Checking..."
+    # Your monitoring logic here
+    sleep 5  # Wait 5 seconds before checking again
+done
+\`\`\`
+
+**Read file line by line:**
+\`\`\`bash
+while read -r line; do
+    echo "Processing: $line"
+done < /etc/passwd
+\`\`\`
+
+:::checkpoint
+What does while true do?
+- Run once
+- Loop forever until manually stopped
+- Loop 10 times
+- Only run if condition is true
+:::
+
+## Functions — Reusable Code Blocks
+
+Functions let you organize code into reusable blocks. Essential for clean, maintainable scripts.
+
+\`\`\`bash
+#!/bin/bash
+
+# Define a function
+check_port() {
+    local target=$1
+    local port=$2
+    nc -z -w 1 $target $port 2>/dev/null
+    if [ $? -eq 0 ]; then
+        echo "Port $port is OPEN on $target"
+    else
+        echo "Port $port is CLOSED on $target"
+    fi
+}
+
+# Call the function
+check_port 192.168.1.1 22
+check_port 192.168.1.1 80
+\`\`\`
+
+**Key concepts:**
+- \`local\` — variable only exists inside the function
+- \`$1\`, \`$2\` — function arguments (not script arguments)
+- \`return\` — return a value (0-255)
+
+:::checkpoint
+What does local do in a bash function?
+- Makes the variable global
+- Makes the variable only exist inside the function
+- Deletes the variable
+- Prints the variable
+:::
+
+## Arithmetic — Counting and Comparing
+
+\`\`\`bash
+# Basic arithmetic
+count=$((count + 1))
+total=$((a + b))
+remainder=$((n % 2))
+
+# Comparison in if statements
+if [ $count -gt 10 ]; then
+    echo "Count is greater than 10"
+fi
+
+# Shorthand increment
+((count++))
+((total += 5))
+\`\`\`
+
+:::checkpoint
+What does $((count + 1)) do?
+- Print the string "count + 1"
+- Add 1 to the variable count
+- Create a new variable
+- Delete the variable
+:::
+
+## Color Output — Making Alerts Visible
+
+ANSI escape codes add color to terminal output. Essential for security tools that need to highlight critical findings.
+
+\`\`\`bash
+# Color codes
+RED='\\033[0;31m'
+GREEN='\\033[0;32m'
+YELLOW='\\033[1;33m'
+NC='\\033[0m'  # No Color (reset)
+
+echo -e "\${RED}CRITICAL: Root login detected!\${NC}"
+echo -e "\${GREEN}OK: No issues found\${NC}"
+echo -e "\${YELLOW}WARNING: Suspicious activity\${NC}"
+\`\`\`
+
+**Color reference:**
+| Code | Color |
+|------|-------|
+| \\033[0;31m | Red |
+| \\033[0;32m | Green |
+| \\033[1;33m | Yellow |
+| \\033[0;34m | Blue |
+| \\033[0m | Reset (no color) |
+
+:::checkpoint
+What does \\033[0m do?
+- Set text to red
+- Reset text color to default
+- Make text bold
+- Clear the screen
+:::
+
+## sleep — Waiting Between Checks
+
+\`\`\`bash
+sleep 5      # Wait 5 seconds
+sleep 1m     # Wait 1 minute
+sleep 0.5    # Wait half a second
+\`\`\`
+
+Used in monitoring loops to avoid overwhelming the system with checks.
+
+## case Statements — Menu Selection
+
+case is cleaner than multiple if/elif for matching a variable against known values.
+
+\`\`\`bash
+#!/bin/bash
+echo "Select scan type:"
+echo "1) Quick scan"
+echo "2) Full scan"
+echo "3) Stealth scan"
+read -p "Choice: " choice
+
+case $choice in
+    1) echo "Running quick scan..."; nmap -T4 --top-ports 100 $1 ;;
+    2) echo "Running full scan..."; nmap -T4 -p- $1 ;;
+    3) echo "Running stealth scan..."; nmap -sS -T2 $1 ;;
+    *) echo "Invalid choice"; exit 1 ;;
+esac
+\`\`\`
+
+:::checkpoint
+What does case $choice in do?
+- Create a loop
+- Match a variable against multiple patterns
+- Read user input
+- Delete a file
+:::
+
+## printf — Formatted Output
+
+printf gives precise control over output formatting. Essential for reports.
+
+\`\`\`bash
+# Formatted table
+printf "%-20s %-15s %s\\n" "USERNAME" "STATUS" "SHELL"
+printf "%-20s %-15s %s\\n" "root" "active" "/bin/bash"
+printf "%-20s %-15s %s\\n" "nobody" "inactive" "/usr/sbin/nologin"
+\`\`\`
+
+**Format specifiers:**
+| Specifier | Meaning |
+|-----------|---------|
+| %s | String |
+| %d | Integer |
+| %-20s | Left-aligned string, 20 chars wide |
+| %10s | Right-aligned string, 10 chars wide |
+
+## sudo -l — Checking Sudo Privileges
+
+\`\`\`bash
+sudo -l
+\`\`\`
+
+Output shows what commands you can run as root:
+\`\`\`
+User user may run the following commands on target:
+    (root) NOPASSWD: /usr/bin/nmap
+    (root) /usr/bin/vim
+\`\`\`
+
+If you see NOPASSWD, you can run that command as root without a password. Check GTFOBins (https://gtfobins.github.io/) for exploitation methods.
+
+:::checkpoint
+What does sudo -l show?
+- All users on the system
+- What commands you can run as root
+- The root password
+- System logs
+:::
+
+## nmap Advanced Flags
+
+\`\`\`bash
+nmap -sV -sC --top-ports 100 -oN scan.txt 192.168.1.1
+\`\`\`
+
+| Flag | Meaning |
+|------|---------|
+| -sV | Service version detection |
+| -sC | Run default scripts |
+| --top-ports 100 | Scan the 100 most common ports |
+| -p- | Scan all 65535 ports |
+| -oN scan.txt | Save output in normal format |
+| -oX scan.xml | Save output in XML format |
+| -O | OS detection |
+| -T4 | Speed template (1=slow/stealth, 5=fast/noisy) |
+
+:::checkpoint
+What does nmap -sV do?
+- Scan all ports
+- Detect service versions
+- Run stealth scan
+- Save results to file
+:::
+
+## read — User Input
+
+\`\`\`bash
+read -p "Enter target IP: " target
+echo "Scanning $target..."
+\`\`\`
+
+- \`-p\` shows a prompt before reading
+- Input is stored in the variable after -p
+
+## Practical Exercise: Complete Recon Script
+
+\`\`\`bash
+#!/bin/bash
+# full_recon.sh — Complete recon with functions and color
+
+RED='\\033[0;31m'
+GREEN='\\033[0;32m'
+YELLOW='\\033[1;33m'
+NC='\\033[0m'
+
+TARGET=$1
+
+if [ -z "$TARGET" ]; then
+    echo "Usage: $0 <target>"
+    exit 1
+fi
+
+echo -e "\${GREEN}=== Recon Report for \$TARGET ===\${NC}"
+echo "Date: \$(date)"
+
+echo -e "\\n\${YELLOW}--- Open Ports ---\${NC}"
+nmap -sV --top-ports 20 \$TARGET 2>/dev/null | grep "open"
+
+echo -e "\\n\${YELLOW}--- Listening Services ---\${NC}"
+ss -tlnp 2>/dev/null | grep LISTEN
+
+echo -e "\\n\${YELLOW}--- SUID Binaries ---\${NC}"
+find / -perm -4000 -type f 2>/dev/null | head -5
+
+echo -e "\\n\${GREEN}=== Scan Complete ===\${NC}"
+\`\`\``,
+        aiPrompt: "Explain how bash scripts work and why automation is important for security professionals.",
         labUrl: "",
         labTitle: "",
-        interviewQuestion: "What is the difference between ';' and '&&' when chaining commands?",
-        interviewAnswer: "Semicolon (;) runs all commands regardless of whether previous ones succeed. AND (&&) only runs the next command if the previous one succeeded (exit code 0). For example, 'mkdir dir; cd dir' runs both even if mkdir fails, while 'mkdir dir && cd dir' only changes directory if the directory was created successfully.",
+        interviewQuestion: "Write a bash script that pings a list of IPs and reports which are alive.",
+        interviewAnswer: "for ip in $(cat ips.txt); do ping -c 1 $ip > /dev/null 2>&1 && echo $ip is alive; done",
         quiz: [
-          {
-            question: "What does the shebang (#!/bin/bash) do at the top of a script?",
-            options: [
-              "It prints a message when the script runs",
-              "It tells the system which interpreter to use to execute the script",
-              "It imports the bash library",
-              "It defines the script as a function"
-            ],
-            correctAnswerIndex: 1,
-            difficulty: "beginner",
-            explanation: "The shebang tells the OS to use /bin/bash to interpret the script."
-          },
-          {
-            question: "What does '&&' do when chaining commands?",
-            options: [
-              "Runs all commands regardless of success",
-              "Runs the next command only if the previous one succeeded",
-              "Runs commands in parallel",
-              "Runs the previous command again"
-            ],
-            correctAnswerIndex: 1,
-            difficulty: "beginner",
-            explanation: "AND (&&) only runs the next command if the previous one returned exit code 0 (success)."
-          },
-          {
-            question: "What does '$#' represent in a bash script?",
-            options: [
-              "The script name",
-              "The first argument",
-              "The number of arguments passed to the script",
-              "The last argument"
-            ],
-            correctAnswerIndex: 2,
-            difficulty: "intermediate",
-            explanation: "$# holds the count of arguments passed to the script."
-          },
-          {
-            question: "What does 'command > file.txt' do?",
-            options: [
-              "Reads file.txt as input",
-              "Redirects command output to file.txt (overwriting existing content)",
-              "Appends output to file.txt",
-              "Deletes file.txt"
-            ],
-            correctAnswerIndex: 1,
-            difficulty: "beginner",
-            explanation: "> redirects stdout to a file, overwriting existing content. Use >> to append instead."
-          },
-          {
-            question: "What does 'command 2>&1' do?",
-            options: [
-              "Runs the command twice",
-              "Redirects stderr to the same place as stdout",
-              "Increases verbosity",
-              "Runs the command with superuser privileges"
-            ],
-            correctAnswerIndex: 1,
-            difficulty: "intermediate",
-            explanation: "2>&1 redirects stderr (file descriptor 2) to wherever stdout (file descriptor 1) is going."
-          },
-          {
-            question: "How do you make a shell script executable?",
-            options: [
-              "chmod 644 script.sh",
-              "chmod +x script.sh",
-              "bash script.sh",
-              "execute script.sh"
-            ],
-            correctAnswerIndex: 1,
-            difficulty: "beginner",
-            explanation: "chmod +x adds execute permission to the file."
-          },
-          {
-            question: "What does '| grep' do in a command pipeline?",
-            options: [
-              "Saves the output to a file",
-              "Filters the output, showing only lines matching the pattern",
-              "Sorts the output alphabetically",
-              "Counts the number of lines"
-            ],
-            correctAnswerIndex: 1,
-            difficulty: "beginner",
-            explanation: "grep filters input, displaying only lines that match the specified pattern."
-          },
-          {
-            question: "What is the purpose of 'echo -n' in a script?",
-            options: [
-              "Echoes a newline character",
-              "Suppresses the trailing newline, so the cursor stays on the same line",
-              "Enables numeric output",
-              "Echoes nothing"
-            ],
-            correctAnswerIndex: 1,
-            difficulty: "intermediate",
-            explanation: "echo -n suppresses the trailing newline, useful for prompts where input appears on the same line."
-          },
-          {
-            question: "What does '\$(command)' do inside a script?",
-            options: [
-              "Runs the command in a subshell and uses its output as a value",
-              "Checks if the command exists",
-              "Installs the command",
-              "Alias for the command"
-            ],
-            correctAnswerIndex: 0,
-            difficulty: "intermediate",
-            explanation: "Command substitution runs the command and captures its output into the variable or string."
-          },
-          {
-            question: "How do you suppress all output from a command?",
-            options: [
-              "command > /dev/null",
-              "command 2> /dev/null",
-              "command > /dev/null 2>&1",
-              "command --silent"
-            ],
-            correctAnswerIndex: 2,
-            difficulty: "intermediate",
-            explanation: "Redirecting both stdout and stderr to /dev/null suppresses all output."
-          },
-          {
-            question: "What does 'set -e' do at the top of a script?",
-            options: [
-              "Enables verbose mode",
-              "Stops the script immediately if any command fails",
-              "Sets the exit code to 0",
-              "Enables debug output"
-            ],
-            correctAnswerIndex: 1,
-            difficulty: "intermediate",
-            explanation: "set -e (errexit) causes the script to exit immediately if any command returns a non-zero exit code."
-          },
-          {
-            question: "What is the difference between 'echo' and 'printf'?",
-            options: [
-              "They are identical",
-              "printf gives more control over formatting and doesn't add a trailing newline by default",
-              "echo is faster than printf",
-              "printf only works in bash"
-            ],
-            correctAnswerIndex: 1,
-            difficulty: "advanced",
-            explanation: "printf provides formatted output with precise control. echo adds a newline by default and has limited formatting options."
-          }
+          { question: "What does #!/bin/bash do?", options: ["Comments out the line", "Tells the system which interpreter to use", "Sets permissions", "Creates a variable"], correctAnswerIndex: 1, difficulty: "beginner", explanation: "The shebang line tells the OS to use bash to execute the script.", certTags: ["Linux+"] },
+          { question: "How do you assign a variable in bash?", options: ["var = 'value'", "var='value'", "$var='value'", "set var 'value'"], correctAnswerIndex: 1, difficulty: "beginner", explanation: "No spaces around = when assigning variables in bash.", certTags: ["Linux+"] },
+          { question: "What does $1 represent?", options: ["Script name", "First argument", "Number of arguments", "All arguments"], correctAnswerIndex: 1, difficulty: "beginner", explanation: "$1 is the first command-line argument passed to the script.", certTags: ["Linux+"] },
+          { question: "What does -z '$1' check?", options: ["If $1 is zero", "If $1 is empty", "If $1 is a number", "If $1 exists"], correctAnswerIndex: 1, difficulty: "beginner", explanation: "-z tests if the string is empty (zero length).", certTags: ["Linux+"] },
+          { question: "What does {1..10} generate?", options: ["Numbers 1 to 10", "Files 1 to 10", "Directories 1 to 10", "Nothing"], correctAnswerIndex: 0, difficulty: "beginner", explanation: "Brace expansion generates a sequence: {1..10} = 1 2 3 4 5 6 7 8 9 10.", certTags: ["Linux+"] },
+          { question: "What does $? contain?", options: ["The last command's exit code", "The current directory", "The number of arguments", "The script name"], correctAnswerIndex: 0, difficulty: "intermediate", explanation: "$? holds the exit code of the last command. 0 = success, non-zero = failure.", certTags: ["Linux+"] },
+          { question: "What does exit 1 do?", options: ["Exits with success", "Exits with error", "Pauses the script", "Loops the script"], correctAnswerIndex: 1, difficulty: "beginner", explanation: "exit 1 exits the script with error code 1 (failure). exit 0 = success.", certTags: ["Linux+"] },
+          { question: "What is command substitution?", options: ["Running a command in background", "$(command) inserts command output into a string", "Deleting a command", "Saving a command to file"], correctAnswerIndex: 1, difficulty: "intermediate", explanation: "$(command) runs the command and inserts its output. date +%A in $(date +%A) inserts the day name.", certTags: ["Linux+"] }
         ]
-      }
+      },
+      {
+        id: "we04d09",
+        title: "Project 9: Log Analysis — Reading the Battlefield",
+        description: "Analyze auth.log, syslog, and application logs to detect attacks, find patterns, and extract indicators of compromise.",
+        type: "practice",
+        duration: "30 min",
+        content: `:::objectives
+- Understand Linux log file locations and types
+- Parse auth.log for failed logins and successful authentications
+- Extract indicators of compromise (IOCs) from logs
+- Build log analysis pipelines for security monitoring
+:::
+
+## Why Log Analysis Matters
+
+Logs are the primary source of evidence in security investigations. Every attack leaves traces in logs:
+- Failed login attempts (brute force)
+- Successful logins from unusual IPs (compromise)
+- Process creation (malware execution)
+- File modifications (data tampering)
+
+If you can't read logs, you can't detect attacks.
+
+## Linux Log Locations
+
+| File | Content |
+|------|---------|
+| /var/log/auth.log | Authentication events (SSH, sudo, login) |
+| /var/log/syslog | System messages |
+| /var/log/kern.log | Kernel messages |
+| /var/log/apache2/access.log | Web server requests |
+| /var/log/apache2/error.log | Web server errors |
+
+## Reading auth.log
+
+\`\`\`bash
+tail -20 /var/log/auth.log
+\`\`\`
+
+A typical failed SSH login:
+\`\`\`
+Jun 15 03:22:14 server sshd[12345]: Failed password for invalid user admin from 10.0.0.50 port 22 ssh2
+\`\`\`
+
+:::checkpoint
+What log file contains SSH login attempts?
+- /var/log/syslog
+- /var/log/auth.log
+- /var/log/messages
+- /var/log/ssh.log
+:::
+
+## Detecting Brute Force Attacks
+
+\`\`\`bash
+# Count failed login attempts
+grep -c "Failed password" /var/log/auth.log
+
+# Find attacking IPs
+grep "Failed password" /var/log/auth.log | awk '{print $11}' | sort | uniq -c | sort -rn
+
+# Find successful logins (potential compromise)
+grep "Accepted" /var/log/auth.log
+
+# Find successful logins from specific IP
+grep "Accepted" /var/log/auth.log | grep "10.0.0.50"
+\`\`\`
+
+:::checkpoint
+What does grep -c do?
+- Show matching lines
+- Count matching lines
+- Delete matching lines
+- Copy matching lines
+:::
+
+## Building a Log Analysis Report
+
+\`\`\`bash
+#!/bin/bash
+# log_analysis.sh — Quick security log analysis
+
+echo "=== Security Log Analysis ==="
+echo "Date: $(date)"
+echo ""
+
+echo "--- Failed Login Attempts ---"
+grep -c "Failed password" /var/log/auth.log
+
+echo ""
+echo "--- Top 5 Attacking IPs ---"
+grep "Failed password" /var/log/auth.log | awk '{print $11}' | sort | uniq -c | sort -rn | head -5
+
+echo ""
+echo "--- Successful Logins ---"
+grep "Accepted" /var/log/auth.log | awk '{print $9, $11}' | sort -u
+
+echo ""
+echo "--- Users Targeted ---"
+grep "Failed password" /var/log/auth.log | awk '{print $9}' | sort | uniq -c | sort -rn
+\`\`\`
+
+:::checkpoint
+What does awk '{print $11}' extract from a log line?
+- The timestamp
+- The IP address (11th field)
+- The username
+- The port number
+:::
+
+## Practical Exercise
+
+\`\`\`bash
+# Analyze your own auth.log
+cat /var/log/auth.log | head -20
+
+# Count failed attempts
+grep -c "Failed" /var/log/auth.log
+
+# Find the most common attacking IP
+grep "Failed" /var/log/auth.log | awk '{print $11}' | sort | uniq -c | sort -rn | head -1
+
+# Find successful logins
+grep "Accepted" /var/log/auth.log
+\`\`\``,
+        aiPrompt: "Explain how to analyze Linux log files to detect security incidents.",
+        labUrl: "",
+        labTitle: "",
+        interviewQuestion: "How do you detect a brute force attack from Linux logs?",
+        interviewAnswer: "I grep auth.log for 'Failed password', extract source IPs with awk, count occurrences with sort | uniq -c, and sort by frequency. If one IP has many failures, it's likely brute force. I also check for successful logins from that IP.",
+        quiz: [
+          { question: "What log file contains SSH login attempts?", options: ["/var/log/syslog", "/var/log/auth.log", "/var/log/messages", "/var/log/ssh.log"], correctAnswerIndex: 1, difficulty: "beginner", explanation: "auth.log contains authentication events including SSH.", certTags: ["Security+"] },
+          { question: "What does grep -c do?", options: ["Show matching lines", "Count matching lines", "Delete matches", "Copy matches"], correctAnswerIndex: 1, difficulty: "beginner", explanation: "-c counts the number of matching lines.", certTags: ["Linux+"] },
+          { question: "What does awk '{print $11}' extract?", options: ["Timestamp", "IP address", "Username", "Port"], correctAnswerIndex: 1, difficulty: "intermediate", explanation: "In auth.log, the 11th field is typically the source IP address.", certTags: ["Security+"] },
+          { question: "What does sort | uniq -c | sort -rn do?", options: ["Delete duplicates", "Count unique values and sort by frequency", "Find unique files", "Create backup"], correctAnswerIndex: 1, difficulty: "intermediate", explanation: "sort orders lines, uniq -c counts consecutive identical lines, sort -rn sorts numerically in reverse.", certTags: ["Linux+"] },
+          { question: "What indicates a successful login in auth.log?", options: ["Failed password", "Accepted password", "Connection closed", "Invalid user"], correctAnswerIndex: 1, difficulty: "beginner", explanation: "Accepted password indicates a successful authentication.", certTags: ["Security+"] },
+          { question: "What is an IOC?", options: ["Input/Output Control", "Indicator of Compromise", "Internal Operating Command", "Internet Open Connection"], correctAnswerIndex: 1, difficulty: "beginner", explanation: "IOC = Indicator of Compromise — evidence that a system has been breached.", certTags: ["Security+"] },
+          { question: "How do you find successful logins from a specific IP?", options: ["grep 'Accepted' auth.log | grep 'IP'", "find auth.log IP", "awk IP auth.log", "tail IP auth.log"], correctAnswerIndex: 0, difficulty: "beginner", explanation: "Chain two greps: first for Accepted, then for the IP.", certTags: ["Security+"] },
+          { question: "What is the purpose of log analysis in security?", options: ["Delete old logs", "Detect attacks and extract IOCs", "Compress log files", "Create new logs"], correctAnswerIndex: 1, difficulty: "beginner", explanation: "Log analysis detects attacks, extracts IOCs, and supports incident response.", certTags: ["Security+"] }
+        ]
+      },
+      {
+        id: "we04d10",
+        title: "Project 10: System Recon — Know Your Target",
+        description: "Perform full system enumeration: OS version, users, network, services, scheduled tasks. The first step of any pentest.",
+        type: "practice",
+        duration: "30 min",
+        content: `:::objectives
+- Enumerate system information (OS, kernel, hostname)
+- Enumerate users and groups
+- Enumerate network configuration and listening ports
+- Enumerate services and scheduled tasks
+- Build a complete system recon script
+:::
+
+## Why System Recon Matters
+
+The first thing a hacker does after gaining access: enumerate the system. You need to know:
+- What OS and version (find kernel exploits)
+- Who has accounts (find targets)
+- What's running (find attack surface)
+- What's scheduled (find persistence opportunities)
+
+## System Information
+
+\`\`\`bash
+hostname                    # Computer name
+uname -a                    # Full kernel info
+cat /etc/os-release         # OS distribution
+uptime                      # How long the system has been running
+\`\`\`
+
+:::checkpoint
+What command shows the kernel version?
+- hostname
+- uname -a
+- cat /etc/hosts
+- id
+:::
+
+## Users and Groups
+
+\`\`\`bash
+id                          # Current user's UID, GID, groups
+whoami                      # Current username
+cat /etc/passwd             # All users
+cat /etc/group              # All groups
+last                        # Recent login history
+\`\`\`
+
+**Users with shells (can log in):**
+\`\`\`bash
+grep -v "nologin\|false" /etc/passwd
+\`\`\`
+
+:::checkpoint
+What file contains user account information?
+- /etc/shadow
+- /etc/passwd
+- /etc/group
+- /etc/users
+:::
+
+## Network Configuration
+
+\`\`\`bash
+ip addr                     # Network interfaces and IPs
+ip route                    # Routing table
+ss -tlnp                    # Listening ports with process names
+cat /etc/resolv.conf        # DNS servers
+\`\`\`
+
+:::checkpoint
+What command shows listening ports?
+- ip addr
+- ss -tlnp
+- cat /etc/passwd
+- uname -a
+:::
+
+## Services and Processes
+
+\`\`\`bash
+systemctl list-units --type=service --state=running
+ps aux
+\`\`\`
+
+## Scheduled Tasks
+
+\`\`\`bash
+crontab -l                  # Current user's cron jobs
+ls -la /etc/cron*           # System cron directories
+cat /etc/crontab            # System crontab
+\`\`\`
+
+## Full Recon Script
+
+\`\`\`bash
+#!/bin/bash
+# full_recon.sh — Complete system enumeration
+
+echo "=========================================="
+echo " SYSTEM RECONNAISSANCE REPORT"
+echo " Date: $(date)"
+echo "=========================================="
+
+echo ""
+echo "--- System Info ---"
+echo "Hostname: $(hostname)"
+echo "Kernel: $(uname -r)"
+echo "OS: $(cat /etc/os-release | grep PRETTY_NAME | cut -d= -f2)"
+echo "Uptime: $(uptime -p)"
+
+echo ""
+echo "--- User Info ---"
+echo "Current user: $(whoami)"
+echo "UID: $(id -u)"
+echo "Groups: $(id -Gn)"
+echo ""
+echo "Users with shells:"
+grep -v "nologin\|false\|sync" /etc/passwd | cut -d: -f1
+
+echo ""
+echo "--- Network ---"
+echo "Interfaces:"
+ip addr show | grep "inet " | awk '{print $2}'
+echo ""
+echo "Listening ports:"
+ss -tlnp 2>/dev/null | grep LISTEN
+
+echo ""
+echo "--- Cron Jobs ---"
+crontab -l 2>/dev/null || echo "No user crontab"
+ls -la /etc/cron.d/ 2>/dev/null
+
+echo ""
+echo "--- SUID Files ---"
+find / -perm -4000 -type f 2>/dev/null | head -10
+\`\`\`
+
+:::checkpoint
+What is the first thing you do after gaining access to a Linux system?
+- Delete logs
+- Change passwords
+- Enumerate the system
+- Install backdoors
+:::`,
+        aiPrompt: "Explain the methodology for system enumeration on a compromised Linux host.",
+        labUrl: "",
+        labTitle: "",
+        interviewQuestion: "What information do you gather when you first access a Linux system during a pentest?",
+        interviewAnswer: "I gather OS/kernel version for exploit matching, user accounts for lateral movement, network interfaces for pivoting, listening ports for services, cron jobs for persistence opportunities, and SUID binaries for privilege escalation.",
+        quiz: [
+          { question: "What command shows the kernel version?", options: ["hostname", "uname -a", "cat /etc/hosts", "id"], correctAnswerIndex: 1, difficulty: "beginner", explanation: "uname -a shows full kernel information including version.", certTags: ["Linux+"] },
+          { question: "What file contains user accounts?", options: ["/etc/shadow", "/etc/passwd", "/etc/group", "/etc/users"], correctAnswerIndex: 1, difficulty: "beginner", explanation: "/etc/passwd contains user account information.", certTags: ["Linux+"] },
+          { question: "What command shows listening ports?", options: ["ip addr", "ss -tlnp", "cat /etc/passwd", "uname -a"], correctAnswerIndex: 1, difficulty: "beginner", explanation: "ss -tlnp shows TCP listening ports with process names.", certTags: ["Security+"] },
+          { question: "What does id show?", options: ["IP address", "UID, GID, and group memberships", "Hostname", "Kernel version"], correctAnswerIndex: 1, difficulty: "beginner", explanation: "id shows user ID, group ID, and all group memberships.", certTags: ["Linux+"] },
+          { question: "What is the first step after gaining access?", options: ["Delete logs", "Change passwords", "Enumerate the system", "Install backdoors"], correctAnswerIndex: 2, difficulty: "intermediate", explanation: "Always enumerate first — you need to understand the system before acting.", certTags: ["OSCP"] },
+          { question: "What does crontab -l show?", options: ["Current directory", "Scheduled tasks for current user", "Running processes", "Network connections"], correctAnswerIndex: 1, difficulty: "beginner", explanation: "crontab -l lists the current user's scheduled cron jobs.", certTags: ["Linux+"] },
+          { question: "Why check /etc/os-release?", options: ["Get IP address", "Identify OS distribution and version", "Find users", "Check network"], correctAnswerIndex: 1, difficulty: "beginner", explanation: "/etc/os-release contains the OS name and version — needed for exploit matching.", certTags: ["Security+"] },
+          { question: "What does uptime show?", options: ["Current time", "How long the system has been running", "User accounts", "Network status"], correctAnswerIndex: 1, difficulty: "beginner", explanation: "uptime shows how long the system has been running since last reboot.", certTags: ["Linux+"] }
+        ]
+      },
+    ]
+  },
+  {
+    id: "week04proj",
+    title: "Linux Projects",
+    durationText: "Week 4 - 4 Projects",
+    focus: "Build real security tools using everything you learned in the Linux tutorials",
+    output: "4 portfolio-ready scripts: recon tool, intrusion detector, privesc checker, network analyzer",
+    topics: [
+      {
+        id: "proj-linux-recon",
+        title: "Project: Automated Recon Tool",
+        description: "Build a bash script that automatically enumerates a target system — ports, services, SUID binaries, users, cron jobs. The first tool every hacker writes.",
+        type: "project",
+        duration: "2-3 hours",
+        content: `:::objectives
+- Build a modular bash script using functions
+- Enumerate system information: ports, services, users, SUID files, cron jobs
+- Generate a formatted report using printf
+- Handle errors and edge cases
+:::
+
+## Your Mission
+
+Build a recon script that takes a target IP as input and automatically enumerates the system. This is the first tool every penetration tester writes — it saves hours of manual work.
+
+## Requirements
+
+Your script must:
+
+1. Accept a target IP as \`$1\` — show usage message if missing
+2. Use **functions** for each check (one function per enumeration vector)
+3. Check at least 5 of these:
+   - Open ports (nmap -sV --top-ports 20)
+   - Listening services (ss -tlnp)
+   - SUID binaries (find / -perm -4000)
+   - Users with shells (grep -v nologin /etc/passwd)
+   - Cron jobs (crontab -l, ls -la /etc/cron*)
+   - Network interfaces (ip addr)
+   - Kernel version (uname -a)
+4. Output results to a **report file** with timestamp
+5. Use **printf** for formatted output (aligned columns)
+6. Use **color** for section headers (green for OK, yellow for findings)
+7. Handle errors gracefully (suppress stderr with 2>/dev/null)
+
+## Hints
+
+\`\`\`bash
+# Function template
+check_ports() {
+    local target=$1
+    echo -e "\\033[1;33m--- Open Ports ---\\033[0m"
+    nmap -sV --top-ports 20 $target 2>/dev/null | grep "open"
+}
+
+# Report header with printf
+printf "%-20s %s\\n" "CHECK" "RESULT"
+printf "%-20s %s\\n" "---" "---"
+
+# Save to file while displaying
+./recon.sh 192.168.1.1 | tee report.txt
+\`\`\`
+
+## Checklist
+
+- [ ] Script accepts target as argument
+- [ ] Usage message if no argument
+- [ ] Functions for each check
+- [ ] At least 5 enumeration vectors
+- [ ] Formatted report output
+- [ ] Color-coded sections
+- [ ] Error handling (2>/dev/null)
+- [ ] Results saved to file
+`,
+        aiPrompt: "Explain the methodology for automated system enumeration during a penetration test.",
+        labUrl: "",
+        labTitle: "",
+        interviewQuestion: "How would you build an automated recon script for a penetration test?",
+        interviewAnswer: "I'd build a modular bash script with separate functions for each check: port scanning with nmap, SUID binary enumeration with find, user enumeration from /etc/passwd, cron job listing, and network interface discovery. Each function outputs formatted results, and I pipe everything to a timestamped report file.",
+        quiz: [
+          { question: "Why use functions in a recon script?", options: ["To make it longer", "To organize code and make it reusable", "To slow down execution", "To hide the code"], correctAnswerIndex: 1, difficulty: "beginner", explanation: "Functions organize code into reusable blocks, making scripts easier to read and maintain.", certTags: ["Linux+"] },
+          { question: "What nmap flag detects service versions?", options: ["-sS", "-sV", "-O", "-p-"], correctAnswerIndex: 1, difficulty: "beginner", explanation: "-sV detects service versions running on open ports.", certTags: ["Security+"] },
+          { question: "What does find / -perm -4000 find?", options: ["Hidden files", "SUID binaries", "Large files", "Recent files"], correctAnswerIndex: 1, difficulty: "intermediate", explanation: "-perm -4000 finds files with the SUID permission bit set.", certTags: ["Security+"] },
+          { question: "What does local do in a bash function?", options: ["Makes variable global", "Restricts variable to function scope", "Deletes the variable", "Prints the variable"], correctAnswerIndex: 1, difficulty: "intermediate", explanation: "local restricts a variable to the function scope.", certTags: ["Linux+"] },
+          { question: "What does tee do?", options: ["Delete output", "Write to file AND screen", "Only write to file", "Only show on screen"], correctAnswerIndex: 1, difficulty: "beginner", explanation: "tee sends output to both stdout and a file.", certTags: ["Linux+"] },
+          { question: "What does printf '%-20s' do?", options: ["Print 20 chars, left-aligned", "Print 20 chars, right-aligned", "Print 20 lines", "Delete 20 chars"], correctAnswerIndex: 0, difficulty: "intermediate", explanation: "- means left-aligned, 20s means 20-character string field.", certTags: ["Linux+"] },
+          { question: "What does 2>/dev/null do?", options: ["Save errors to file", "Suppress error messages", "Show only errors", "Redirect stdout"], correctAnswerIndex: 1, difficulty: "beginner", explanation: "2>/dev/null suppresses error messages by sending them to the null device.", certTags: ["Linux+"] },
+          { question: "What does ss -tlnp show?", options: ["File contents", "Listening ports with processes", "CPU usage", "User accounts"], correctAnswerIndex: 1, difficulty: "intermediate", explanation: "ss -tlnp shows TCP listening ports with process names.", certTags: ["Security+"] }
+        ]
+      },
+      {
+        id: "proj-linux-intrusion",
+        title: "Project: Real-Time Intrusion Detector",
+        description: "Build a script that monitors auth.log in real-time, detects brute force attacks, and alerts when thresholds are exceeded. The foundation of every SOC tool.",
+        type: "project",
+        duration: "2-3 hours",
+        content: `:::objectives
+- Monitor log files in real-time using tail -f
+- Count failed login attempts per IP using awk and arithmetic
+- Alert with color-coded output when thresholds are exceeded
+- Log alerts to a file for later analysis
+:::
+
+## Your Mission
+
+Build a real-time intrusion detection script that monitors SSH login attempts and alerts on suspicious activity. This is what SOC analysts use every day.
+
+## Requirements
+
+Your script must:
+
+1. Monitor \`/var/log/auth.log\` in real-time using \`tail -f\`
+2. **Count** failed login attempts per IP address
+3. **Alert** when an IP exceeds 5 failed attempts (color: red)
+4. **Log** successful logins as potential compromises (color: yellow)
+5. Run continuously until killed (Ctrl+C)
+6. Save all alerts to a log file with timestamps
+7. Use **color output** for different alert levels
+
+## Hints
+
+\`\`\`bash
+# Real-time monitoring
+tail -f /var/log/auth.log | while read -r line; do
+    # Process each line
+    if echo "$line" | grep -q "Failed"; then
+        # Extract IP
+        ip=$(echo "$line" | awk '{print $11}')
+        # Count and alert
+        count=$((count + 1))
+        if [ $count -gt 5 ]; then
+            echo -e "\\033[0;31mALERT: $ip has $count failed attempts\\033[0m"
+        fi
+    fi
+done
+
+# Color codes
+RED='\\033[0;31m'
+GREEN='\\033[0;32m'
+YELLOW='\\033[1;33m'
+NC='\\033[0m'
+
+# Log with timestamp
+echo "$(date): ALERT - $ip" >> alerts.log
+\`\`\`
+
+## Checklist
+
+- [ ] Uses tail -f for real-time monitoring
+- [ ] Counts failed logins per IP
+- [ ] Alerts when threshold exceeded (5+ attempts)
+- [ ] Color-coded output (red for alerts, yellow for warnings)
+- [ ] Logs alerts to file with timestamps
+- [ ] Runs continuously until killed
+- [ ] Handles Ctrl+C gracefully
+`,
+        aiPrompt: "Explain how real-time log monitoring works in a SOC environment.",
+        labUrl: "",
+        labTitle: "",
+        interviewQuestion: "How would you build a real-time SSH brute force detector?",
+        interviewAnswer: "I'd use tail -f to monitor auth.log in real-time, pipe each line through a while read loop, grep for 'Failed password', extract the source IP with awk, count occurrences per IP, and alert when a threshold is exceeded. I'd color-code alerts and log them to a file with timestamps.",
+        quiz: [
+          { question: "What does tail -f do?", options: ["Show last lines", "Follow file in real-time", "Find text in file", "Format file output"], correctAnswerIndex: 1, difficulty: "beginner", explanation: "-f follows the file — new lines appear as they're added.", certTags: ["Linux+"] },
+          { question: "What does while read -r line do?", options: ["Read one line", "Read file line by line in a loop", "Delete lines", "Count lines"], correctAnswerIndex: 1, difficulty: "intermediate", explanation: "while read processes a file line by line in a loop.", certTags: ["Linux+"] },
+          { question: "What does $((count + 1)) do?", options: ["Print count", "Add 1 to count", "Delete count", "Create variable"], correctAnswerIndex: 1, difficulty: "beginner", explanation: "$(( )) performs arithmetic. count + 1 increments the counter.", certTags: ["Linux+"] },
+          { question: "What does \\033[0;31m do?", options: ["Set text to red", "Reset color", "Clear screen", "Print newline"], correctAnswerIndex: 0, difficulty: "intermediate", explanation: "0;31m is the ANSI escape code for red text.", certTags: ["Linux+"] },
+          { question: "What does awk '{print $11}' extract?", options: ["Line 11", "11th field (source IP)", "11th file", "11th character"], correctAnswerIndex: 1, difficulty: "intermediate", explanation: "In auth.log, field 11 is typically the source IP address.", certTags: ["Security+"] },
+          { question: "How do you save alerts to a file?", options: ["echo alert > file", "echo alert >> file", "echo alert | file", "echo alert - file"], correctAnswerIndex: 1, difficulty: "beginner", explanation: ">> appends to the file. > would overwrite it.", certTags: ["Linux+"] },
+          { question: "What does sleep 5 do?", options: ["Wait 5 seconds", "Sleep for 5 minutes", "Pause the script forever", "Delete 5 files"], correctAnswerIndex: 0, difficulty: "beginner", explanation: "sleep 5 pauses execution for 5 seconds.", certTags: ["Linux+"] },
+          { question: "How do you stop a tail -f process?", options: ["Ctrl+C", "Ctrl+Z", "exit", "kill"], correctAnswerIndex: 0, difficulty: "beginner", explanation: "Ctrl+C sends SIGINT, stopping the process.", certTags: ["Linux+"] }
+        ]
+      },
+      {
+        id: "proj-linux-privesc",
+        title: "Project: Privilege Escalation Checker",
+        description: "Build a script that checks a system for privilege escalation vectors — SUID binaries, sudo misconfigs, writable files, cron jobs. What every pentester runs first.",
+        type: "project",
+        duration: "2-3 hours",
+        content: `:::objectives
+- Check SUID/SGID binaries using find
+- Parse sudo -l output for exploitable commands
+- Find writable sensitive files
+- Check cron job permissions
+- Generate a color-coded risk report
+:::
+
+## Your Mission
+
+Build a privilege escalation checker that scans a system for common escalation vectors. This is the first tool you run after gaining access to a target.
+
+## Requirements
+
+Your script must:
+
+1. Check **SUID/SGID binaries** (find / -perm -4000)
+2. Check **sudo privileges** (sudo -l)
+3. Check **writable sensitive files** (find / -writable)
+4. Check **cron job permissions** (ls -la /etc/cron*)
+5. Check **kernel version** for known exploits (uname -r)
+6. Use **color-coded risk levels**:
+   - Red: Critical (SUID binary with known exploit)
+   - Yellow: Warning (writable file, suspicious cron)
+   - Green: OK (no issues found)
+7. Use **case statements** for risk level selection
+8. Output a summary with total findings count
+
+## Hints
+
+\`\`\`bash
+# SUID check
+find / -perm -4000 -type f 2>/dev/null | while read -r binary; do
+    echo -e "\\033[0;31mSUID: $binary\\033[0m"
+done
+
+# Sudo check
+sudo -l 2>/dev/null | grep "NOPASSWD"
+
+# Writable files
+find /etc -writable -type f 2>/dev/null
+
+# Risk levels with case
+risk_level() {
+    case $1 in
+        critical) echo -e "\\033[0;31mCRITICAL\\033[0m" ;;
+        warning)  echo -e "\\033[1;33mWARNING\\033[0m" ;;
+        ok)       echo -e "\\033[0;32mOK\\033[0m" ;;
+    esac
+}
+
+# GTFOBins URL pattern
+echo "Check: https://gtfobins.github.io/gtfobins/$binary/"
+\`\`\`
+
+## Checklist
+
+- [ ] Checks SUID/SGID binaries
+- [ ] Checks sudo -l output
+- [ ] Checks writable sensitive files
+- [ ] Checks cron job permissions
+- [ ] Checks kernel version
+- [ ] Color-coded risk levels
+- [ ] Summary with findings count
+- [ ] References GTFOBins for SUID binaries
+`,
+        aiPrompt: "Explain the methodology for privilege escalation enumeration on a Linux system.",
+        labUrl: "",
+        labTitle: "",
+        interviewQuestion: "How do you check for privilege escalation vectors on a Linux system?",
+        interviewAnswer: "I run find / -perm -4000 to find SUID binaries, sudo -l to check for NOPASSWD entries, find / -writable to find writable sensitive files, and check /etc/cron* for writable cron scripts. I cross-reference SUID binaries with GTFOBins and check the kernel version for known exploits.",
+        quiz: [
+          { question: "What does sudo -l show?", options: ["All users", "Your sudo privileges", "Root password", "System logs"], correctAnswerIndex: 1, difficulty: "beginner", explanation: "sudo -l shows what commands you can run with sudo.", certTags: ["Security+"] },
+          { question: "What is GTFOBins?", options: ["A password cracker", "A list of exploitable Unix binaries", "A network scanner", "A firewall tool"], correctAnswerIndex: 1, difficulty: "intermediate", explanation: "GTFOBins documents how to exploit legitimate binaries for privilege escalation.", certTags: ["Security+"] },
+          { question: "What does find / -perm -4000 find?", options: ["Hidden files", "SUID binaries", "Large files", "Recent files"], correctAnswerIndex: 1, difficulty: "intermediate", explanation: "-perm -4000 finds files with the SUID bit set.", certTags: ["Security+"] },
+          { question: "What does NOPASSWD mean in sudo -l?", options: ["Password is required", "No password needed for that command", "Account is disabled", "Password expired"], correctAnswerIndex: 1, difficulty: "intermediate", explanation: "NOPASSWD means you can run the command as root without entering a password.", certTags: ["Security+"] },
+          { question: "What does case $1 in do?", options: ["Create a loop", "Match variable against patterns", "Read input", "Delete a file"], correctAnswerIndex: 1, difficulty: "intermediate", explanation: "case matches a variable against multiple patterns, like a switch statement.", certTags: ["Linux+"] },
+          { question: "What does find / -writable find?", options: ["Executable files", "Files you can write to", "Hidden files", "Large files"], correctAnswerIndex: 1, difficulty: "intermediate", explanation: "-writable finds files that the current user can write to.", certTags: ["Security+"] },
+          { question: "What color indicates critical findings?", options: ["Green", "Yellow", "Red", "Blue"], correctAnswerIndex: 2, difficulty: "beginner", explanation: "Red indicates critical findings that need immediate attention.", certTags: ["Security+"] },
+          { question: "What does uname -r show?", options: ["Hostname", "Kernel version", "IP address", "User count"], correctAnswerIndex: 1, difficulty: "beginner", explanation: "uname -r shows the kernel release version.", certTags: ["Linux+"] }
+        ]
+      },
+      {
+        id: "proj-linux-network",
+        title: "Project: Network Forensics Analyzer",
+        description: "Build a script that analyzes network traffic logs, extracts IPs, counts connections, and detects port scan patterns. The analyst's eyes on the network.",
+        type: "project",
+        duration: "2-3 hours",
+        content: `:::objectives
+- Parse network log files using awk with custom field separators
+- Extract and count unique source IPs using associative arrays
+- Detect port scan patterns (one IP hitting many ports)
+- Generate a formatted report with top talkers
+:::
+
+## Your Mission
+
+Build a network forensics analyzer that reads firewall or access logs and extracts intelligence. This is what network analysts use to detect intrusions.
+
+## Requirements
+
+Your script must:
+
+1. Accept a **log file** as input (\$1)
+2. Extract **unique source IPs** from the log
+3. Count **connections per IP**
+4. Detect **port scan patterns** (1 IP hitting 10+ different ports)
+5. Show **top 10 talkers** sorted by connection count
+6. Use **awk BEGIN/END blocks** for report headers and summaries
+7. Use **printf** for formatted table output
+8. Output a **summary report** with total connections, unique IPs, and scan alerts
+
+## Hints
+
+\`\`\`bash
+# Extract IPs (field 1 typically)
+awk '{print $1}' firewall.log | sort | uniq -c | sort -rn | head -10
+
+# Associative arrays in awk for counting
+awk '{ip[$1]++} END {for (i in ip) print ip[i], i}' firewall.log
+
+# BEGIN/END for report framing
+awk 'BEGIN {print "=== Network Report ==="} 
+{print} 
+END {print "=== End ==="}' firewall.log
+
+# Detect port scans (IP hitting many ports)
+awk '{ip[$1":"$5]++} 
+END {
+    for (key in ip) {
+        split(key, parts, ":")
+        ports[parts[1]]++
+    }
+    for (ip in ports) {
+        if (ports[ip] > 10) print "SCAN DETECTED:", ip, ports[ip], "ports"
+    }
+}' firewall.log
+
+# Formatted table
+printf "%-20s %-10s %s\\n" "IP" "CONNECTIONS" "STATUS"
+printf "%-20s %-10s %s\\n" "192.168.1.100" "1547" "SUSPICIOUS"
+\`\`\`
+
+## Checklist
+
+- [ ] Accepts log file as argument
+- [ ] Extracts unique source IPs
+- [ ] Counts connections per IP
+- [ ] Detects port scan patterns (10+ ports from same IP)
+- [ ] Shows top 10 talkers
+- [ ] Uses awk BEGIN/END blocks
+- [ ] Formatted table output with printf
+- [ ] Summary report with totals
+`,
+        aiPrompt: "Explain how to analyze network logs to detect intrusions and suspicious activity.",
+        labUrl: "",
+        labTitle: "",
+        interviewQuestion: "How would you analyze firewall logs to detect a port scan?",
+        interviewAnswer: "I'd use awk to extract source IPs and destination ports, then use associative arrays to count unique ports per IP. If one IP hits more than 10 different ports in a short time, it's likely a port scan. I'd output the top talkers sorted by connection count.",
+        quiz: [
+          { question: "What does awk '{print $1}' do?", options: ["Print first line", "Print first field", "Print all fields", "Delete first field"], correctAnswerIndex: 1, difficulty: "beginner", explanation: "$1 is the first field (typically source IP in log files).", certTags: ["Linux+"] },
+          { question: "What does sort | uniq -c | sort -rn do?", options: ["Delete duplicates", "Count unique values and sort by frequency", "Find unique files", "Create backup"], correctAnswerIndex: 1, difficulty: "intermediate", explanation: "sort orders lines, uniq -c counts, sort -rn sorts numerically in reverse.", certTags: ["Linux+"] },
+          { question: "What is an awk associative array?", options: ["A regular array", "An array indexed by strings instead of numbers", "A deleted array", "A sorted array"], correctAnswerIndex: 1, difficulty: "advanced", explanation: "Associative arrays use strings as keys (like ip[$1]++).", certTags: ["Linux+"] },
+          { question: "What does awk BEGIN block do?", options: ["Run after each line", "Run before processing any lines", "Run only if empty", "Run at the end"], correctAnswerIndex: 1, difficulty: "intermediate", explanation: "BEGIN runs once before awk processes any input.", certTags: ["Linux+"] },
+          { question: "What does head -10 do?", options: ["Show first 10 lines", "Show last 10 lines", "Delete 10 lines", "Count 10 lines"], correctAnswerIndex: 0, difficulty: "beginner", explanation: "head -10 shows the first 10 lines of output.", certTags: ["Linux+"] },
+          { question: "What indicates a port scan?", options: ["One connection to one port", "One IP hitting many different ports", "Many IPs to one port", "No connections"], correctAnswerIndex: 1, difficulty: "intermediate", explanation: "A port scan is when one IP probes many different ports.", certTags: ["Security+"] },
+          { question: "What does printf '%-20s' do?", options: ["Print 20 chars, left-aligned", "Print 20 chars, right-aligned", "Print 20 lines", "Delete 20 chars"], correctAnswerIndex: 0, difficulty: "intermediate", explanation: "- means left-aligned, 20s means 20-character string.", certTags: ["Linux+"] },
+          { question: "What does awk 'END {}' do?", options: ["Run at start", "Run after all input processed", "Run on each line", "Delete output"], correctAnswerIndex: 1, difficulty: "intermediate", explanation: "END runs once after all input lines have been processed.", certTags: ["Linux+"] }
+        ]
+      },
     ]
   }
 ];
