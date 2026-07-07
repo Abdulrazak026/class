@@ -124,6 +124,8 @@ Try running these scans against a local VM and compare the output formats. Which
         aiPrompt: '',
         labUrl: '',
         labTitle: '',
+        interviewQuestion: 'When would you choose a SYN scan over a TCP Connect scan, and what are the tradeoffs of stealth scans like NULL, FIN, and Xmas?',
+        interviewAnswer: 'SYN scan is preferred because it does not complete the TCP handshake, making it faster and less likely to be logged. TCP Connect scan completes the handshake and is easily logged but does not require root privileges. NULL, FIN, and Xmas scans can evade some firewalls but are unreliable on modern systems that do not strictly follow RFC 793, making them unable to distinguish open from filtered ports.',
         quiz: [
           {
             question: 'Which Nmap scan type sends SYN packets without completing the TCP handshake?',
@@ -370,6 +372,8 @@ Run \`nmap -sV -sC --script=vuln\` against a local VM and document every finding
         aiPrompt: '',
         labUrl: '',
         labTitle: '',
+        interviewQuestion: 'How do you use NSE scripts for service enumeration, and what is the recommended Nmap workflow for a penetration test?',
+        interviewAnswer: 'NSE scripts extend Nmap with Lua scripts organized by category. The recommended workflow is: first discover hosts with nmap -sn, then scan ports with -sS -sV, enumerate services with --script=default,vuln, and save output with -oA. Use specific scripts like smb-enum-shares for SMB enumeration and http-enum for web directory discovery. Always save output for later reference throughout the engagement.',
         quiz: [
           {
             question: 'Which Nmap flag combination is equivalent to running default NSE scripts?',
@@ -615,6 +619,8 @@ Start msfconsole, search for exploits targeting Windows SMB, and identify the op
         aiPrompt: '',
         labUrl: '',
         labTitle: '',
+        interviewQuestion: 'Explain the difference between staged and stageless payloads in Metasploit, and when you would use each.',
+        interviewAnswer: 'Staged payloads use a small stager that connects back to load the full Meterpreter DLL, indicated by a forward slash in the name like windows/x64/meterpreter/reverse_tcp. Stageless payloads contain everything in one piece, indicated by an underscore. Use staged when you need a smaller initial payload to bypass size restrictions or detection, and stageless when you need a self-contained payload that does not require a second download.',
         quiz: [
           {
             question: 'What is the difference between a staged and stageless payload?',
@@ -873,6 +879,8 @@ Complete a full exploitation chain against a local vulnerable VM: scan with Nmap
         aiPrompt: '',
         labUrl: '',
         labTitle: '',
+        interviewQuestion: 'Walk me through a complete Metasploit exploitation workflow from reconnaissance to post-exploitation.',
+        interviewAnswer: 'Start with Nmap reconnaissance to identify open ports and services, then search Metasploit for compatible exploits. Configure the exploit with RHOSTS, LHOST, and appropriate payload, run check to verify vulnerability, then exploit. After gaining a Meterpreter session, use sysinfo and getuid to understand your context, then escalate privileges, dump hashes with hashdump, and document everything for the report.',
         quiz: [
           {
             question: 'What is the first step in the Metasploit exploitation workflow?',
@@ -1127,6 +1135,8 @@ Crack a set of sample MD5 and NTLM hashes using both John and Hashcat. Compare t
         aiPrompt: '',
         labUrl: '',
         labTitle: '',
+        interviewQuestion: 'How do you identify an unknown hash type, and what is the difference between John the Ripper and Hashcat for cracking?',
+        interviewAnswer: 'Use hashid or hash-identifier to identify hash type based on length and format, and consider the context like the source system. John the Ripper is CPU-focused with automatic format detection, while Hashcat leverages GPU acceleration for significantly faster cracking. Hashcat requires specifying mode numbers like 0 for MD5 or 1000 for NTLM. Both support rule-based attacks to modify wordlist entries for better coverage.',
         quiz: [
           {
             question: 'How many characters does a standard MD5 hash have?',
@@ -1446,6 +1456,8 @@ Set up a local SSH server and brute-force it with Hydra using rockyou.txt. Time 
         aiPrompt: '',
         labUrl: '',
         labTitle: '',
+        interviewQuestion: 'What is the difference between online and offline password attacks, and how do you reduce detection risk during online brute force?',
+        interviewAnswer: 'Online attacks try passwords against live services, limited by network latency and lockout policies, running at about 100 to 1000 guesses per second. Offline attacks crack obtained hashes locally with no lockout, reaching billions of guesses per second on GPUs. To reduce detection, lower parallel tasks with -t, use targeted wordlists, monitor for lockout indicators, and space attempts over time.',
         quiz: [
           {
             question: 'What does the ^USER^ placeholder do in Hydra http-post-form?',
@@ -1857,6 +1869,8 @@ Always try the safest vectors first (sudo, SUID, cron) before resorting to kerne
         aiPrompt: '',
         labUrl: '',
         labTitle: '',
+        interviewQuestion: 'What is your methodology for Linux privilege escalation, and what are the most common vectors?',
+        interviewAnswer: 'My methodology is: enumerate with id, uname -a, and sudo -l to understand my position, find SUID binaries with find / -perm -4000, check cron jobs in /etc/crontab, search for kernel exploits with searchsploit, and run LinPEAS for automated enumeration. The most common vectors are SUID binaries that can execute arbitrary commands, sudo misconfigurations with NOPASSWD, writable cron scripts, and kernel exploits like Dirty COW or PwnKit.',
         quiz: [
           {
             question: 'What does the SUID bit (permission 4000) on a binary do?',
@@ -2173,6 +2187,8 @@ Run WinPEAS on a local vulnerable Windows VM. Identify at least 2 privilege esca
         aiPrompt: '',
         labUrl: '',
         labTitle: '',
+        interviewQuestion: 'Explain unquoted service paths and AlwaysInstallElevated as Windows privilege escalation vectors.',
+        interviewAnswer: 'Unquoted service paths occur when a service path contains spaces without quotes, causing Windows to try alternative paths where an attacker can place a malicious executable. AlwaysInstallElevated allows any user to install MSI packages with SYSTEM privileges when both HKLM and HKCU registry keys are set to 1. Both vectors are detected by WinPEAS and exploited by placing malicious binaries that execute with elevated service account privileges.',
         quiz: [
           {
             question: 'What does systeminfo output reveal that is useful for privilege escalation?',
@@ -2439,6 +2455,8 @@ Map out the Kerberos authentication flow from memory. Which tickets are involved
         aiPrompt: '',
         labUrl: '',
         labTitle: '',
+        interviewQuestion: 'Explain the Kerberos authentication flow and why understanding it is important for security professionals.',
+        interviewAnswer: 'Kerberos flow: client requests TGT from KDC, KDC returns TGT encrypted with user hash, client presents TGT to request service ticket, KDC issues TGS encrypted with service account hash, client presents TGS to access the service. Understanding this is critical because each stage has specific attack vectors: Kerberoasting targets TGS tickets, AS-REP Roasting targets accounts without pre-authentication, and Golden Ticket attacks forge TGTs using the KRBTGT hash.',
         quiz: [
           {
             question: 'What is the top-level container in Active Directory that defines a trust boundary?',
@@ -2671,6 +2689,8 @@ You understand how Kerberos authentication works and why each attack exploits a 
         aiPrompt: '',
         labUrl: '',
         labTitle: '',
+        interviewQuestion: 'Explain Kerberoasting, how it works at the protocol level, and how to detect it.',
+        interviewAnswer: 'Kerberoasting exploits the fact that any authenticated user can request a TGS for any service with an SPN. The TGS is encrypted with the service account NTLM hash, which can be cracked offline with Hashcat mode 13100. Detection involves monitoring Event ID 4769 for high volumes of TGS requests from a single user in a short period, and mitigating by using strong passwords for service accounts and managed service accounts.',
         quiz: [
           {
             question: 'What is Kerberoasting?',
@@ -2949,6 +2969,8 @@ Walk through the full attack methodology from memory. What tools would you use a
         aiPrompt: '',
         labUrl: '',
         labTitle: '',
+        interviewQuestion: 'Walk me through your penetration testing methodology and explain why reconnaissance is the most important phase.',
+        interviewAnswer: 'My methodology follows five phases: Reconnaissance gathers OSINT without touching the target, Scanning identifies live hosts and services with Nmap, Enumeration deep-dives into discovered services, Exploitation gains initial access using identified vulnerabilities, and Post-Exploitation escalates privileges and documents findings. Reconnaissance is most important because it guides all subsequent phases, reveals attack vectors, and prevents wasting time on wrong targets.',
         quiz: [
           {
             question: 'What is the correct order of the penetration testing methodology?',
@@ -3265,6 +3287,8 @@ Write a brief executive summary and one detailed finding entry.
         aiPrompt: '',
         labUrl: '',
         labTitle: '',
+        interviewQuestion: 'What makes a good pentest report, and how do you write actionable remediation recommendations?',
+        interviewAnswer: 'A good report includes an executive summary for stakeholders, detailed technical findings with steps to reproduce, evidence like screenshots and tool output, and specific remediation steps. Good remediation is actionable: instead of patch the system, write apply Microsoft KB5008380 to resolve CVE-2022-21893. Include CVSS scores, affected systems, and test the update in staging before production. Every finding needs reproducible steps and verifiable evidence.',
         quiz: [
           {
             question: 'What should the executive summary of a pentest report contain?',

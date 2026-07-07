@@ -47,6 +47,8 @@ export const phase3: Module[] = [
         duration: '4 hours',
         labUrl: '',
         aiPrompt: '',
+        interviewQuestion: 'Can you explain the CIA triad and give a real-world example of each component being compromised?',
+        interviewAnswer: 'The CIA triad consists of Confidentiality, Integrity, and Availability. Confidentiality is compromised when unauthorized users access sensitive data, like the Equifax breach. Integrity is violated when data is altered without authorization, as in the Stuxnet attack modifying PLC firmware. Availability is impacted when systems become inaccessible, such as ransomware encrypting hospital patient records.',
         content: `:::objectives
 - Explain each component of the CIA triad with real-world failure examples
 - Differentiate between Authentication, Authorization, and Accounting
@@ -171,6 +173,8 @@ Before moving on, verify you can:
         duration: '4 hours',
         labUrl: '',
         aiPrompt: '',
+        interviewQuestion: 'What is the difference between a virus and a worm, and why does that distinction matter for defense?',
+        interviewAnswer: 'A virus requires a host file and user action to spread, while a worm self-replicates across networks autonomously. This distinction matters because worms like WannaCry can cause widespread damage rapidly without human interaction, requiring network-level defenses like segmentation, while viruses require user education and email filtering.',
         content: `:::objectives
 - Classify malware into distinct categories based on behavior and propagation
 - Identify delivery methods and attack vectors for each malware type
@@ -297,6 +301,8 @@ When analyzing malware, always consider the full kill chain: initial access → 
         duration: '4 hours',
         labUrl: '',
         aiPrompt: '',
+        interviewQuestion: 'How would you design a security awareness training program to defend against social engineering attacks?',
+        interviewAnswer: 'An effective program combines regular phishing simulations with immediate feedback, teaches employees to recognize psychological triggers like urgency and authority, establishes clear reporting procedures without blame, and conducts periodic tabletop exercises. The key is creating a culture where reporting suspicious activity is rewarded rather than punished.',
         content: `:::objectives
 - Identify and classify social engineering attack types
 - Analyze phishing emails using header analysis and URL inspection
@@ -384,6 +390,8 @@ The most effective defense is a culture where employees feel safe reporting susp
         duration: '4 hours',
         labUrl: '',
         aiPrompt: '',
+        interviewQuestion: 'When would you choose symmetric encryption over asymmetric, and how does TLS combine both?',
+        interviewAnswer: 'Symmetric encryption is preferred for bulk data because it is significantly faster than asymmetric. TLS uses hybrid encryption: asymmetric algorithms like ECDHE securely exchange a symmetric session key, then AES-GCM encrypts the actual data. This combines the key distribution benefits of asymmetric with the performance of symmetric encryption.',
         content: `:::objectives
 - Differentiate between symmetric and asymmetric encryption with use cases
 - Explain major encryption algorithms and their key sizes
@@ -538,6 +546,8 @@ sha256sum important_file.zip
         duration: '4 hours',
         labUrl: '',
         aiPrompt: '',
+        interviewQuestion: 'Why is FIDO2/WebAuthn considered phishing-resistant, and how does it differ from TOTP-based MFA?',
+        interviewAnswer: 'FIDO2 uses public key cryptography bound to specific domains, so credentials registered for a legitimate site cannot be used on a phishing site. TOTP codes can be phished in real-time by relaying the code to the legitimate service within the 30-second window. FIDO2 requires user interaction with a physical device and validates the origin.',
         content: `:::objectives
 - Differentiate authentication factors and their security properties
 - Implement various MFA methods (TOTP, HOTP, push, biometric)
@@ -647,6 +657,8 @@ Use RADIUS for network access (Wi-Fi, VPN). Use TACACS+ for device administratio
         duration: '4 hours',
         labUrl: '',
         aiPrompt: '',
+        interviewQuestion: 'How would you implement access controls for a hospital EHR system, and which model would you choose?',
+        interviewAnswer: 'I would implement RBAC with roles like doctor, nurse, and billing staff, each with appropriate permissions. Doctors get read/write to patient records, nurses get read access with limited write, and billing sees only billing codes. Combined with ABAC refinements for time-of-day and location restrictions, and enforced through separation of duties for critical functions like medication ordering.',
         content: `:::objectives
 - Compare DAC, MAC, RBAC, and ABAC models with use cases
 - Apply least privilege and need-to-know principles
@@ -736,6 +748,8 @@ Choose: DAC for simple needs, MAC for military/government, RBAC for most enterpr
         duration: '4 hours',
         labUrl: '',
         aiPrompt: '',
+        interviewQuestion: 'What is zero trust architecture, and how does it differ from traditional perimeter security?',
+        interviewAnswer: 'Zero trust assumes no implicit trust regardless of network location, verifying every access request based on identity, device health, and context. Traditional perimeter security trusts everything inside the firewall. Zero trust implements micro-segmentation, continuous verification, and least privilege access at every layer, reducing lateral movement if an attacker breaches the perimeter.',
         content: `:::objectives
 - Design network architectures with DMZs and proper segmentation
 - Implement zero trust architecture principles
@@ -824,6 +838,8 @@ Zero Trust is not a product — it is an architectural approach requiring change
         duration: '4 hours',
         labUrl: '',
         aiPrompt: '',
+        interviewQuestion: 'Explain the difference between RPO and RTO and how they influence backup strategy design.',
+        interviewAnswer: 'RPO defines the maximum acceptable data loss measured in time, determining how frequently backups must occur. RTO defines the maximum acceptable downtime, influencing recovery infrastructure and failover design. A 1-hour RPO requires at least hourly backups, while a 4-hour RTO may justify warm standby systems. Together they drive investment in backup frequency, storage, and recovery automation.',
         content: `:::objectives
 - Compare Type 1 and Type 2 hypervisors
 - Differentiate VMs and containers
@@ -934,6 +950,8 @@ RAID is NOT backup. RAID protects against disk failure, not accidental deletion,
         duration: '4 hours',
         labUrl: '',
         aiPrompt: '',
+        interviewQuestion: 'Walk me through the NIST incident response lifecycle and explain why containment comes before eradication.',
+        interviewAnswer: 'The NIST lifecycle includes Preparation, Detection and Analysis, Containment, Eradication, Recovery, and Lessons Learned. Containment must precede eradication because you need to stop the bleeding and preserve evidence before removing the threat. If you eradicate first, you may lose forensic evidence, allow the attacker to maintain persistence through other vectors, or fail to close the original entry point.',
         content: `:::objectives
 - Execute the six phases of the NIST Incident Response lifecycle
 - Compose and manage a CSIRT
@@ -1056,6 +1074,8 @@ Key points: Preparation is ongoing. Contain before eradicating. Lessons learned 
         duration: '4 hours',
         labUrl: '',
         aiPrompt: '',
+        interviewQuestion: 'How would you design a logging infrastructure to detect a compromised insider slowly exfiltrating data?',
+        interviewAnswer: 'I would implement centralized logging with SIEM correlation across authentication, file access, and network events. Key indicators include unusual data transfer volumes, access patterns outside normal working hours, queries against sensitive tables, and connections to external IPs. Baseline normal behavior per user and alert on deviations, with PowerShell script block logging to detect fileless techniques.',
         content: `:::objectives
 - Navigate Windows Event Logs and Linux log files
 - Understand syslog levels and their uses
@@ -1192,6 +1212,8 @@ Attackers often delete logs to cover their tracks. Centralized logging (send log
         duration: '4 hours',
         labUrl: '',
         aiPrompt: '',
+        interviewQuestion: 'How do you prioritize vulnerability remediation beyond just CVSS score?',
+        interviewAnswer: 'Beyond CVSS, I consider asset criticality, exploit availability in the wild, environmental exposure like internet-facing versus internal, compensating controls already in place, and EPSS probability scores. An internet-facing web server with CVSS 7.0 and a public exploit should be patched before an internal dev server with CVSS 9.0 and no known exploit. Business context drives prioritization.',
         content: `:::objectives
 - Differentiate vulnerability scanning from penetration testing
 - Interpret CVE and CVSS scores for prioritization
@@ -1312,6 +1334,8 @@ Patching too fast risks system instability. Patching too slow leaves vulnerabili
         duration: '4 hours',
         labUrl: '',
         aiPrompt: '',
+        interviewQuestion: 'What is the order of volatility in digital forensics, and why does it matter for evidence collection?',
+        interviewAnswer: 'Order of volatility ranks evidence by how quickly it is lost: CPU registers, routing tables, RAM, temporary files, disk, remote logs, and archival media. It matters because volatile evidence like RAM is lost when power is removed, while disk data persists. Collecting in the wrong order means losing critical forensic evidence like running malware processes, network connections, or encryption keys in memory.',
         content: `:::objectives
 - Explain order of volatility and evidence collection procedures
 - Perform forensic imaging with dd and write blockers
@@ -1498,6 +1522,8 @@ Always verify data destruction. After sanitization, attempt to read the media to
         duration: '4 hours',
         labUrl: '',
         aiPrompt: '',
+        interviewQuestion: 'How do you calculate ALE and use it to justify a security investment to management?',
+        interviewAnswer: 'ALE equals SLE times ARO. For a $2M asset with 30% exposure factor and 0.5 annual occurrence rate, SLE is $600,000 and ALE is $300,000. If a $150,000 control reduces ALE by 60%, the net savings is $30,000 annually, making it cost-effective. Presenting risk in dollar terms helps management make informed decisions about security investments versus accepting residual risk.',
         content: `:::objectives
 - Execute risk identification, assessment, response, and monitoring
 - Compare quantitative vs qualitative risk analysis
@@ -1640,6 +1666,8 @@ The goal of risk management is not to eliminate all risk - it's to make informed
         duration: '4 hours',
         labUrl: '',
         aiPrompt: '',
+        interviewQuestion: 'Explain the difference between NIST CSF and NIST SP 800-53, and how they work together.',
+        interviewAnswer: 'NIST CSF is a strategic framework defining what to do through five functions: Identify, Protect, Detect, Respond, and Recover. SP 800-53 is a detailed catalog of how to do it with specific security controls across 20 families. CSF provides the high-level structure for risk management, while SP 800-53 maps specific controls to each CSF category for implementation guidance.',
         content: `:::objectives
 - Execute the 7 steps of the NIST Risk Management Framework
 - Apply NIST Cybersecurity Framework (CSF) functions
@@ -1802,6 +1830,8 @@ Controls are not mutually exclusive. A single control can be technical + prevent
         duration: '4 hours',
         labUrl: '',
         aiPrompt: '',
+        interviewQuestion: 'What are the seven GDPR data processing principles, and how do they affect application design?',
+        interviewAnswer: 'The principles are lawfulness, purpose limitation, data minimization, accuracy, storage limitation, integrity and confidentiality, and accountability. They affect design by requiring privacy by design, collecting only necessary data, implementing retention policies, providing data subject access mechanisms, and maintaining audit trails. Applications must support data portability, erasure requests, and consent management from the ground up.',
         content: `:::objectives
 - Explain GDPR data processing principles
 - Identify lawful bases for processing personal data
@@ -1922,6 +1952,8 @@ GDPR compliance is not just about avoiding fines — it builds customer trust, i
         duration: '4 hours',
         labUrl: '',
         aiPrompt: '',
+        interviewQuestion: 'How does Nigeria NDPR compare to GDPR, and what must a company operating in both regions consider?',
+        interviewAnswer: 'NDPR was modeled after GDPR but has key differences: DPO is required for all controllers, registration with NDPC is mandatory, and fines are capped at 2% of annual gross revenue. Companies operating in both regions should comply with the higher standard, typically GDPR, and document compliance for both frameworks. Breach notification is 72 hours under both, but separate notifications may be required to NDPC and EU DPAs.',
         content: `:::objectives
 - Explain NDPR scope and requirements for data controllers/processors
 - Identify data subject rights under NDPR
@@ -2072,6 +2104,8 @@ Organizations operating in both EU and Nigeria can harmonize compliance by meeti
         duration: '4 hours',
         labUrl: '',
         aiPrompt: '',
+        interviewQuestion: 'Why is AES-GCM preferred over AES-CBC in modern applications, and what problem does forward secrecy solve?',
+        interviewAnswer: 'AES-GCM provides authenticated encryption with associated data, combining encryption and integrity verification in one operation, while CBC requires separate HMAC computation and is vulnerable to padding oracle attacks. Forward secrecy ensures that if a server private key is compromised, past session keys remain secure because each session used ephemeral keys that were discarded after use.',
         content: `:::objectives
 - Explain AES key sizes and encryption modes (ECB, CBC, GCM)
 - Describe RSA key generation, encryption, and signing processes
@@ -2236,6 +2270,8 @@ openssl ecparam -genkey -name prime256v1 -noout -out ec_private.pem
         duration: '4 hours',
         labUrl: '',
         aiPrompt: '',
+        interviewQuestion: 'Why should you never use SHA-256 for password storage, and what makes argon2 the preferred alternative?',
+        interviewAnswer: 'SHA-256 is designed for speed, enabling billions of hashes per second on GPUs for brute force attacks. Argon2 is memory-hard, requiring significant RAM per hash computation, making GPU and ASIC attacks much more expensive. It also supports tunable time and memory parameters, automatic salting, and resists both brute force and side-channel attacks through its argon2id variant.',
         content: `:::objectives
 - Understand SHA-256 and SHA-512 properties and use cases
 - Explain HMAC for message authentication
@@ -2416,6 +2452,8 @@ sha256sum -c checksums.txt
         duration: '4 hours',
         labUrl: '',
         aiPrompt: '',
+        interviewQuestion: 'Explain how digital signatures provide non-repudiation and the difference between CRL and OCSP for certificate revocation.',
+        interviewAnswer: 'Digital signatures use the signer private key to encrypt a hash of the document, providing non-repudiation because only the private key holder could have created the signature. CRL downloads a full revocation list periodically, providing stale data, while OCSP queries specific certificates in real-time. OCSP stapling improves this by having the server include the OCSP response in the TLS handshake.',
         content: `:::objectives
 - Explain how digital signatures provide integrity, authentication, and non-repudiation
 - Describe the certificate lifecycle: request, issuance, renewal, revocation
@@ -2582,6 +2620,8 @@ openssl s_client -connect example.com:443
         duration: '4 hours',
         labUrl: '',
         aiPrompt: '',
+        interviewQuestion: 'How would you explain the PKI chain of trust, and what happens when an intermediate CA is compromised?',
+        interviewAnswer: 'The PKI chain of trust flows from Root CA to Intermediate CA to end-entity certificates. Root CAs are kept offline in HSMs, while intermediates handle daily signing. If an intermediate CA is compromised, all certificates it signed become untrusted because the chain of trust is broken. The intermediate must be revoked, and all affected certificates reissued through a different intermediate CA.',
         content: `:::objectives
 - Review all five Security+ domains covered in Phase 3
 - Apply knowledge through scenario-based questions

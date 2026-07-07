@@ -1070,7 +1070,7 @@ What does awk '{print $11}' do?
           { question: "What does sort | uniq -c do?", options: ["Delete duplicates", "Sort and count unique lines", "Find unique files", "Create backup"], correctAnswerIndex: 1, difficulty: "intermediate", explanation: "sort orders lines, then uniq -c counts consecutive identical lines.", certTags: ["Linux+"] },
           { question: "What does awk '{print $11}' do?", options: ["Print line 11", "Print the 11th field", "Print 11 copies", "Delete field 11"], correctAnswerIndex: 1, difficulty: "intermediate", explanation: "awk splits each line into fields. $11 is the 11th field.", certTags: ["Linux+"] },
           { question: "What does /dev/null do?", options: ["Store data", "Discard all output", "Create a file", "Show errors"], correctAnswerIndex: 1, difficulty: "beginner", explanation: "/dev/null is the null device — writing to it discards the data.", certTags: ["Linux+"] },
-          { question: "How do you chain multiple commands?", options: ["Use ;", "Use |", "Use &", "All of the above"], correctAnswerIndex: 1, difficulty: "beginner", explanation: "| (pipe) chains commands by sending output of one to input of next.", certTags: ["Linux+"] }
+          { question: "How do you chain multiple commands?", options: ["Use ;", "Use |", "Use &", "Use >"], correctAnswerIndex: 1, difficulty: "beginner", explanation: "| (pipe) chains commands by sending output of one to input of next. ; runs sequentially, & runs in background, > redirects to file.", certTags: ["Linux+"] }
         ]
       },
       {
