@@ -52,40 +52,53 @@ export function TerminalLab({ onCommand }: TerminalLabProps) {
 
     termRef.current = term;
 
-    // Try to connect to WebSocket server
-    const connectWs = () => {
-      const wsUrl = `ws://${window.location.hostname}:4959`;
-      const ws = new WebSocket(wsUrl);
+    // Check if we're on HTTPS (Vercel) or HTTP (local)
+    const isHttps = window.location.protocol === 'https:';
+    
+    if (isHttps) {
+      // On Vercel - can't connect to local WebSocket
+      setError('Terminal only works locally');
+      term.write('\r\n\x1b[33m=== Real Terminal Not Available ===\x1b[0m\r\n\r\n');
+      term.write('\x1b[36mThe real terminal only works when running the site locally.\x1b[0m\r\n\r\n');
+      term.write('\x1b[37mTo use the real terminal:\x1b[0m\r\n');
+      term.write('\x1b[32m1. Open your WSL2 Ubuntu terminal\x1b[0m\r\n');
+      term.write('\x1b[32m2. Or run the site locally: npm run dev\x1b[0m\r\n\r\n');
+      term.write('\x1b[37mFor now, practice the commands shown in the exercises\x1b[0m\r\n');
+      term.write('\x1b[37min your real WSL2 terminal.\x1b[0m\r\n\r\n');
+    } else {
+      // Local - try to connect to WebSocket
+      const connectWs = () => {
+        const wsUrl = `ws://${window.location.hostname}:4959`;
+        const ws = new WebSocket(wsUrl);
 
-      ws.onopen = () => {
-        setConnected(true);
-        setError(null);
-        term.write('\r\n\x1b[32mConnected to real terminal!\x1b[0m\r\n');
-        term.write('\x1b[36mType commands just like in your WSL2 Ubuntu terminal.\x1b[0m\r\n\r\n');
+        ws.onopen = () => {
+          setConnected(true);
+          setError(null);
+          term.write('\r\n\x1b[32mConnected to real terminal!\x1b[0m\r\n');
+          term.write('\x1b[36mType commands just like in your WSL2 Ubuntu terminal.\x1b[0m\r\n\r\n');
+        };
+
+        ws.onmessage = (event) => {
+          term.write(event.data);
+        };
+
+        ws.onclose = () => {
+          setConnected(false);
+          term.write('\r\n\x1b[31mDisconnected from terminal server.\x1b[0m\r\n');
+        };
+
+        ws.onerror = () => {
+          setConnected(false);
+          setError('Could not connect to terminal server');
+          term.write('\r\n\x1b[31mCould not connect to terminal server.\x1b[0m\r\n');
+          term.write('\x1b[33mMake sure the server is running: npm run dev\x1b[0m\r\n');
+        };
+
+        wsRef.current = ws;
       };
 
-      ws.onmessage = (event) => {
-        term.write(event.data);
-      };
-
-      ws.onclose = () => {
-        setConnected(false);
-        term.write('\r\n\x1b[31mDisconnected from terminal server.\x1b[0m\r\n');
-        term.write('\x1b[33mMake sure the server is running: node server.cjs\x1b[0m\r\n');
-      };
-
-      ws.onerror = () => {
-        setConnected(false);
-        setError('Could not connect to terminal server');
-        term.write('\r\n\x1b[31mCould not connect to terminal server.\x1b[0m\r\n');
-        term.write('\x1b[33mFor real terminal, run the site locally with: npm run dev\x1b[0m\r\n');
-        term.write('\x1b[33mOr use your WSL2 Ubuntu terminal directly.\x1b[0m\r\n');
-      };
-
-      wsRef.current = ws;
-    };
-
-    connectWs();
+      connectWs();
+    }
 
     // Handle user input
     term.onData((data) => {
@@ -93,7 +106,6 @@ export function TerminalLab({ onCommand }: TerminalLabProps) {
         wsRef.current.send(data);
       }
       if (onCommand && data === '\r') {
-        // Extract the current line when Enter is pressed
         const line = term.buffer.active.getLine(term.buffer.active.cursorY)?.translateToString(true) || '';
         onCommand(line.trim());
       }
@@ -124,7 +136,7 @@ export function TerminalLab({ onCommand }: TerminalLabProps) {
           {connected ? (
             <span className="text-green-400">Connected to WSL2 Ubuntu</span>
           ) : error ? (
-            <span className="text-red-400">{error}</span>
+            <span className="text-yellow-400">{error}</span>
           ) : (
             <span className="text-yellow-400">Connecting...</span>
           )}
