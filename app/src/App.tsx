@@ -53,7 +53,6 @@ const LabsPage = lazy(() => import('./pages/LabsPage').then(m => ({ default: m.L
 const CertsPage = lazy(() => import('./pages/CertsPage').then(m => ({ default: m.CertsPage })));
 const CareerPage = lazy(() => import('./pages/CareerPage').then(m => ({ default: m.CareerPage })));
 const InterviewsPage = lazy(() => import('./pages/InterviewsPage').then(m => ({ default: m.InterviewsPage })));
-const LinuxLab = lazy(() => import('./pages/LinuxLab').then(m => ({ default: m.LinuxLab })));
 
 export default function App() {
   const lastMsgCountRef = useRef(0);
@@ -70,7 +69,6 @@ export default function App() {
   const [onlineComments, setOnlineComments] = useState<Record<string, TopicComment[]>>({});
   const [userId, setUserId] = useState<number | null>(null);
   const [dataVersion, setDataVersion] = useState(0);
-  const [showLinuxLab, setShowLinuxLab] = useState(false);
 
   useEffect(() => {
     document.documentElement.classList.toggle('dark', darkMode);
@@ -248,10 +246,6 @@ export default function App() {
   }, [completedTasks, curriculumData]);
 
   const handleOpenCourse = (topicId?: string) => {
-    if (topicId === 'proj-linux-terminal') {
-      setShowLinuxLab(true);
-      return;
-    }
     setActiveTab('syllabus');
     if (topicId) {
        setActiveTopicId(topicId);
@@ -316,19 +310,11 @@ export default function App() {
                   setActiveTab={setActiveTab}
                 />
               )}
-              {activeTab === 'projects' && !showLinuxLab && (
+              {activeTab === 'projects' && (
                 <Projects 
                   onOpenProject={handleOpenCourse} 
                   completedTasks={mergedTasks}
                 />
-              )}
-              {showLinuxLab && (
-                <div>
-                  <div className="p-2 bg-white border-b border-gray-200 flex items-center gap-2">
-                    <button onClick={() => setShowLinuxLab(false)} className="text-sm text-gray-500 hover:text-gray-700">Back to Projects</button>
-                  </div>
-                  <LinuxLab />
-                </div>
               )}
               {activeTab === 'labs' && <LabsPage />}
               {activeTab === 'certs' && <CertsPage />}

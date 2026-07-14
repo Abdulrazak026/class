@@ -30,12 +30,6 @@ export default defineConfig(({mode}) => {
     server: {
       port: 3000,
       hmr: process.env.DISABLE_HMR !== 'true',
-      proxy: {
-        '/ws-terminal': {
-          target: 'ws://localhost:4959',
-          ws: true,
-        },
-      },
     },
   };
 });

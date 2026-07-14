@@ -5722,11 +5722,11 @@ printf "%-20s %-10s %s\\n" "192.168.1.100" "1547" "SUSPICIOUS"
       {
         id: "proj-linux-terminal",
         title: "Linux Terminal Lab",
-        description: "Practice real Linux commands in a live terminal with verified exercises. Master pwd, cd, mkdir, rm, mv, echo, and process management.",
+        description: "Practice real Linux commands in your WSL2 Ubuntu terminal. Master pwd, cd, mkdir, rm, mv, echo, and process management.",
         type: "project",
         duration: "2-3 hours",
         content: `:::objectives
-- Practice real Linux commands in a live terminal
+- Practice real Linux commands in your WSL2 Ubuntu terminal
 - Master navigation: pwd, ls, cd, echo
 - Master file operations: mkdir, touch, cp, mv, rm
 - Master process management: ps, kill, top
@@ -5734,29 +5734,190 @@ printf "%-20s %-10s %s\\n" "192.168.1.100" "1547" "SUSPICIOUS"
 
 ## Your Mission
 
-Practice real Linux commands in a live terminal environment. This project has 5 levels with 4 exercises each.
+Practice real Linux commands in your WSL2 Ubuntu terminal. This project has 5 levels with 4 exercises each.
 
 ## How It Works
 
-1. Open the Linux Terminal Lab from the Projects page
-2. Each exercise shows you what to do
-3. Type the commands in the real terminal
-4. Mark the exercise as done when complete
-5. Progress through all 5 levels
+1. **Open your WSL2 Ubuntu terminal** (Windows Terminal - Ubuntu tab)
+2. Read each exercise below
+3. Type the commands in your real terminal
+4. Verify the output matches what's expected
+5. Move to the next exercise
 
-## Levels
+## Level 1: Navigation & Output
 
-| Level | Commands | Focus |
-|-------|----------|-------|
-| 1 | pwd, ls, cd, echo | Navigation & Output |
-| 2 | mkdir, touch | Creating Files & Directories |
-| 3 | mv, cp | Moving & Copying |
-| 4 | rm, rmdir | Deleting |
-| 5 | ps, kill, top | Process Management |
+### Exercise 1: Where Am I?
+\`\`\`bash
+pwd
+whoami
+\`\`\`
+Expected: You see your current directory path and username.
 
-## Why This Matters
+### Exercise 2: Look Around
+\`\`\`bash
+ls
+ls -la
+\`\`\`
+Expected: You see files and directories. -la shows hidden files and details.
 
-Every hacker and security professional uses the terminal daily. These commands are the foundation of everything you'll do in this course. Master them now, and the rest will be easier.
+### Exercise 3: Move Around
+\`\`\`bash
+cd /tmp
+pwd
+cd ~
+pwd
+\`\`\`
+Expected: You move to /tmp, then back to your home directory.
+
+### Exercise 4: Print a Message
+\`\`\`bash
+echo "Hello World"
+echo $USER
+echo $HOME
+\`\`\`
+Expected: You see "Hello World", your username, and your home path.
+
+## Level 2: Creating Files & Directories
+
+### Exercise 5: Make a Directory
+\`\`\`bash
+mkdir practice
+ls
+\`\`\`
+Expected: You see a new "practice" directory.
+
+### Exercise 6: Create a File
+\`\`\`bash
+cd practice
+touch test.txt
+ls -la
+\`\`\`
+Expected: You see test.txt with 0 bytes.
+
+### Exercise 7: Nested Directories
+\`\`\`bash
+mkdir -p projects/webapp/src
+ls -R
+\`\`\`
+Expected: You see the full directory tree.
+
+### Exercise 8: Write to a File
+\`\`\`bash
+echo "Hello World" > hello.txt
+cat hello.txt
+\`\`\`
+Expected: You see "Hello World" in the file.
+
+## Level 3: Moving & Copying
+
+### Exercise 9: Copy a File
+\`\`\`bash
+cp test.txt backup.txt
+ls
+\`\`\`
+Expected: You see both test.txt and backup.txt.
+
+### Exercise 10: Rename a File
+\`\`\`bash
+mv backup.txt test_backup.txt
+ls
+\`\`\`
+Expected: backup.txt is renamed to test_backup.txt.
+
+### Exercise 11: Move to Directory
+\`\`\`bash
+mv test_backup.txt ../projects/
+ls ../projects/
+\`\`\`
+Expected: test_backup.txt is now in the projects directory.
+
+### Exercise 12: Copy Directory
+\`\`\`bash
+cd ~
+cp -r practice practice_backup
+ls
+\`\`\`
+Expected: You see both practice and practice_backup directories.
+
+## Level 4: Deleting
+
+### Exercise 13: Delete a File
+\`\`\`bash
+rm hello.txt
+ls
+\`\`\`
+Expected: hello.txt is gone.
+
+### Exercise 14: Delete a Directory
+\`\`\`bash
+cd ~
+rmdir practice
+ls
+\`\`\`
+Expected: practice directory is gone.
+
+### Exercise 15: Force Delete
+\`\`\`bash
+rm -rf practice_backup
+ls
+\`\`\`
+Expected: practice_backup and all contents are gone.
+
+### Exercise 16: Clean Up
+\`\`\`bash
+rm -rf projects
+ls -la
+\`\`\`
+Expected: All test files and directories are gone.
+
+## Level 5: Process Management
+
+### Exercise 17: List Processes
+\`\`\`bash
+ps aux
+\`\`\`
+Expected: You see all running processes with details.
+
+### Exercise 18: Start a Background Process
+\`\`\`bash
+sleep 600 &
+ps aux | grep sleep
+\`\`\`
+Expected: You see the sleep process with its PID.
+
+### Exercise 19: Kill a Process
+\`\`\`bash
+ps aux | grep sleep | grep -v grep
+kill <PID>
+ps aux | grep sleep
+\`\`\`
+Expected: The sleep process is gone.
+
+### Exercise 20: Monitor Resources
+\`\`\`bash
+top -bn1 | head -20
+\`\`\`
+Expected: You see the top processes sorted by CPU usage.
+
+## Challenge
+
+After completing all exercises, write a script that:
+1. Creates a directory called "my_lab"
+2. Creates 5 files in it
+3. Lists them
+4. Copies one to a backup
+5. Deletes the original
+6. Verifies the backup exists
+
+\`\`\`bash
+mkdir my_lab
+cd my_lab
+touch file{1..5}.txt
+ls
+cp file1.txt file1_backup.txt
+rm file1.txt
+ls
+\`\`\`
 `,
         aiPrompt: "Explain why mastering Linux terminal commands is essential for cybersecurity professionals.",
         labUrl: "",
