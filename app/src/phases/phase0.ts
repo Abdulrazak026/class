@@ -2543,7 +2543,7 @@ regedit
   {
     id: "week04",
     title: "Linux Fundamentals",
-    durationText: "Week 4 - 10 Tutorials",
+    durationText: "Week 4 - 15 Tutorials",
     focus: "Master Linux from absolute beginner to intermediate level through hands-on projects",
     output: "Ability to navigate, read, search, script, and analyze systems on Linux - the hacker's primary tool",
     topics: [
@@ -3465,6 +3465,49 @@ ls -la /proc/*/exe 2>/dev/null | grep /tmp
 
 # Find processes with network connections
 ss -tulnp
+\`\`\`
+
+## Try It Yourself
+
+### Exercise 1: Start and Find a Process
+1. Run: sleep 600 &
+2. Run: ps aux | grep sleep
+3. Note the PID number
+4. Run: kill <PID>
+5. Verify: ps aux | grep sleep (should show nothing)
+
+### Exercise 2: Monitor with top
+1. Run: top
+2. Press P to sort by CPU
+3. Press M to sort by memory
+4. Press q to quit
+
+### Exercise 3: Find Suspicious Processes
+1. Run: ps aux | grep -v grep | grep root
+2. Run: ss -tulnp
+3. Document what you find
+
+## Practice Challenge
+
+Write a script that:
+1. Lists all processes running as root
+2. Checks for any process using more than 50% CPU
+3. Lists all processes with network connections
+4. Saves the output to a report file
+
+\`\`\`bash
+#!/bin/bash
+echo "=== Process Security Audit ==="
+echo "Date: $(date)"
+echo ""
+echo "--- Root Processes ---"
+ps aux | grep "^root" | grep -v grep
+echo ""
+echo "--- High CPU Processes (>50%) ---"
+ps aux | awk '$3 > 50 {print $0}'
+echo ""
+echo "--- Processes with Network Connections ---"
+ss -tulnp
 \`\`\``,
         aiPrompt: "Explain how to identify and handle suspicious processes on a compromised Linux system.",
         labUrl: "",
@@ -3484,41 +3527,79 @@ ss -tulnp
       },
       {
         id: "we04d07",
-        title: "Pipes & Redirects - Chaining Commands",
-        description: "Chain commands together with pipes, redirect output to files, and build powerful one-liners for recon.",
+        title: "Pipes - Chaining Commands",
+        description: "Chain commands together with pipes to process output and build powerful one-liners for security recon.",
         type: "practice",
         duration: "30 min",
         content: `:::objectives
-- Chain commands using pipes (|) to process output
-- Redirect output to files with > and >>
-- Understand stderr vs stdout and how to redirect both
-- Build powerful one-liners for security reconnaissance
+- Understand what pipes do and how they work (stdout to stdin)
+- Chain commands using pipes to filter and process output
+- Build multi-step pipelines for security reconnaissance
+- Use sort, uniq, and wc in pipeline combinations
 :::
 
-## Pipes: Connecting Commands
+## What Is a Pipe?
 
-A pipe sends the output of one command as input to the next.
+A pipe (|) takes the output of one command and sends it as input to the next command. Instead of typing commands separately, you chain them together.
 
 \`\`\`bash
 ls -la | grep ".txt"
 \`\`\`
 
-Output: Only lines containing ".txt" from the ls output.
-
 **How it works:**
-1. \`ls -la\` produces a list of files
-2. \`|\` sends that list to grep
+1. \`ls -la\` produces a list of files (stdout)
+2. \`|\` sends that output as input to the next command (stdin)
 3. \`grep ".txt"\` filters for lines containing ".txt"
 
 :::checkpoint
 What does a pipe (|) do?
 - Deletes the output
-- Sends output of one command to input of next
+- Sends stdout of one command to stdin of the next
 - Saves output to a file
 - Runs commands in parallel
 :::
 
-## Building Recon Pipelines
+## Basic Pipe Examples
+
+\`\`\`bash
+# Count files in a directory
+ls | wc -l
+
+# Find text files
+ls -la | grep ".txt"
+
+# Count lines in a file containing "error"
+cat /var/log/syslog | grep "error" | wc -l
+
+# Show only running services
+systemctl list-units | grep "running"
+\`\`\`
+
+## The sort | uniq -c Pipeline
+
+This is one of the most useful pipelines for security analysis:
+
+\`\`\`bash
+# Count unique IPs in a log file
+cat /var/log/auth.log | awk '{print $11}' | sort | uniq -c | sort -rn
+\`\`\`
+
+**Breaking it down:**
+1. \`cat\` reads the file
+2. \`awk '{print $11}'\` extracts the 11th field (IP address)
+3. \`sort\` orders the lines alphabetically
+4. \`uniq -c\` counts consecutive identical lines
+5. \`sort -rn\` sorts numerically in reverse (highest count first)
+
+:::checkpoint
+What does sort | uniq -c do?
+- Deletes duplicate lines
+- Sorts lines and counts unique occurrences
+- Finds unique files
+- Creates a backup
+:::
+
+## Security-Focused Pipeline Examples
 
 \`\`\`bash
 # Find failed SSH login attempts
@@ -3527,32 +3608,134 @@ cat /var/log/auth.log | grep "Failed" | wc -l
 # Count unique attacking IPs
 grep "Failed" /var/log/auth.log | awk '{print $11}' | sort | uniq -c | sort -rn
 
-# Find large files
+# Find large files (potential data exfiltration)
 find / -size +10M -type f 2>/dev/null | head -20
+
+# Find files modified in the last 24 hours
+find / -mtime -1 -type f 2>/dev/null | head -10
+
+# Find processes running from /tmp
+ls -la /proc/*/exe 2>/dev/null | grep /tmp
+\`\`\`
+
+## Try It Yourself
+
+### Exercise 1: Count Files
+\`\`\`bash
+# Count how many files are in /etc
+ls /etc | wc -l
+\`\`\`
+
+### Exercise 2: Find Failed Logins
+\`\`\`bash
+# Count failed login attempts
+grep "Failed" /var/log/auth.log | wc -l
+
+# Find the most common attacking IP
+grep "Failed" /var/log/auth.log | awk '{print $11}' | sort | uniq -c | sort -rn | head -1
+\`\`\`
+
+### Exercise 3: Build a Recon Pipeline
+\`\`\`bash
+# Find all .conf files and count them
+find /etc -name "*.conf" 2>/dev/null | wc -l
+
+# Find SUID binaries
+find / -perm -4000 -type f 2>/dev/null | wc -l
+\`\`\`
+
+## Practice Challenge
+
+Write a one-liner that:
+1. Reads /var/log/auth.log
+2. Finds all lines containing "Failed password"
+3. Extracts the IP address (field 11)
+4. Counts unique IPs
+5. Shows the top 3 most frequent attackers
+
+\`\`\`bash
+grep "Failed password" /var/log/auth.log | awk '{print $11}' | sort | uniq -c | sort -rn | head -3
+\`\`\``,
+        aiPrompt: "Explain how pipes work in Linux and give examples of security-focused one-liners.",
+        labUrl: "",
+        labTitle: "",
+        interviewQuestion: "Write a one-liner to find the top 5 IPs with the most failed SSH login attempts.",
+        interviewAnswer: "grep 'Failed password' /var/log/auth.log | awk '{print $11}' | sort | uniq -c | sort -rn | head -5",
+        quiz: [
+          { question: "What does a pipe (|) do?", options: ["Deletes output", "Sends stdout to next command's stdin", "Saves to file", "Runs in parallel"], correctAnswerIndex: 1, difficulty: "beginner", explanation: "Pipes connect commands - stdout of one becomes stdin of next.", certTags: ["Linux+"] },
+          { question: "What does sort | uniq -c do?", options: ["Delete duplicates", "Sort and count unique lines", "Find unique files", "Create backup"], correctAnswerIndex: 1, difficulty: "beginner", explanation: "sort orders lines, then uniq -c counts consecutive identical lines.", certTags: ["Linux+"] },
+          { question: "What does wc -l count?", options: ["Characters", "Words", "Lines", "Files"], correctAnswerIndex: 2, difficulty: "beginner", explanation: "-l flag counts lines.", certTags: ["Linux+"] },
+          { question: "What does sort -rn do?", options: ["Sort alphabetically", "Sort numerically in reverse", "Remove duplicates", "Count lines"], correctAnswerIndex: 1, difficulty: "intermediate", explanation: "-r reverses order, -n sorts numerically. Together they sort highest numbers first.", certTags: ["Linux+"] },
+          { question: "What does awk '{print $11}' do?", options: ["Print line 11", "Print the 11th field", "Print 11 copies", "Delete field 11"], correctAnswerIndex: 1, difficulty: "intermediate", explanation: "awk splits each line into fields. $11 is the 11th field.", certTags: ["Linux+"] },
+          { question: "What does head -5 do?", options: ["Show first 5 lines", "Show last 5 lines", "Delete 5 lines", "Count 5 lines"], correctAnswerIndex: 0, difficulty: "beginner", explanation: "head shows the first N lines of output.", certTags: ["Linux+"] },
+          { question: "Why use pipes instead of separate commands?", options: ["Looks cooler", "Combines output into one stream for processing", "Uses less memory", "Runs faster"], correctAnswerIndex: 1, difficulty: "beginner", explanation: "Pipes chain commands together, passing output as input to the next command.", certTags: ["Linux+"] },
+          { question: "What does grep 'Failed' | wc -l do?", options: ["Delete failed lines", "Count lines containing 'Failed'", "Find failed files", "Create a backup"], correctAnswerIndex: 1, difficulty: "beginner", explanation: "grep filters for 'Failed', then wc -l counts the matching lines.", certTags: ["Linux+"] }
+        ]
+      },
+      {
+        id: "we04d08",
+        title: "Redirects - Saving Output",
+        description: "Redirect command output to files, suppress errors, and use tee to display and save output simultaneously.",
+        type: "practice",
+        duration: "30 min",
+        content: `:::objectives
+- Redirect stdout to files with > (overwrite) and >> (append)
+- Redirect stderr with 2> and combine with stdout using 2>&1
+- Suppress output using /dev/null
+- Use tee to save output to a file while still displaying it
+:::
+
+## Why Redirects Matter
+
+When running commands, you often need to:
+- Save scan results to a file for later analysis
+- Suppress error messages that clutter output
+- Log command output while still watching it
+- Combine stdout and stderr into one stream
+
+## Overwrite vs Append: > and >>
+
+\`\`\`bash
+# Overwrite file (creates or replaces)
+echo "Scan started" > scan_log.txt
+
+# Append to file (adds to end)
+echo "Scan completed" >> scan_log.txt
+
+# Verify contents
+cat scan_log.txt
 \`\`\`
 
 :::checkpoint
-What does \`sort | uniq -c\` do?
-- Deletes duplicate lines
-- Sorts lines and counts unique occurrences
-- Finds unique files
-- Creates a backup
+What does > do?
+- Appends to file
+- Overwrites file with output
+- Deletes the file
+- Creates a pipe
 :::
 
-## Output Redirection: > and >>
+:::warning
+\`>\` overwrites the file completely. Use \`>>\` to add to an existing file without losing the previous contents.
+:::
+
+## Redirecting stderr: 2>
+
+Every command has two output streams:
+- **stdout (1)**: Normal output
+- **stderr (2)**: Error messages
 
 \`\`\`bash
-# Overwrite file
-echo "Scan started" > scan_log.txt
+# Redirect only errors to a file
+find / -name "*.conf" 2> errors.txt
 
-# Append to file
-echo "Scan completed" >> scan_log.txt
+# Redirect normal output to file
+find / -name "*.conf" > results.txt
 
-# Redirect both stdout and stderr
-command > all.txt 2>&1
+# Redirect BOTH stdout and stderr to file
+find / -name "*.conf" > all.txt 2>&1
 
-# Suppress all output
-command > /dev/null 2>&1
+# Suppress all output (both streams)
+find / -name "*.conf" > /dev/null 2>&1
 \`\`\`
 
 | Operator | Meaning |
@@ -3564,59 +3747,173 @@ command > /dev/null 2>&1
 | \`> /dev/null\` | Suppress output |
 
 :::checkpoint
-What does > do?
-- Appends to file
-- Overwrites file with output
-- Deletes the file
-- Creates a pipe
+What does 2>&1 do?
+- Delete errors
+- Redirect stderr to stdout
+- Show only errors
+- Redirect stdout to stderr
 :::
 
-## Practical Exercise: Log Analysis Pipeline
+## /dev/null - The Black Hole
 
 \`\`\`bash
-# Find all failed SSH attempts, extract IPs, count and sort
-grep "Failed password" /var/log/auth.log | \\
-  awk '{print $11}' | \\
-  sort | \\
-  uniq -c | \\
-  sort -rn | \\
-  head -5
+# Suppress all output
+command > /dev/null 2>&1
+
+# Suppress only errors
+command 2>/dev/null
 \`\`\`
 
-This one-liner:
-1. Finds failed login attempts
-2. Extracts the IP address (field 11)
-3. Sorts the IPs
-4. Counts unique occurrences
-5. Sorts by count (highest first)
-6. Shows top 5
+\`/dev/null\` is a special file that discards everything written to it. Use it to suppress unwanted output.
+
+## tee - Write to File AND Screen
+
+tee sends output to both a file and stdout simultaneously. Essential for logging while watching output.
+
+\`\`\`bash
+# Save scan results while viewing them
+nmap -sV 192.168.1.1 | tee scan_results.txt
+
+# Append to log while running
+echo "Scan started: $(date)" | tee -a scan_log.txt
+nmap -sV 192.168.1.1 | tee -a scan_log.txt
+\`\`\`
 
 :::checkpoint
-What does awk '{print $11}' do?
-- Print the 11th line
-- Print the 11th field/column
-- Print 11 copies
-- Delete the 11th field
+What does tee do differently from >?
+- Nothing, they are the same
+- tee writes to both file AND screen, > only writes to file
+- tee deletes the file first
+- tee only works with pipes
 :::
 
-## Advanced awk - The Hacker's Report Engine
+## Try It Yourself
 
-awk is the most powerful text processing tool in Linux. Beyond basic field extraction, it can generate reports, count patterns, and detect anomalies.
+### Exercise 1: Basic Redirects
+\`\`\`bash
+# Create a file with redirect
+echo "Hello World" > test.txt
+cat test.txt
 
-### Custom Field Separator: -F
+# Append to it
+echo "Second line" >> test.txt
+cat test.txt
+\`\`\`
+
+### Exercise 2: Suppress Errors
+\`\`\`bash
+# Try to read a file that doesn't exist
+cat /nonexistent 2>/dev/null
+echo "Exit code: $?"
+\`\`\`
+
+### Exercise 3: Use tee
+\`\`\`bash
+# Save system info while viewing it
+uname -a | tee system_info.txt
+hostname | tee -a system_info.txt
+id | tee -a system_info.txt
+cat system_info.txt
+\`\`\`
+
+## Practice Challenge
+
+Write a script that:
+1. Runs nmap on a target
+2. Saves the output to a file using tee
+3. Suppresses any error messages
+4. Shows a timestamp at the start and end
+
+\`\`\`bash
+#!/bin/bash
+echo "Scan started: $(date)" | tee scan_report.txt
+nmap -sV --top-ports 20 192.168.1.1 2>/dev/null | tee -a scan_report.txt
+echo "Scan completed: $(date)" | tee -a scan_report.txt
+\`\`\``,
+        aiPrompt: "Explain how output redirection works in Linux and when to use each type.",
+        labUrl: "",
+        labTitle: "",
+        interviewQuestion: "How do you save command output to a file while still seeing it on screen?",
+        interviewAnswer: "Use tee: command | tee output.txt. This sends output to both stdout (screen) and the file. Use tee -a to append instead of overwrite.",
+        quiz: [
+          { question: "What does > do?", options: ["Append to file", "Overwrite file with output", "Delete file", "Create pipe"], correctAnswerIndex: 1, difficulty: "beginner", explanation: "> redirects stdout to a file, overwriting it.", certTags: ["Linux+"] },
+          { question: "What does >> do differently from >?", options: ["Nothing", "Appends instead of overwriting", "Deletes the file", "Creates a new file"], correctAnswerIndex: 1, difficulty: "beginner", explanation: ">> appends to the file. > overwrites it.", certTags: ["Linux+"] },
+          { question: "What does 2>&1 do?", options: ["Delete errors", "Redirect stderr to stdout", "Show only errors", "Redirect stdout to stderr"], correctAnswerIndex: 1, difficulty: "intermediate", explanation: "2>&1 redirects file descriptor 2 (stderr) to file descriptor 1 (stdout).", certTags: ["Linux+"] },
+          { question: "What does /dev/null do?", options: ["Store data", "Discard all output", "Create a file", "Show errors"], correctAnswerIndex: 1, difficulty: "beginner", explanation: "/dev/null is the null device - writing to it discards the data.", certTags: ["Linux+"] },
+          { question: "What does tee do differently from >?", options: ["Same thing", "Writes to both file AND screen", "Deletes file first", "Only works with pipes"], correctAnswerIndex: 1, difficulty: "intermediate", explanation: "tee sends output to both stdout and a file. > only redirects to file.", certTags: ["Linux+"] },
+          { question: "What does 2> redirect?", options: ["stdout", "stderr", "Both", "Neither"], correctAnswerIndex: 1, difficulty: "beginner", explanation: "2> redirects file descriptor 2 (stderr/error messages).", certTags: ["Linux+"] },
+          { question: "How do you suppress all output?", options: ["> /dev/null", "> /dev/null 2>&1", "2> /dev/null", ">> /dev/null"], correctAnswerIndex: 1, difficulty: "intermediate", explanation: "> /dev/null 2>&1 redirects both stdout and stderr to /dev/null.", certTags: ["Linux+"] },
+          { question: "What does tee -a do?", options: ["Append to file", "Overwrite file", "Delete file", "Create file"], correctAnswerIndex: 0, difficulty: "beginner", explanation: "-a flag tells tee to append to the file instead of overwriting.", certTags: ["Linux+"] }
+        ]
+      },
+      {
+        id: "we04d09",
+        title: "awk - Processing Text",
+        description: "Extract fields, format output, and generate reports using awk - the hacker's text processing engine.",
+        type: "practice",
+        duration: "30 min",
+        content: `:::objectives
+- Extract fields from text using awk
+- Use custom field separators with -F
+- Generate reports using BEGIN and END blocks
+- Format output with printf
+:::
+
+## What Is awk?
+
+awk is a powerful text processing tool that splits each line into fields and lets you manipulate them. It's the #1 tool for parsing log files and generating reports.
+
+## Basic Field Extraction
+
+\`\`\`bash
+# Print the first field
+echo "hello world test" | awk '{print $1}'
+# Output: hello
+
+# Print multiple fields
+echo "hello world test" | awk '{print $1, $3}'
+# Output: hello test
+
+# Print all fields
+echo "hello world test" | awk '{print $0}'
+# Output: hello world test
+\`\`\`
+
+:::checkpoint
+What does awk '{print $1}' do?
+- Print the first line
+- Print the first field
+- Print all fields
+- Delete the first field
+:::
+
+## Parsing /etc/passwd
+
+\`\`\`bash
+# Print username and shell
+awk -F: '{print $1, $7}' /etc/passwd
+\`\`\`
+
+Output:
+\`\`\`
+root /bin/bash
+daemon /usr/sbin/nologin
+user /bin/bash
+\`\`\`
+
+## Custom Field Separator: -F
 
 By default, awk splits on whitespace. Use -F to specify a delimiter:
 
 \`\`\`bash
 # Parse /etc/passwd (colon-separated)
-awk -F: '{print $1, $7}' /etc/passwd
-\`\`\`
+awk -F: '{print $1}' /etc/passwd
 
-Output: Shows username and shell for each user.
-
-\`\`\`bash
 # Parse CSV files
 awk -F, '{print $2}' data.csv
+
+# Parse log files with specific format
+awk -F'[ :]' '{print $4}' /var/log/syslog
 \`\`\`
 
 :::checkpoint
@@ -3627,7 +3924,7 @@ What does awk -F: '{print $1}' /etc/passwd do?
 - Delete the first field
 :::
 
-### BEGIN and END Blocks
+## BEGIN and END Blocks
 
 BEGIN runs before processing any lines. END runs after processing all lines. Use them for report headers and summaries.
 
@@ -3653,7 +3950,7 @@ When does a BEGIN block execute?
 - At the end of processing
 :::
 
-### Conditional Logic in awk
+## Conditional Logic in awk
 
 awk can filter lines based on conditions:
 
@@ -3668,7 +3965,7 @@ awk '$11 ~ /^[0-9]+\./ {print $11}' /var/log/auth.log
 awk 'BEGIN {f=0; s=0} /Failed/ {f++} /Accepted/ {s++} END {print "Failed:", f, "Success:", s}' /var/log/auth.log
 \`\`\`
 
-### Formatted Output with printf
+## printf - Formatted Output
 
 printf gives you control over output formatting:
 
@@ -3694,105 +3991,83 @@ What does printf "%-20s" do?
 - Delete 20 characters
 :::
 
-## tee - Write to File AND Screen
+## Try It Yourself
 
-tee sends output to both a file and stdout simultaneously. Essential for logging while watching output.
-
+### Exercise 1: Extract Fields
 \`\`\`bash
-# Save scan results while viewing them
-nmap -sV 192.168.1.1 | tee scan_results.txt
+# Extract username and UID from /etc/passwd
+awk -F: '{print $1, $3}' /etc/passwd
 
-# Append to log while running
-echo "Scan started: $(date)" | tee -a scan_log.txt
-nmap -sV 192.168.1.1 | tee -a scan_log.txt
+# Extract only users with UID >= 1000
+awk -F: '$3 >= 1000 {print $1}' /etc/passwd
 \`\`\`
 
-:::checkpoint
-What does tee do differently from >?
-- Nothing, they are the same
-- tee writes to both file AND screen, > only writes to file
-- tee deletes the file first
-- tee only works with pipes
-:::
+### Exercise 2: Parse Log Files
+\`\`\`bash
+# Extract IP addresses from auth.log
+awk '{print $11}' /var/log/auth.log | head -10
 
-## Practical Exercise: Build a Log Report
+# Count lines containing "Failed"
+awk '/Failed/ {count++} END {print count}' /var/log/auth.log
+\`\`\`
+
+### Exercise 3: Generate a Report
+\`\`\`bash
+# Create a formatted user report
+awk -F: 'BEGIN {printf "%-15s %-5s %s\\n", "USERNAME", "UID", "SHELL"} 
+{printf "%-15s %-5s %s\\n", $1, $3, $7}' /etc/passwd
+\`\`\`
+
+## Practice Challenge
+
+Write an awk command that:
+1. Reads /var/log/auth.log
+2. Finds lines containing "Failed password"
+3. Extracts the IP address (field 11)
+4. Counts occurrences of each IP
+5. Prints a formatted report with headers
 
 \`\`\`bash
-# Generate a formatted report of failed logins
-grep "Failed" /var/log/auth.log | \\
-awk 'BEGIN {print "=== Failed Login Report ==="; print ""; count=0} 
-{count++; printf "%-5s %-15s %s\\n", count, $11, $0} 
-END {print ""; print "Total failed attempts:", count}' | \\
-tee report.txt
+grep "Failed password" /var/log/auth.log | \\
+awk '{ip[$11]++} 
+END {
+    printf "%-20s %s\\n", "IP ADDRESS", "ATTEMPTS"
+    printf "%-20s %s\\n", "---", "---"
+    for (i in ip) printf "%-20s %d\\n", i, ip[i]
+}'
 \`\`\``,
-        aiPrompt: "Explain how pipes and redirects work in Linux and give examples of security-focused one-liners.",
+        aiPrompt: "Explain how awk works and why it's essential for security log analysis.",
         labUrl: "",
         labTitle: "",
-        interviewQuestion: "Write a one-liner to find the top 5 IPs with the most failed SSH login attempts.",
-        interviewAnswer: "grep 'Failed password' /var/log/auth.log | awk '{print $11}' | sort | uniq -c | sort -rn | head -5",
+        interviewQuestion: "How would you use awk to extract IP addresses from auth.log?",
+        interviewAnswer: "awk '{print $11}' /var/log/auth.log extracts the 11th field which is typically the source IP in SSH failed login entries. For more complex parsing, I'd use awk -F to set custom delimiters and pattern matching to filter specific events.",
         quiz: [
-          { question: "What does a pipe (|) do?", options: ["Deletes output", "Sends output to next command's input", "Saves to file", "Runs in parallel"], correctAnswerIndex: 1, difficulty: "beginner", explanation: "Pipes connect commands - stdout of one becomes stdin of next.", certTags: ["Linux+"] },
-          { question: "What does > do?", options: ["Append to file", "Overwrite file with output", "Delete file", "Create pipe"], correctAnswerIndex: 1, difficulty: "beginner", explanation: "> redirects stdout to a file, overwriting it.", certTags: ["Linux+"] },
-          { question: "What does >> do differently from >?", options: ["Nothing", "Appends instead of overwriting", "Deletes the file", "Creates a new file"], correctAnswerIndex: 1, difficulty: "beginner", explanation: ">> appends to the file. > overwrites it.", certTags: ["Linux+"] },
-          { question: "What does 2>&1 do?", options: ["Delete errors", "Redirect stderr to stdout", "Show only errors", "Redirect stdout to stderr"], correctAnswerIndex: 1, difficulty: "intermediate", explanation: "2>&1 redirects file descriptor 2 (stderr) to file descriptor 1 (stdout).", certTags: ["Linux+"] },
-          { question: "What does sort | uniq -c do?", options: ["Delete duplicates", "Sort and count unique lines", "Find unique files", "Create backup"], correctAnswerIndex: 1, difficulty: "intermediate", explanation: "sort orders lines, then uniq -c counts consecutive identical lines.", certTags: ["Linux+"] },
-          { question: "What does awk '{print $11}' do?", options: ["Print line 11", "Print the 11th field", "Print 11 copies", "Delete field 11"], correctAnswerIndex: 1, difficulty: "intermediate", explanation: "awk splits each line into fields. $11 is the 11th field.", certTags: ["Linux+"] },
-          { question: "What does /dev/null do?", options: ["Store data", "Discard all output", "Create a file", "Show errors"], correctAnswerIndex: 1, difficulty: "beginner", explanation: "/dev/null is the null device - writing to it discards the data.", certTags: ["Linux+"] },
-          { question: "What does awk -F: do?", options: ["Print field 1", "Use colon as field separator", "Filter lines", "Format output"], correctAnswerIndex: 1, difficulty: "intermediate", explanation: "-F sets the field separator. -F: means split on colons.", certTags: ["Linux+"] },
+          { question: "What does awk '{print $1}' do?", options: ["Print first line", "Print first field", "Print all fields", "Delete first field"], correctAnswerIndex: 1, difficulty: "beginner", explanation: "$1 is the first field in awk.", certTags: ["Linux+"] },
+          { question: "What does -F: do in awk?", options: ["Print field 1", "Use colon as field separator", "Filter lines", "Format output"], correctAnswerIndex: 1, difficulty: "beginner", explanation: "-F sets the field separator. -F: means split on colons.", certTags: ["Linux+"] },
           { question: "When does awk BEGIN block execute?", options: ["After each line", "Before processing any lines", "Only if file is empty", "At the end"], correctAnswerIndex: 1, difficulty: "intermediate", explanation: "BEGIN runs once before awk processes any input lines.", certTags: ["Linux+"] },
-          { question: "What does tee do differently from >?", options: ["Same thing", "Writes to both file AND screen", "Deletes file first", "Only works with pipes"], correctAnswerIndex: 1, difficulty: "intermediate", explanation: "tee sends output to both stdout and a file. > only redirects to file.", certTags: ["Linux+"] },
-          { question: "What does printf '%-20s' do?", options: ["Print 20 chars, left-aligned", "Print 20 chars, right-aligned", "Print only 20 lines", "Delete 20 chars"], correctAnswerIndex: 0, difficulty: "intermediate", explanation: "- means left-aligned, 20s means 20-character string field.", certTags: ["Linux+"] }
+          { question: "When does awk END block execute?", options: ["At the start", "After all input processed", "On each line", "Only on errors"], correctAnswerIndex: 1, difficulty: "intermediate", explanation: "END runs once after all input lines have been processed.", certTags: ["Linux+"] },
+          { question: "What does $0 represent in awk?", options: ["First field", "Last field", "Entire line", "Line number"], correctAnswerIndex: 2, difficulty: "beginner", explanation: "$0 represents the entire current line.", certTags: ["Linux+"] },
+          { question: "What does printf '%-20s' do?", options: ["Print 20 chars, left-aligned", "Print 20 chars, right-aligned", "Print 20 lines", "Delete 20 chars"], correctAnswerIndex: 0, difficulty: "intermediate", explanation: "- means left-aligned, 20s means 20-character string field.", certTags: ["Linux+"] },
+          { question: "How do you count lines with awk?", options: ["awk 'count++'", "awk '{count++} END {print count}'", "awk 'wc -l'", "awk '{print NR}'"], correctAnswerIndex: 1, difficulty: "intermediate", explanation: "Use a variable incremented on each line, printed in END block.", certTags: ["Linux+"] },
+          { question: "What does awk '/pattern/' do?", options: ["Delete matching lines", "Print lines matching the pattern", "Count matching lines", "Save matching lines"], correctAnswerIndex: 1, difficulty: "beginner", explanation: "/pattern/ filters lines - only matching lines are processed.", certTags: ["Linux+"] }
         ]
       },
       {
-        id: "we04d08",
-        title: "Bash Scripting - Writing Your First Tools",
-        description: "Write bash scripts with variables, conditionals, and loops. Automate reconnaissance and build custom tools.",
+        id: "we04d10",
+        title: "Variables & Arguments",
+        description: "Use variables, command substitution, and command-line arguments to write flexible scripts.",
         type: "practice",
-        duration: "45 min",
+        duration: "30 min",
         content: `:::objectives
-- Write bash scripts with proper shebang and structure
-- Use variables, conditionals (if/else), and loops (for/while)
-- Accept command-line arguments
-- Build a simple recon script
-:::
-
-## What Is a Script?
-
-A script is a file containing commands that execute sequentially. Instead of typing 10 commands manually, you write them once and run the script.
-
-## Your First Script
-
-\`\`\`bash
-#!/bin/bash
-# This is a comment
-
-echo "Hello, $USER!"
-echo "Today is $(date +%A)"
-echo "You are in $(pwd)"
-\`\`\`
-
-**Breaking it down:**
-- \`#!/bin/bash\` - shebang line (tells the system to use bash)
-- \`#\` - comment (ignored by bash)
-- \`$USER\` - variable (your username)
-- \`$(date +%A)\` - command substitution (runs date, inserts output)
-
-Save it and make it executable:
-\`\`\`bash
-chmod +x hello.sh
-./hello.sh
-\`\`\`
-
-:::checkpoint
-What does #!/bin/bash do?
-- Comments out the line
-- Tells the system which interpreter to use
-- Sets the file permissions
-- Creates a variable
+- Assign and use variables in bash scripts
+- Use command substitution to capture command output
+- Access script arguments ($0, $1, $2, $#, $@)
+- Use read for user input
 :::
 
 ## Variables
+
+Variables store data that you can reuse. In bash, assign without spaces and access with $.
 
 \`\`\`bash
 #!/bin/bash
@@ -3802,9 +4077,11 @@ PORT=80
 echo "Scanning $TARGET on port $PORT"
 \`\`\`
 
+**Rules:**
 - No spaces around \`=\`
 - Use \`$VAR\` to access the value
 - Use \`"$VAR"\` in strings to preserve spaces
+- Variable names are case-sensitive
 
 :::checkpoint
 How do you assign a value to a variable in bash?
@@ -3814,7 +4091,38 @@ How do you assign a value to a variable in bash?
 - set var "value"
 :::
 
-## Command-Line Arguments
+## Command Substitution: $(command)
+
+Capture the output of a command into a variable:
+
+\`\`\`bash
+#!/bin/bash
+
+CURRENT_DATE=$(date +%Y-%m-%d)
+HOSTNAME=$(hostname)
+CURRENT_USER=$(whoami)
+
+echo "Report generated on $CURRENT_DATE"
+echo "Host: $HOSTNAME"
+echo "User: $CURRENT_USER"
+\`\`\`
+
+**Alternative syntax (backticks):**
+\`\`\`bash
+CURRENT_DATE=\`date +%Y-%m-%d\`
+\`\`\`
+
+:::checkpoint
+What does $(command) do?
+- Run the command in background
+- Insert the command's output into a string
+- Delete the command
+- Save the command to a file
+:::
+
+## Script Arguments: $0, $1, $2, $#, $@
+
+When you run a script with arguments, they're available as special variables:
 
 \`\`\`bash
 #!/bin/bash
@@ -3840,6 +4148,14 @@ Number of arguments: 2
 All arguments: 192.168.1.100 80
 \`\`\`
 
+| Variable | Meaning |
+|----------|---------|
+| \`$0\` | Script name |
+| \`$1\` | First argument |
+| \`$2\` | Second argument |
+| \`$#\` | Number of arguments |
+| \`$@\` | All arguments |
+
 :::checkpoint
 What does $1 represent in a bash script?
 - The script name
@@ -3848,7 +4164,133 @@ What does $1 represent in a bash script?
 - All arguments
 :::
 
-## Conditionals: if/else
+## read - User Input
+
+\`\`\`bash
+#!/bin/bash
+
+read -p "Enter target IP: " target
+echo "Scanning $target..."
+\`\`\`
+
+- \`-p\` shows a prompt before reading
+- Input is stored in the variable after -p
+
+**Reading multiple values:**
+\`\`\`bash
+read -p "Enter IP: " ip
+read -p "Enter port: " port
+echo "Target: $ip:$port"
+\`\`\`
+
+## Try It Yourself
+
+### Exercise 1: Use Variables
+\`\`\`bash
+#!/bin/bash
+NAME="CyberStudent"
+DAY=$(date +%A)
+echo "Hello $NAME, today is $DAY"
+\`\`\`
+
+### Exercise 2: Command Substitution
+\`\`\`bash
+#!/bin/bash
+IP=$(hostname -I | awk '{print $1}')
+echo "Your IP address is: $IP"
+\`\`\`
+
+### Exercise 3: Script Arguments
+\`\`\`bash
+#!/bin/bash
+echo "You provided $# arguments"
+echo "First: $1"
+echo "Second: $2"
+\`\`\`
+
+Run: \`./args.sh hello world\`
+
+### Exercise 4: User Input
+\`\`\`bash
+#!/bin/bash
+read -p "Enter filename: " filename
+echo "You entered: $filename"
+ls -la "$filename"
+\`\`\`
+
+## Practice Challenge
+
+Write a script that:
+1. Takes a target IP as first argument
+2. Takes a port as second argument
+3. Uses variables for colors
+4. Displays a formatted banner
+5. Tests if the port is open
+
+\`\`\`bash
+#!/bin/bash
+
+RED='\\033[0;31m'
+GREEN='\\033[0;32m'
+NC='\\033[0m'
+
+TARGET=$1
+PORT=$2
+
+if [ -z "$TARGET" ] || [ -z "$PORT" ]; then
+    echo "Usage: $0 <target> <port>"
+    exit 1
+fi
+
+echo -e "\${GREEN}=== Port Check ===\${NC}"
+echo "Target: \$TARGET"
+echo "Port: \$PORT"
+
+nc -z -w 1 \$TARGET \$PORT 2>/dev/null
+if [ \$? -eq 0 ]; then
+    echo -e "\${GREEN}Port \$PORT is OPEN\${NC}"
+else
+    echo -e "\${RED}Port \$PORT is CLOSED\${NC}"
+fi
+\`\`\``,
+        aiPrompt: "Explain how variables and arguments work in bash scripts.",
+        labUrl: "",
+        labTitle: "",
+        interviewQuestion: "How do you pass arguments to a bash script and use them?",
+        interviewAnswer: "Arguments are accessed with $1, $2, etc. $# gives the count, $@ gives all arguments. I always check if arguments are provided using if [ -z '$1' ] and show usage if missing.",
+        quiz: [
+          { question: "How do you assign a variable in bash?", options: ["var = 'value'", "var='value'", "$var='value'", "set var 'value'"], correctAnswerIndex: 1, difficulty: "beginner", explanation: "No spaces around = when assigning variables in bash.", certTags: ["Linux+"] },
+          { question: "What does $(command) do?", options: ["Run command in background", "Insert command output into string", "Delete command", "Save command to file"], correctAnswerIndex: 1, difficulty: "beginner", explanation: "$(command) runs the command and inserts its output.", certTags: ["Linux+"] },
+          { question: "What does $1 represent?", options: ["Script name", "First argument", "Number of arguments", "All arguments"], correctAnswerIndex: 1, difficulty: "beginner", explanation: "$1 is the first command-line argument.", certTags: ["Linux+"] },
+          { question: "What does $# contain?", options: ["All arguments", "Script name", "Number of arguments", "First argument"], correctAnswerIndex: 2, difficulty: "beginner", explanation: "$# contains the number of arguments passed to the script.", certTags: ["Linux+"] },
+          { question: "What does $@ contain?", options: ["First argument", "Script name", "Number of arguments", "All arguments"], correctAnswerIndex: 3, difficulty: "beginner", explanation: "$@ contains all arguments passed to the script.", certTags: ["Linux+"] },
+          { question: "What does read -p do?", options: ["Read password", "Show prompt and read input", "Read file", "Print variable"], correctAnswerIndex: 1, difficulty: "beginner", explanation: "-p shows a prompt before reading user input.", certTags: ["Linux+"] },
+          { question: "What does $0 contain?", options: ["First argument", "Script name", "Number of arguments", "Current directory"], correctAnswerIndex: 1, difficulty: "beginner", explanation: "$0 contains the name of the script.", certTags: ["Linux+"] },
+          { question: "Why use quotes around $VAR?", options: ["Looks better", "Preserves spaces in the value", "Makes it faster", "Required by bash"], correctAnswerIndex: 1, difficulty: "intermediate", explanation: "Quotes preserve spaces and special characters in variable values.", certTags: ["Linux+"] }
+        ]
+      },
+      {
+        id: "we04d11",
+        title: "Conditionals - Making Decisions",
+        description: "Use if/then/else statements to make decisions in scripts based on conditions and exit codes.",
+        type: "practice",
+        duration: "30 min",
+        content: `:::objectives
+- Write if/then/else/fi statements
+- Use comparison operators for numbers and strings
+- Check string length with -z and -n
+- Use exit codes ($?) to check command success
+:::
+
+## Why Conditionals Matter
+
+Scripts need to make decisions:
+- Check if a file exists before reading it
+- Check if a port is open before exploiting it
+- Check if a command succeeded before continuing
+- Validate user input before processing
+
+## if/then/else/fi
 
 \`\`\`bash
 #!/bin/bash
@@ -3861,15 +4303,74 @@ fi
 echo "Scanning $1..."
 \`\`\`
 
-**Comparison operators:**
+**Structure:**
+\`\`\`bash
+if [ condition ]; then
+    # code if true
+elif [ other_condition ]; then
+    # code if other condition is true
+else
+    # code if all conditions are false
+fi
+\`\`\`
+
+:::checkpoint
+What does if [ condition ]; then do?
+- Create a loop
+- Execute code based on a condition
+- Read user input
+- Delete a file
+:::
+
+## Comparison Operators
+
+### Numeric Comparisons
+
 | Operator | Meaning |
 |----------|---------|
-| \`-eq\` | Equal (numbers) |
+| \`-eq\` | Equal |
 | \`-ne\` | Not equal |
 | \`-gt\` | Greater than |
 | \`-lt\` | Less than |
-| \`=\` | Equal (strings) |
+| \`-ge\` | Greater than or equal |
+| \`-le\` | Less than or equal |
+
+\`\`\`bash
+#!/bin/bash
+
+count=5
+
+if [ $count -gt 3 ]; then
+    echo "Count is greater than 3"
+fi
+
+if [ $count -eq 5 ]; then
+    echo "Count equals 5"
+fi
+\`\`\`
+
+### String Comparisons
+
+| Operator | Meaning |
+|----------|---------|
+| \`=\` | Equal |
+| \`!=\` | Not equal |
 | \`-z\` | String is empty |
+| \`-n\` | String is not empty |
+
+\`\`\`bash
+#!/bin/bash
+
+name="admin"
+
+if [ "$name" = "admin" ]; then
+    echo "Welcome admin"
+fi
+
+if [ -z "$1" ]; then
+    echo "No argument provided"
+fi
+\`\`\`
 
 :::checkpoint
 What does -z "$1" check?
@@ -3879,12 +4380,180 @@ What does -z "$1" check?
 - If $1 exists
 :::
 
-## Loops: for
+## Exit Codes: $?
+
+Every command returns an exit code:
+- \`0\` = success
+- \`non-zero\` = failure
 
 \`\`\`bash
 #!/bin/bash
 
-for ip in 192.168.1.{1..10}; do
+ping -c 1 192.168.1.1 > /dev/null 2>&1
+if [ $? -eq 0 ]; then
+    echo "Host is alive"
+else
+    echo "Host is down"
+fi
+\`\`\`
+
+:::checkpoint
+What does $? contain?
+- The last command's exit code
+- The current directory
+- The number of arguments
+- The script name
+:::
+
+## Checking Files
+
+\`\`\`bash
+#!/bin/bash
+
+if [ -f "/etc/passwd" ]; then
+    echo "File exists"
+fi
+
+if [ -d "/tmp" ]; then
+    echo "Directory exists"
+fi
+
+if [ -r "/etc/shadow" ]; then
+    echo "File is readable"
+fi
+
+if [ -w "/tmp" ]; then
+    echo "Directory is writable"
+fi
+\`\`\`
+
+| Operator | Meaning |
+|----------|---------|
+| \`-f\` | File exists |
+| \`-d\` | Directory exists |
+| \`-r\` | File is readable |
+| \`-w\` | File is writable |
+| \`-x\` | File is executable |
+
+## Try It Yourself
+
+### Exercise 1: Check Arguments
+\`\`\`bash
+#!/bin/bash
+
+if [ -z "$1" ]; then
+    echo "Usage: $0 <target>"
+    exit 1
+fi
+
+echo "Target: $1"
+\`\`\`
+
+### Exercise 2: Check if Host is Alive
+\`\`\`bash
+#!/bin/bash
+
+TARGET=$1
+
+ping -c 1 $TARGET > /dev/null 2>&1
+if [ $? -eq 0 ]; then
+    echo "$TARGET is alive"
+else
+    echo "$TARGET is down"
+fi
+\`\`\`
+
+### Exercise 3: Check File Existence
+\`\`\`bash
+#!/bin/bash
+
+FILE=$1
+
+if [ -f "$FILE" ]; then
+    echo "File exists"
+    cat "$FILE"
+else
+    echo "File not found"
+    exit 1
+fi
+\`\`\`
+
+## Practice Challenge
+
+Write a script that:
+1. Takes a target IP as argument
+2. Checks if argument was provided
+3. Pings the target
+4. If alive, checks if port 22 is open
+5. Reports the results
+
+\`\`\`bash
+#!/bin/bash
+
+if [ -z "$1" ]; then
+    echo "Usage: $0 <target>"
+    exit 1
+fi
+
+TARGET=$1
+
+ping -c 1 $TARGET > /dev/null 2>&1
+if [ $? -eq 0 ]; then
+    echo "$TARGET is alive"
+    
+    nc -z -w 1 $TARGET 22 2>/dev/null
+    if [ $? -eq 0 ]; then
+        echo "Port 22 is OPEN"
+    else
+        echo "Port 22 is CLOSED"
+    fi
+else
+    echo "$TARGET is down"
+fi
+\`\`\``,
+        aiPrompt: "Explain how conditional statements work in bash scripts.",
+        labUrl: "",
+        labTitle: "",
+        interviewQuestion: "How do you check if a command succeeded in a bash script?",
+        interviewAnswer: "I check $? which contains the exit code of the last command. 0 means success, non-zero means failure. I use if [ $? -eq 0 ] to test, or use the command directly in the if statement.",
+        quiz: [
+          { question: "What does if [ condition ]; then do?", options: ["Create a loop", "Execute code based on condition", "Read input", "Delete file"], correctAnswerIndex: 1, difficulty: "beginner", explanation: "if/then executes code when the condition is true.", certTags: ["Linux+"] },
+          { question: "What does -eq mean?", options: ["Not equal", "Equal (numbers)", "Greater than", "Less than"], correctAnswerIndex: 1, difficulty: "beginner", explanation: "-eq tests numeric equality.", certTags: ["Linux+"] },
+          { question: "What does -z '$1' check?", options: ["If $1 is zero", "If $1 is empty", "If $1 is a number", "If $1 exists"], correctAnswerIndex: 1, difficulty: "beginner", explanation: "-z tests if the string is empty (zero length).", certTags: ["Linux+"] },
+          { question: "What does $? contain?", options: ["Last command's exit code", "Current directory", "Number of arguments", "Script name"], correctAnswerIndex: 0, difficulty: "beginner", explanation: "$? holds the exit code of the last command. 0 = success.", certTags: ["Linux+"] },
+          { question: "What exit code means success?", options: ["1", "0", "-1", "255"], correctAnswerIndex: 1, difficulty: "beginner", explanation: "Exit code 0 means success. Non-zero means failure.", certTags: ["Linux+"] },
+          { question: "What does -f '/file' check?", options: ["File is readable", "File exists", "File is writable", "File is executable"], correctAnswerIndex: 1, difficulty: "beginner", explanation: "-f tests if the file exists and is a regular file.", certTags: ["Linux+"] },
+          { question: "What does -n '$1' check?", options: ["If $1 is numeric", "If $1 is not empty", "If $1 is negative", "If $1 is null"], correctAnswerIndex: 1, difficulty: "beginner", explanation: "-n tests if the string is not empty.", certTags: ["Linux+"] },
+          { question: "What does fi do?", options: ["Start a loop", "End an if statement", "Find a file", "Fill a variable"], correctAnswerIndex: 1, difficulty: "beginner", explanation: "fi closes the if/then/else block.", certTags: ["Linux+"] }
+        ]
+      },
+      {
+        id: "we04d12",
+        title: "Loops - Repeating Tasks",
+        description: "Use for and while loops to automate repetitive tasks like scanning multiple hosts or processing lists.",
+        type: "practice",
+        duration: "30 min",
+        content: `:::objectives
+- Write for loops with lists and brace expansion
+- Write while loops with conditions
+- Use while read to process files line by line
+- Automate security tasks with loops
+:::
+
+## Why Loops Matter
+
+Instead of running the same command 100 times, use a loop:
+- Ping a list of hosts
+- Scan multiple ports
+- Process each line in a log file
+- Check multiple files for sensitive data
+
+## for Loops with Lists
+
+\`\`\`bash
+#!/bin/bash
+
+for ip in 192.168.1.1 192.168.1.2 192.168.1.3; do
     ping -c 1 $ip > /dev/null 2>&1
     if [ $? -eq 0 ]; then
         echo "$ip is alive"
@@ -3892,7 +4561,34 @@ for ip in 192.168.1.{1..10}; do
 done
 \`\`\`
 
-This loops through IPs 192.168.1.1 to 192.168.1.10, pings each one, and reports which are alive.
+:::checkpoint
+What does a for loop do?
+- Run once
+- Repeat code for each item in a list
+- Read user input
+- Delete files
+:::
+
+## Brace Expansion: {1..10}
+
+Generate sequences easily:
+
+\`\`\`bash
+# Numbers 1 to 10
+for i in {1..10}; do
+    echo "Number: $i"
+done
+
+# IP addresses
+for ip in 192.168.1.{1..254}; do
+    ping -c 1 $ip > /dev/null 2>&1 && echo "$ip is alive"
+done
+
+# Port scanning
+for port in {1..1000}; do
+    nc -z -w 1 192.168.1.1 $port 2>/dev/null && echo "Port $port is open"
+done
+\`\`\`
 
 :::checkpoint
 What does {1..10} generate?
@@ -3902,46 +4598,26 @@ What does {1..10} generate?
 - Nothing
 :::
 
-## Your First Recon Script
+## for Loops with Command Output
 
 \`\`\`bash
-#!/bin/bash
-# recon.sh - Basic host reconnaissance
+# Loop through file contents
+for user in $(cat /etc/passwd | cut -d: -f1); do
+    echo "User: $user"
+done
 
-TARGET=$1
-
-if [ -z "$TARGET" ]; then
-    echo "Usage: $0 <target>"
-    exit 1
-fi
-
-echo "=== Recon Report for $TARGET ==="
-echo "Date: $(date)"
-echo ""
-
-echo "--- Ping Test ---"
-ping -c 3 $TARGET
-
-echo ""
-echo "--- Open Ports ---"
-nmap -T4 --top-ports 20 $TARGET 2>/dev/null | grep "open"
-
-echo ""
-echo "--- DNS Info ---"
-host $TARGET 2>/dev/null
+# Loop through directory contents
+for file in /etc/*.conf; do
+    echo "Config: $file"
+done
 \`\`\`
 
-\`\`\`bash
-chmod +x recon.sh
-./recon.sh 192.168.1.1
-\`\`\`
+## while Loops
 
-## While Loops - Continuous Monitoring
-
-For loops iterate over a list. While loops repeat until a condition is false. Essential for monitoring scripts.
+while loops repeat until a condition is false:
 
 \`\`\`bash
-# Simple while loop
+# Simple counter
 count=1
 while [ $count -le 5 ]; do
     echo "Count: $count"
@@ -3949,33 +4625,152 @@ while [ $count -le 5 ]; do
 done
 \`\`\`
 
-**Infinite loop with break condition:**
-\`\`\`bash
-while true; do
-    echo "Checking..."
-    # Your monitoring logic here
-    sleep 5  # Wait 5 seconds before checking again
-done
-\`\`\`
+:::checkpoint
+What does while [ condition ] do?
+- Run once
+- Repeat while condition is true
+- Read user input
+- Delete files
+:::
 
-**Read file line by line:**
+## while read - Processing Files
+
+Process a file line by line:
+
 \`\`\`bash
+# Read each line of a file
 while read -r line; do
-    echo "Processing: $line"
+    echo "Line: $line"
 done < /etc/passwd
+
+# Process a list of IPs
+while read -r ip; do
+    ping -c 1 $ip > /dev/null 2>&1
+    if [ $? -eq 0 ]; then
+        echo "$ip is alive"
+    fi
+done < ips.txt
 \`\`\`
 
 :::checkpoint
-What does while true do?
-- Run once
-- Loop forever until manually stopped
-- Loop 10 times
-- Only run if condition is true
+What does while read -r line do?
+- Read one line
+- Read file line by line in a loop
+- Delete lines
+- Count lines
 :::
 
-## Functions - Reusable Code Blocks
+## Infinite Loops with Break
 
-Functions let you organize code into reusable blocks. Essential for clean, maintainable scripts.
+\`\`\`bash
+# Monitor in real-time
+while true; do
+    echo "Checking at $(date)..."
+    ps aux | grep -v grep | grep suspicious_process
+    sleep 5
+done
+\`\`\`
+
+Press Ctrl+C to stop.
+
+## Try It Yourself
+
+### Exercise 1: Ping a Range
+\`\`\`bash
+for ip in 192.168.1.{1..5}; do
+    ping -c 1 $ip > /dev/null 2>&1
+    if [ $? -eq 0 ]; then
+        echo "$ip is alive"
+    else
+        echo "$ip is down"
+    fi
+done
+\`\`\`
+
+### Exercise 2: Scan Ports
+\`\`\`bash
+for port in 22 80 443 8080; do
+    nc -z -w 1 192.168.1.1 $port 2>/dev/null
+    if [ $? -eq 0 ]; then
+        echo "Port $port is open"
+    fi
+done
+\`\`\`
+
+### Exercise 3: Process a File
+\`\`\`bash
+# Create a test file
+echo -e "192.168.1.1\\n192.168.1.2\\n192.168.1.3" > targets.txt
+
+# Process each line
+while read -r ip; do
+    echo "Checking $ip..."
+    ping -c 1 $ip > /dev/null 2>&1 && echo "$ip alive"
+done < targets.txt
+\`\`\`
+
+## Practice Challenge
+
+Write a script that:
+1. Reads a list of IPs from a file
+2. Pings each IP
+3. Checks if port 22 is open on alive hosts
+4. Reports the results
+
+\`\`\`bash
+#!/bin/bash
+
+while read -r ip; do
+    ping -c 1 $ip > /dev/null 2>&1
+    if [ $? -eq 0 ]; then
+        echo "$ip is alive"
+        nc -z -w 1 $ip 22 2>/dev/null
+        if [ $? -eq 0 ]; then
+            echo "  Port 22 is OPEN"
+        fi
+    else
+        echo "$ip is down"
+    fi
+done < targets.txt
+\`\`\``,
+        aiPrompt: "Explain how for and while loops work in bash scripts.",
+        labUrl: "",
+        labTitle: "",
+        interviewQuestion: "How would you ping a list of IPs from a file and report which are alive?",
+        interviewAnswer: "while read -r ip; do ping -c 1 $ip > /dev/null 2>&1 && echo $ip is alive; done < ips.txt",
+        quiz: [
+          { question: "What does a for loop do?", options: ["Run once", "Repeat code for each item in a list", "Read user input", "Delete files"], correctAnswerIndex: 1, difficulty: "beginner", explanation: "for loops iterate over a list of items.", certTags: ["Linux+"] },
+          { question: "What does {1..10} generate?", options: ["Numbers 1 to 10", "Files 1 to 10", "Directories 1 to 10", "Nothing"], correctAnswerIndex: 0, difficulty: "beginner", explanation: "Brace expansion generates a sequence.", certTags: ["Linux+"] },
+          { question: "What does while [ condition ] do?", options: ["Run once", "Repeat while condition is true", "Read user input", "Delete files"], correctAnswerIndex: 1, difficulty: "beginner", explanation: "while loops repeat as long as the condition is true.", certTags: ["Linux+"] },
+          { question: "What does while read -r line do?", options: ["Read one line", "Read file line by line in a loop", "Delete lines", "Count lines"], correctAnswerIndex: 1, difficulty: "intermediate", explanation: "while read processes a file line by line.", certTags: ["Linux+"] },
+          { question: "What does done < file.txt do?", options: ["Write to file", "Redirect file as input to the loop", "Delete file", "Create file"], correctAnswerIndex: 1, difficulty: "intermediate", explanation: "< redirects the file as input to the loop.", certTags: ["Linux+"] },
+          { question: "How do you stop an infinite loop?", options: ["Ctrl+C", "Ctrl+Z", "exit", "kill"], correctAnswerIndex: 0, difficulty: "beginner", explanation: "Ctrl+C sends SIGINT, stopping the loop.", certTags: ["Linux+"] },
+          { question: "What does && do between commands?", options: ["Run both", "Run second only if first succeeds", "Run second only if first fails", "Run in parallel"], correctAnswerIndex: 1, difficulty: "intermediate", explanation: "&& runs the second command only if the first succeeds (exit code 0).", certTags: ["Linux+"] },
+          { question: "What does $((count + 1)) do?", options: ["Print count", "Add 1 to count", "Delete count", "Create variable"], correctAnswerIndex: 1, difficulty: "beginner", explanation: "$(( )) performs arithmetic.", certTags: ["Linux+"] }
+        ]
+      },
+      {
+        id: "we04d13",
+        title: "Functions & Reusable Code",
+        description: "Write reusable functions, use case statements for menus, and add color output to scripts.",
+        type: "practice",
+        duration: "30 min",
+        content: `:::objectives
+- Define and call functions in bash
+- Use local variables and return values
+- Write case statements for menu selection
+- Add color output using ANSI codes
+:::
+
+## Why Functions Matter
+
+Functions organize code into reusable blocks:
+- Avoid repeating the same code
+- Make scripts easier to read and maintain
+- Allow code reuse across scripts
+- Enable modular design
+
+## Function Syntax
 
 \`\`\`bash
 #!/bin/bash
@@ -3997,59 +4792,111 @@ check_port 192.168.1.1 22
 check_port 192.168.1.1 80
 \`\`\`
 
-**Key concepts:**
-- \`local\` - variable only exists inside the function
-- \`$1\`, \`$2\` - function arguments (not script arguments)
-- \`return\` - return a value (0-255)
+:::checkpoint
+What does a function do in bash?
+- Run once
+- Create a reusable block of code
+- Read user input
+- Delete files
+:::
+
+## Local Variables
+
+Use \`local\` to restrict variables to the function scope:
+
+\`\`\`bash
+#!/bin/bash
+
+my_function() {
+    local name=$1
+    echo "Hello $name"
+}
+
+my_function "World"
+echo "$name"  # Empty - local variable not accessible here
+\`\`\`
 
 :::checkpoint
 What does local do in a bash function?
 - Makes the variable global
-- Makes the variable only exist inside the function
+- Restricts variable to function scope
 - Deletes the variable
 - Prints the variable
 :::
 
-## Arithmetic - Counting and Comparing
+## Return Values
+
+Functions can return values using \`return\` (0-255) or output:
 
 \`\`\`bash
-# Basic arithmetic
-count=$((count + 1))
-total=$((a + b))
-remainder=$((n % 2))
+#!/bin/bash
 
-# Comparison in if statements
-if [ $count -gt 10 ]; then
-    echo "Count is greater than 10"
+# Using return code
+is_alive() {
+    ping -c 1 $1 > /dev/null 2>&1
+    return $?
+}
+
+is_alive 192.168.1.1
+if [ $? -eq 0 ]; then
+    echo "Host is alive"
 fi
 
-# Shorthand increment
-((count++))
-((total += 5))
+# Using output
+get_ip() {
+    hostname -I | awk '{print $1}'
+}
+
+MY_IP=$(get_ip)
+echo "Your IP: $MY_IP"
+\`\`\`
+
+## case Statements
+
+case is cleaner than multiple if/elif for matching a variable:
+
+\`\`\`bash
+#!/bin/bash
+
+echo "Select scan type:"
+echo "1) Quick scan"
+echo "2) Full scan"
+echo "3) Stealth scan"
+read -p "Choice: " choice
+
+case $choice in
+    1) echo "Running quick scan..." ;;
+    2) echo "Running full scan..." ;;
+    3) echo "Running stealth scan..." ;;
+    *) echo "Invalid choice" ;;
+esac
 \`\`\`
 
 :::checkpoint
-What does $((count + 1)) do?
-- Print the string "count + 1"
-- Add 1 to the variable count
-- Create a new variable
-- Delete the variable
+What does case $choice in do?
+- Create a loop
+- Match a variable against multiple patterns
+- Read user input
+- Delete a file
 :::
 
-## Color Output - Making Alerts Visible
+## Color Output - ANSI Codes
 
-ANSI escape codes add color to terminal output. Essential for security tools that need to highlight critical findings.
+ANSI escape codes add color to terminal output:
 
 \`\`\`bash
-# Color codes
+#!/bin/bash
+
 RED='\\033[0;31m'
 GREEN='\\033[0;32m'
 YELLOW='\\033[1;33m'
+BLUE='\\033[0;34m'
 NC='\\033[0m'  # No Color (reset)
 
 echo -e "\${RED}CRITICAL: Root login detected!\${NC}"
 echo -e "\${GREEN}OK: No issues found\${NC}"
 echo -e "\${YELLOW}WARNING: Suspicious activity\${NC}"
+echo -e "\${BLUE}INFO: Scan started\${NC}"
 \`\`\`
 
 **Color reference:**
@@ -4069,180 +4916,123 @@ What does \\033[0m do?
 - Clear the screen
 :::
 
-## sleep - Waiting Between Checks
+## Try It Yourself
 
-\`\`\`bash
-sleep 5      # Wait 5 seconds
-sleep 1m     # Wait 1 minute
-sleep 0.5    # Wait half a second
-\`\`\`
-
-Used in monitoring loops to avoid overwhelming the system with checks.
-
-## case Statements - Menu Selection
-
-case is cleaner than multiple if/elif for matching a variable against known values.
-
+### Exercise 1: Write a Function
 \`\`\`bash
 #!/bin/bash
-echo "Select scan type:"
-echo "1) Quick scan"
-echo "2) Full scan"
-echo "3) Stealth scan"
+
+greet() {
+    local name=$1
+    echo "Hello, $name!"
+}
+
+greet "CyberStudent"
+greet "Hacker"
+\`\`\`
+
+### Exercise 2: Check a Port
+\`\`\`bash
+#!/bin/bash
+
+check_port() {
+    local target=$1
+    local port=$2
+    nc -z -w 1 $target $port 2>/dev/null
+    if [ $? -eq 0 ]; then
+        echo -e "\\033[0;32mPort $port is OPEN on $target\\033[0m"
+    else
+        echo -e "\\033[0;31mPort $port is CLOSED on $target\\033[0m"
+    fi
+}
+
+check_port 192.168.1.1 22
+check_port 192.168.1.1 80
+\`\`\`
+
+### Exercise 3: Menu with case
+\`\`\`bash
+#!/bin/bash
+
+echo "Select an option:"
+echo "1) Show system info"
+echo "2) Show network info"
+echo "3) Show user info"
 read -p "Choice: " choice
 
 case $choice in
-    1) echo "Running quick scan..."; nmap -T4 --top-ports 100 $1 ;;
-    2) echo "Running full scan..."; nmap -T4 -p- $1 ;;
-    3) echo "Running stealth scan..."; nmap -sS -T2 $1 ;;
-    *) echo "Invalid choice"; exit 1 ;;
+    1) uname -a ;;
+    2) ip addr ;;
+    3) id ;;
+    *) echo "Invalid" ;;
 esac
 \`\`\`
 
-:::checkpoint
-What does case $choice in do?
-- Create a loop
-- Match a variable against multiple patterns
-- Read user input
-- Delete a file
-:::
+## Practice Challenge
 
-## printf - Formatted Output
-
-printf gives precise control over output formatting. Essential for reports.
-
-\`\`\`bash
-# Formatted table
-printf "%-20s %-15s %s\\n" "USERNAME" "STATUS" "SHELL"
-printf "%-20s %-15s %s\\n" "root" "active" "/bin/bash"
-printf "%-20s %-15s %s\\n" "nobody" "inactive" "/usr/sbin/nologin"
-\`\`\`
-
-**Format specifiers:**
-| Specifier | Meaning |
-|-----------|---------|
-| %s | String |
-| %d | Integer |
-| %-20s | Left-aligned string, 20 chars wide |
-| %10s | Right-aligned string, 10 chars wide |
-
-## sudo -l - Checking Sudo Privileges
-
-\`\`\`bash
-sudo -l
-\`\`\`
-
-Output shows what commands you can run as root:
-\`\`\`
-User user may run the following commands on target:
-    (root) NOPASSWD: /usr/bin/nmap
-    (root) /usr/bin/vim
-\`\`\`
-
-If you see NOPASSWD, you can run that command as root without a password. Check GTFOBins (https://gtfobins.github.io/) for exploitation methods.
-
-:::checkpoint
-What does sudo -l show?
-- All users on the system
-- What commands you can run as root
-- The root password
-- System logs
-:::
-
-## nmap Advanced Flags
-
-\`\`\`bash
-nmap -sV -sC --top-ports 100 -oN scan.txt 192.168.1.1
-\`\`\`
-
-| Flag | Meaning |
-|------|---------|
-| -sV | Service version detection |
-| -sC | Run default scripts |
-| --top-ports 100 | Scan the 100 most common ports |
-| -p- | Scan all 65535 ports |
-| -oN scan.txt | Save output in normal format |
-| -oX scan.xml | Save output in XML format |
-| -O | OS detection |
-| -T4 | Speed template (1=slow/stealth, 5=fast/noisy) |
-
-:::checkpoint
-What does nmap -sV do?
-- Scan all ports
-- Detect service versions
-- Run stealth scan
-- Save results to file
-:::
-
-## read - User Input
-
-\`\`\`bash
-read -p "Enter target IP: " target
-echo "Scanning $target..."
-\`\`\`
-
-- \`-p\` shows a prompt before reading
-- Input is stored in the variable after -p
-
-## Practical Exercise: Complete Recon Script
+Write a script that:
+1. Defines a function check_service() that checks if a port is open
+2. Uses color output (green for open, red for closed)
+3. Has a menu using case statement
+4. Checks multiple services (SSH, HTTP, HTTPS)
 
 \`\`\`bash
 #!/bin/bash
-# full_recon.sh - Complete recon with functions and color
 
 RED='\\033[0;31m'
 GREEN='\\033[0;32m'
-YELLOW='\\033[1;33m'
 NC='\\033[0m'
 
-TARGET=$1
+check_service() {
+    local target=$1
+    local port=$2
+    local name=$3
+    nc -z -w 1 $target $port 2>/dev/null
+    if [ $? -eq 0 ]; then
+        echo -e "\${GREEN}$name (port $port): OPEN\${NC}"
+    else
+        echo -e "\${RED}$name (port $port): CLOSED\${NC}"
+    fi
+}
 
-if [ -z "$TARGET" ]; then
-    echo "Usage: $0 <target>"
+TARGET=\$1
+if [ -z "\$TARGET" ]; then
+    echo "Usage: \$0 <target>"
     exit 1
 fi
 
-echo -e "\${GREEN}=== Recon Report for \$TARGET ===\${NC}"
-echo "Date: \$(date)"
-
-echo -e "\\n\${YELLOW}--- Open Ports ---\${NC}"
-nmap -sV --top-ports 20 \$TARGET 2>/dev/null | grep "open"
-
-echo -e "\\n\${YELLOW}--- Listening Services ---\${NC}"
-ss -tlnp 2>/dev/null | grep LISTEN
-
-echo -e "\\n\${YELLOW}--- SUID Binaries ---\${NC}"
-find / -perm -4000 -type f 2>/dev/null | head -5
-
-echo -e "\\n\${GREEN}=== Scan Complete ===\${NC}"
+echo "=== Service Check for \$TARGET ==="
+check_service \$TARGET 22 "SSH"
+check_service \$TARGET 80 "HTTP"
+check_service \$TARGET 443 "HTTPS"
 \`\`\``,
-        aiPrompt: "Explain how bash scripts work and why automation is important for security professionals.",
+        aiPrompt: "Explain how functions work in bash scripts and why they're important for security tools.",
         labUrl: "",
         labTitle: "",
-        interviewQuestion: "Write a bash script that pings a list of IPs and reports which are alive.",
-        interviewAnswer: "for ip in $(cat ips.txt); do ping -c 1 $ip > /dev/null 2>&1 && echo $ip is alive; done",
+        interviewQuestion: "How do you write a reusable function in bash?",
+        interviewAnswer: "I define functions with name() { ... }, use local variables to avoid conflicts, and return values using output or return codes. I organize my scripts into functions for each check, making the code modular and reusable.",
         quiz: [
-          { question: "What does #!/bin/bash do?", options: ["Comments out the line", "Tells the system which interpreter to use", "Sets permissions", "Creates a variable"], correctAnswerIndex: 1, difficulty: "beginner", explanation: "The shebang line tells the OS to use bash to execute the script.", certTags: ["Linux+"] },
-          { question: "How do you assign a variable in bash?", options: ["var = 'value'", "var='value'", "$var='value'", "set var 'value'"], correctAnswerIndex: 1, difficulty: "beginner", explanation: "No spaces around = when assigning variables in bash.", certTags: ["Linux+"] },
-          { question: "What does $1 represent?", options: ["Script name", "First argument", "Number of arguments", "All arguments"], correctAnswerIndex: 1, difficulty: "beginner", explanation: "$1 is the first command-line argument passed to the script.", certTags: ["Linux+"] },
-          { question: "What does -z '$1' check?", options: ["If $1 is zero", "If $1 is empty", "If $1 is a number", "If $1 exists"], correctAnswerIndex: 1, difficulty: "beginner", explanation: "-z tests if the string is empty (zero length).", certTags: ["Linux+"] },
-          { question: "What does {1..10} generate?", options: ["Numbers 1 to 10", "Files 1 to 10", "Directories 1 to 10", "Nothing"], correctAnswerIndex: 0, difficulty: "beginner", explanation: "Brace expansion generates a sequence: {1..10} = 1 2 3 4 5 6 7 8 9 10.", certTags: ["Linux+"] },
-          { question: "What does $? contain?", options: ["The last command's exit code", "The current directory", "The number of arguments", "The script name"], correctAnswerIndex: 0, difficulty: "intermediate", explanation: "$? holds the exit code of the last command. 0 = success, non-zero = failure.", certTags: ["Linux+"] },
-          { question: "What does exit 1 do?", options: ["Exits with success", "Exits with error", "Pauses the script", "Loops the script"], correctAnswerIndex: 1, difficulty: "beginner", explanation: "exit 1 exits the script with error code 1 (failure). exit 0 = success.", certTags: ["Linux+"] },
-          { question: "What is command substitution?", options: ["Running a command in background", "$(command) inserts command output into a string", "Deleting a command", "Saving a command to file"], correctAnswerIndex: 1, difficulty: "intermediate", explanation: "$(command) runs the command and inserts its output. date +%A in $(date +%A) inserts the day name.", certTags: ["Linux+"] }
+          { question: "What does a function do in bash?", options: ["Run once", "Create reusable block of code", "Read input", "Delete files"], correctAnswerIndex: 1, difficulty: "beginner", explanation: "Functions organize code into reusable blocks.", certTags: ["Linux+"] },
+          { question: "What does local do?", options: ["Makes variable global", "Restricts variable to function scope", "Deletes variable", "Prints variable"], correctAnswerIndex: 1, difficulty: "beginner", explanation: "local restricts a variable to the function scope.", certTags: ["Linux+"] },
+          { question: "What does case $var in do?", options: ["Create a loop", "Match variable against patterns", "Read input", "Delete file"], correctAnswerIndex: 1, difficulty: "intermediate", explanation: "case matches a variable against multiple patterns.", certTags: ["Linux+"] },
+          { question: "What does \\033[0;31m do?", options: ["Set text to red", "Reset color", "Clear screen", "Print newline"], correctAnswerIndex: 0, difficulty: "intermediate", explanation: "0;31m is the ANSI escape code for red text.", certTags: ["Linux+"] },
+          { question: "What does \\033[0m do?", options: ["Set text to red", "Reset text to default", "Make text bold", "Clear screen"], correctAnswerIndex: 1, difficulty: "beginner", explanation: "\\033[0m resets text color to default.", certTags: ["Linux+"] },
+          { question: "How do you call a function?", options: ["call function_name", "function_name args", "run function_name", "exec function_name"], correctAnswerIndex: 1, difficulty: "beginner", explanation: "Just use the function name followed by arguments.", certTags: ["Linux+"] },
+          { question: "What does *) mean in case?", options: ["Delete all", "Default/invalid option", "Match all files", "End case"], correctAnswerIndex: 1, difficulty: "intermediate", explanation: "* is a wildcard that matches anything - used as default case.", certTags: ["Linux+"] },
+          { question: "What does return $? do?", options: ["Exit script", "Return exit code from function", "Print $?", "Delete function"], correctAnswerIndex: 1, difficulty: "intermediate", explanation: "return exits the function with a specific exit code.", certTags: ["Linux+"] }
         ]
       },
       {
-        id: "we04d09",
+        id: "we04d14",
         title: "Log Analysis - Reading the Battlefield",
-        description: "Analyze auth.log, syslog, and application logs to detect attacks, find patterns, and extract indicators of compromise.",
+        description: "Analyze auth.log and syslog to detect attacks, extract indicators of compromise, and build security reports.",
         type: "practice",
         duration: "30 min",
         content: `:::objectives
 - Understand Linux log file locations and types
 - Parse auth.log for failed logins and successful authentications
 - Extract indicators of compromise (IOCs) from logs
-- Build log analysis pipelines for security monitoring
+- Build log analysis reports
 :::
 
 ## Why Log Analysis Matters
@@ -4265,17 +5055,6 @@ If you can't read logs, you can't detect attacks.
 | /var/log/apache2/access.log | Web server requests |
 | /var/log/apache2/error.log | Web server errors |
 
-## Reading auth.log
-
-\`\`\`bash
-tail -20 /var/log/auth.log
-\`\`\`
-
-A typical failed SSH login:
-\`\`\`
-Jun 15 03:22:14 server sshd[12345]: Failed password for invalid user admin from 10.0.0.50 port 22 ssh2
-\`\`\`
-
 :::checkpoint
 What log file contains SSH login attempts?
 - /var/log/syslog
@@ -4284,20 +5063,34 @@ What log file contains SSH login attempts?
 - /var/log/ssh.log
 :::
 
-## Detecting Brute Force Attacks
+## Generating Test Data
+
+Before analyzing logs, generate some test data:
+
+\`\`\`bash
+# Generate failed login attempts
+ssh localhost 2>/dev/null  # Enter wrong password 3 times
+
+# Check the logs
+tail -20 /var/log/auth.log
+\`\`\`
+
+A typical failed SSH login:
+\`\`\`
+Jun 15 03:22:14 server sshd[12345]: Failed password for invalid user admin from 10.0.0.50 port 22 ssh2
+\`\`\`
+
+## grep "Failed" - Finding Attacks
 
 \`\`\`bash
 # Count failed login attempts
 grep -c "Failed password" /var/log/auth.log
 
+# Show all failed attempts
+grep "Failed password" /var/log/auth.log
+
 # Find attacking IPs
 grep "Failed password" /var/log/auth.log | awk '{print $11}' | sort | uniq -c | sort -rn
-
-# Find successful logins (potential compromise)
-grep "Accepted" /var/log/auth.log
-
-# Find successful logins from specific IP
-grep "Accepted" /var/log/auth.log | grep "10.0.0.50"
 \`\`\`
 
 :::checkpoint
@@ -4308,7 +5101,28 @@ What does grep -c do?
 - Copy matching lines
 :::
 
-## Building a Log Analysis Report
+## awk for IP Extraction
+
+\`\`\`bash
+# Extract IP addresses (field 11)
+grep "Failed password" /var/log/auth.log | awk '{print $11}'
+
+# Count unique IPs
+grep "Failed password" /var/log/auth.log | awk '{print $11}' | sort | uniq -c | sort -rn
+
+# Find successful logins (potential compromise)
+grep "Accepted" /var/log/auth.log | awk '{print $9, $11}'
+\`\`\`
+
+:::checkpoint
+What does awk '{print $11}' extract from auth.log?
+- The timestamp
+- The IP address (11th field)
+- The username
+- The port number
+:::
+
+## Report Building
 
 \`\`\`bash
 #!/bin/bash
@@ -4334,28 +5148,74 @@ echo "--- Users Targeted ---"
 grep "Failed password" /var/log/auth.log | awk '{print $9}' | sort | uniq -c | sort -rn
 \`\`\`
 
-:::checkpoint
-What does awk '{print $11}' extract from a log line?
-- The timestamp
-- The IP address (11th field)
-- The username
-- The port number
-:::
+## Try It Yourself
 
-## Practical Exercise
+### Exercise 1: Count Failed Logins
+\`\`\`bash
+grep -c "Failed" /var/log/auth.log
+\`\`\`
+
+### Exercise 2: Find Attacking IPs
+\`\`\`bash
+grep "Failed" /var/log/auth.log | awk '{print $11}' | sort | uniq -c | sort -rn | head -5
+\`\`\`
+
+### Exercise 3: Find Successful Logins
+\`\`\`bash
+grep "Accepted" /var/log/auth.log
+\`\`\`
+
+### Exercise 4: Build a Report
+\`\`\`bash
+#!/bin/bash
+echo "=== Security Report ==="
+echo "Date: $(date)"
+echo ""
+echo "Failed logins: $(grep -c 'Failed' /var/log/auth.log)"
+echo ""
+echo "Top attackers:"
+grep "Failed" /var/log/auth.log | awk '{print $11}' | sort | uniq -c | sort -rn | head -3
+\`\`\`
+
+## Practice Challenge
+
+Write a script that:
+1. Analyzes /var/log/auth.log
+2. Counts failed login attempts
+3. Extracts top 5 attacking IPs
+4. Lists successful logins
+5. Generates a formatted report
 
 \`\`\`bash
-# Analyze your own auth.log
-cat /var/log/auth.log | head -20
+#!/bin/bash
 
-# Count failed attempts
-grep -c "Failed" /var/log/auth.log
+echo "=========================================="
+echo " SECURITY LOG ANALYSIS REPORT"
+echo " Date: $(date)"
+echo "=========================================="
 
-# Find the most common attacking IP
-grep "Failed" /var/log/auth.log | awk '{print $11}' | sort | uniq -c | sort -rn | head -1
+echo ""
+echo "--- Failed Login Count ---"
+grep -c "Failed password" /var/log/auth.log
 
-# Find successful logins
-grep "Accepted" /var/log/auth.log
+echo ""
+echo "--- Top 5 Attacking IPs ---"
+grep "Failed password" /var/log/auth.log | awk '{print $11}' | sort | uniq -c | sort -rn | head -5
+
+echo ""
+echo "--- Successful Logins ---"
+grep "Accepted" /var/log/auth.log | awk '{
+    printf "%-20s %-15s\\n", $9, $11
+}'
+
+echo ""
+echo "--- Users Targeted ---"
+grep "Failed password" /var/log/auth.log | awk '{print $9}' | sort | uniq -c | sort -rn
+
+echo ""
+echo "=========================================="
+echo " Report Complete"
+echo "=========================================="
 \`\`\``,
         aiPrompt: "Explain how to analyze Linux log files to detect security incidents.",
         labUrl: "",
@@ -4365,7 +5225,7 @@ grep "Accepted" /var/log/auth.log
         quiz: [
           { question: "What log file contains SSH login attempts?", options: ["/var/log/syslog", "/var/log/auth.log", "/var/log/messages", "/var/log/ssh.log"], correctAnswerIndex: 1, difficulty: "beginner", explanation: "auth.log contains authentication events including SSH.", certTags: ["Security+"] },
           { question: "What does grep -c do?", options: ["Show matching lines", "Count matching lines", "Delete matches", "Copy matches"], correctAnswerIndex: 1, difficulty: "beginner", explanation: "-c counts the number of matching lines.", certTags: ["Linux+"] },
-          { question: "What does awk '{print $11}' extract?", options: ["Timestamp", "IP address", "Username", "Port"], correctAnswerIndex: 1, difficulty: "intermediate", explanation: "In auth.log, the 11th field is typically the source IP address.", certTags: ["Security+"] },
+          { question: "What does awk '{print $11}' extract from auth.log?", options: ["Timestamp", "IP address", "Username", "Port"], correctAnswerIndex: 1, difficulty: "intermediate", explanation: "In auth.log, the 11th field is typically the source IP address.", certTags: ["Security+"] },
           { question: "What does sort | uniq -c | sort -rn do?", options: ["Delete duplicates", "Count unique values and sort by frequency", "Find unique files", "Create backup"], correctAnswerIndex: 1, difficulty: "intermediate", explanation: "sort orders lines, uniq -c counts consecutive identical lines, sort -rn sorts numerically in reverse.", certTags: ["Linux+"] },
           { question: "What indicates a successful login in auth.log?", options: ["Failed password", "Accepted password", "Connection closed", "Invalid user"], correctAnswerIndex: 1, difficulty: "beginner", explanation: "Accepted password indicates a successful authentication.", certTags: ["Security+"] },
           { question: "What is an IOC?", options: ["Input/Output Control", "Indicator of Compromise", "Internal Operating Command", "Internet Open Connection"], correctAnswerIndex: 1, difficulty: "beginner", explanation: "IOC = Indicator of Compromise - evidence that a system has been breached.", certTags: ["Security+"] },
@@ -4374,7 +5234,7 @@ grep "Accepted" /var/log/auth.log
         ]
       },
       {
-        id: "we04d10",
+        id: "we04d15",
         title: "System Recon - Know Your Target",
         description: "Perform full system enumeration: OS version, users, network, services, scheduled tasks. The first step of any pentest.",
         type: "practice",
@@ -4384,7 +5244,6 @@ grep "Accepted" /var/log/auth.log
 - Enumerate users and groups
 - Enumerate network configuration and listening ports
 - Enumerate services and scheduled tasks
-- Build a complete system recon script
 :::
 
 ## Why System Recon Matters
@@ -4467,58 +5326,35 @@ ls -la /etc/cron*           # System cron directories
 cat /etc/crontab            # System crontab
 \`\`\`
 
-## Full Recon Script
+## Try It Yourself
 
-\`\`\`bash
-#!/bin/bash
-# full_recon.sh - Complete system enumeration
+### Exercise 1: System Info
+1. Run: hostname
+2. Run: uname -a
+3. Run: cat /etc/os-release
+4. Document the OS version and kernel version
 
-echo "=========================================="
-echo " SYSTEM RECONNAISSANCE REPORT"
-echo " Date: $(date)"
-echo "=========================================="
+### Exercise 2: User Enumeration
+1. Run: id
+2. Run: whoami
+3. Run: cat /etc/passwd | grep -v nologin
+4. List all users who can log in
 
-echo ""
-echo "--- System Info ---"
-echo "Hostname: $(hostname)"
-echo "Kernel: $(uname -r)"
-echo "OS: $(cat /etc/os-release | grep PRETTY_NAME | cut -d= -f2)"
-echo "Uptime: $(uptime -p)"
+### Exercise 3: Network Info
+1. Run: ip addr
+2. Run: ss -tlnp
+3. Run: cat /etc/resolv.conf
+4. Document your IP address and any listening ports
 
-echo ""
-echo "--- User Info ---"
-echo "Current user: $(whoami)"
-echo "UID: $(id -u)"
-echo "Groups: $(id -Gn)"
-echo ""
-echo "Users with shells:"
-grep -v "nologin\|false\|sync" /etc/passwd | cut -d: -f1
+### Exercise 4: Services and Tasks
+1. Run: systemctl list-units --type=service --state=running
+2. Run: crontab -l
+3. Run: ls -la /etc/cron*
+4. Document any running services and scheduled tasks
 
-echo ""
-echo "--- Network ---"
-echo "Interfaces:"
-ip addr show | grep "inet " | awk '{print $2}'
-echo ""
-echo "Listening ports:"
-ss -tlnp 2>/dev/null | grep LISTEN
-
-echo ""
-echo "--- Cron Jobs ---"
-crontab -l 2>/dev/null || echo "No user crontab"
-ls -la /etc/cron.d/ 2>/dev/null
-
-echo ""
-echo "--- SUID Files ---"
-find / -perm -4000 -type f 2>/dev/null | head -10
-\`\`\`
-
-:::checkpoint
-What is the first thing you do after gaining access to a Linux system?
-- Delete logs
-- Change passwords
-- Enumerate the system
-- Install backdoors
-:::`,
+### Practice Challenge
+Write a script that runs all the above commands and saves the output to a report file.
+`,
         aiPrompt: "Explain the methodology for system enumeration on a compromised Linux host.",
         labUrl: "",
         labTitle: "",
@@ -4881,6 +5717,61 @@ printf "%-20s %-10s %s\\n" "192.168.1.100" "1547" "SUSPICIOUS"
           { question: "What indicates a port scan?", options: ["One connection to one port", "One IP hitting many different ports", "Many IPs to one port", "No connections"], correctAnswerIndex: 1, difficulty: "intermediate", explanation: "A port scan is when one IP probes many different ports.", certTags: ["Security+"] },
           { question: "What does printf '%-20s' do?", options: ["Print 20 chars, left-aligned", "Print 20 chars, right-aligned", "Print 20 lines", "Delete 20 chars"], correctAnswerIndex: 0, difficulty: "intermediate", explanation: "- means left-aligned, 20s means 20-character string.", certTags: ["Linux+"] },
           { question: "What does awk 'END {}' do?", options: ["Run at start", "Run after all input processed", "Run on each line", "Delete output"], correctAnswerIndex: 1, difficulty: "intermediate", explanation: "END runs once after all input lines have been processed.", certTags: ["Linux+"] }
+        ]
+      },
+      {
+        id: "proj-linux-terminal",
+        title: "Linux Terminal Lab",
+        description: "Practice real Linux commands in a live terminal with verified exercises. Master pwd, cd, mkdir, rm, mv, echo, and process management.",
+        type: "project",
+        duration: "2-3 hours",
+        content: `:::objectives
+- Practice real Linux commands in a live terminal
+- Master navigation: pwd, ls, cd, echo
+- Master file operations: mkdir, touch, cp, mv, rm
+- Master process management: ps, kill, top
+:::
+
+## Your Mission
+
+Practice real Linux commands in a live terminal environment. This project has 5 levels with 4 exercises each.
+
+## How It Works
+
+1. Open the Linux Terminal Lab from the Projects page
+2. Each exercise shows you what to do
+3. Type the commands in the real terminal
+4. Mark the exercise as done when complete
+5. Progress through all 5 levels
+
+## Levels
+
+| Level | Commands | Focus |
+|-------|----------|-------|
+| 1 | pwd, ls, cd, echo | Navigation & Output |
+| 2 | mkdir, touch | Creating Files & Directories |
+| 3 | mv, cp | Moving & Copying |
+| 4 | rm, rmdir | Deleting |
+| 5 | ps, kill, top | Process Management |
+
+## Why This Matters
+
+Every hacker and security professional uses the terminal daily. These commands are the foundation of everything you'll do in this course. Master them now, and the rest will be easier.
+`,
+        aiPrompt: "Explain why mastering Linux terminal commands is essential for cybersecurity professionals.",
+        labUrl: "",
+        labTitle: "",
+        interviewQuestion: "How comfortable are you with the Linux terminal?",
+        interviewAnswer: "I use the Linux terminal daily. I can navigate the filesystem, manage files, search for content, and write scripts. I'm comfortable with pipes, redirects, and process management.",
+        quiz: [
+          { question: "What does pwd do?", options: ["Print working directory", "Password", "Process word", "Program working data"], correctAnswerIndex: 0, difficulty: "beginner", explanation: "pwd prints the current working directory.", certTags: ["Linux+"] },
+          { question: "How do you create a directory?", options: ["mkdir", "touch", "cat", "rm"], correctAnswerIndex: 0, difficulty: "beginner", explanation: "mkdir creates a new directory.", certTags: ["Linux+"] },
+          { question: "How do you delete a file?", options: ["rm", "mv", "cp", "del"], correctAnswerIndex: 0, difficulty: "beginner", explanation: "rm removes (deletes) files.", certTags: ["Linux+"] },
+          { question: "What does kill do?", options: ["Start a process", "Stop a process", "List processes", "Monitor processes"], correctAnswerIndex: 1, difficulty: "beginner", explanation: "kill sends a signal to stop a process.", certTags: ["Linux+"] },
+          { question: "How do you copy a file?", options: ["cp", "mv", "rm", "cat"], correctAnswerIndex: 0, difficulty: "beginner", explanation: "cp copies files.", certTags: ["Linux+"] },
+          { question: "What does echo do?", options: ["Print text", "Read files", "Delete files", "List files"], correctAnswerIndex: 0, difficulty: "beginner", explanation: "echo prints text to the screen.", certTags: ["Linux+"] },
+          { question: "How do you move a file?", options: ["mv", "cp", "rm", "touch"], correctAnswerIndex: 0, difficulty: "beginner", explanation: "mv moves or renames files.", certTags: ["Linux+"] },
+          { question: "What does ps aux show?", options: ["All running processes", "All files", "All users", "All networks"], correctAnswerIndex: 0, difficulty: "beginner", explanation: "ps aux shows all running processes.", certTags: ["Linux+"] }
         ]
       },
     ]
