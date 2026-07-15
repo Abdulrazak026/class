@@ -2103,449 +2103,650 @@ netstat -tlnp
         description: "Master Python basics: variables, data types, strings, loops, conditionals, functions, and file I/O with security-focused examples.",
         type: "learn",
         duration: "5-6 hours",
-        content: `:::objectives
-- Verify Python 3 is installed and working
-- Understand variables and data types
-- Use string operations for security tasks
-- Write loops and conditionals
-- Define functions with parameters and return values
-- Perform file I/O operations
-- Complete security-focused coding exercises
-:::
+        content: `## Before We Begin
 
-## Step 1: Verify Python Installation
+**WHY:** You need Python to automate security tasks. Typing commands by hand is slow and error-prone. Python lets you write scripts that do the work for you.
 
-\`\`\`bash
-python3 --version
-\`\`\`
+**Your setup:**
+- VS Code is your editor
+- The terminal inside VS Code connects to WSL2 (Ubuntu)
+- Python3 is already installed in WSL2
 
-**Expected output:**
-\`\`\`
-Python 3.10.12
-\`\`\`
+**Open the terminal:**
+1. Open VS Code
+2. Press \`Ctrl + \`\` (backtick key, top-left of keyboard)
+3. You should see a terminal that says something like \`user@hostname:~$\`
+4. Type \`python3 --version\` and press Enter
+5. You should see \`Python 3.x.x\`
 
-If Python 3 isn't installed:
+If it says "command not found", run \`sudo apt install python3 -y\` first.
 
-\`\`\`bash
-sudo apt install python3 -y
-\`\`\`
+**How to run Python code:**
 
-Also install pip (Python package manager):
-
-\`\`\`bash
-sudo apt install python3-pip -y
-\`\`\`
-
-:::info
-Python 3 is the current version. Python 2 is end-of-life. Always use \`python3\` to invoke the correct version.
-:::
-
-## Step 2: Start the Python Shell
-
+Option A - Interactive shell (good for testing):
 \`\`\`bash
 python3
 \`\`\`
+You will see \`>>>\` which means Python is ready. Type \`exit()\` to leave.
 
-You'll see the Python prompt:
-
+Option B - Save to a file and run it (good for real scripts):
+\`\`\`bash
+touch hello.py
+python3 hello.py
 \`\`\`
-Python 3.10.12 (main, May 27 2022, 17:12:29) [GCC 11.2.0] on linux
-Type "help" for more information.
->>>
-\`\`\`
 
-Type \`exit()\` to leave the Python shell.
+:::tip
+For this lesson, use the interactive shell (Option A) to try each example. Type each line after the \`>>>\` prompt.
+:::
 
-## Step 3: Variables and Data Types
+---
 
-Type these in the Python shell (after the \`>>>\` prompt):
+## 1. Variables
+
+**WHY:** You need to store data so your script can use it later. Without variables, you would have to hardcode everything.
+
+**Think of variables as sticky notes.** You write a label on the sticky note and stick a value on it. Later, you read the sticky note to get the value back.
 
 \`\`\`python
-# Strings
 target_ip = "192.168.1.1"
-target_url = "http://example.com"
-scan_type = "nmap -sV"
-
-# Integers
 open_ports = 5
+is_vulnerable = True
+\`\`\`
+
+- \`target_ip\` is a sticky note labeled "target_ip" with the value "192.168.1.1"
+- \`open_ports\` is a sticky note with the number 5
+- \`is_vulnerable\` is a sticky note with True (yes/no value)
+
+**Rules for variable names:**
+- Use letters, numbers, underscores
+- Cannot start with a number
+- No spaces
+- Examples: \`target_ip\`, \`port_80\`, \`scan_result\`
+
+**Try It Yourself:**
+Open the Python shell (\`python3\`) and type:
+\`\`\`python
+target_ip = "192.168.1.1"
+print(target_ip)
+\`\`\`
+
+:::practice
+Create a variable called \`my_port\` and set it to 443. Then print it.
+:::
+
+---
+
+## 2. Strings
+
+**WHY:** Most security data is text - IP addresses, URLs, log lines, commands. Strings let you store and manipulate text.
+
+**Strings are text wrapped in quotes.** Single or double quotes both work.
+
+\`\`\`python
+target_ip = "192.168.1.1"
+scan_type = 'nmap -sV'
+\`\`\`
+
+**f-strings (format strings):**
+Put an \`f\` before the quotes and use curly braces \`{}\` to insert variables.
+
+\`\`\`python
+target_ip = "192.168.1.1"
+port = 80
+print(f"Scanning {target_ip} on port {port}")
+\`\`\`
+
+Output: \`Scanning 192.168.1.1 on port 80\`
+
+**Useful string methods:**
+
+\`\`\`python
+# .lower() - convert to lowercase (useful for comparing text)
+response = "HTTP/1.1 200 OK"
+print(response.lower())
+
+# .strip() - remove extra spaces from start and end
+password_hash = "  5f4dcc3b5aa765d61d8327deb882cf99  "
+clean_hash = password_hash.strip()
+print(clean_hash)
+
+# .split() - break a string into parts
+log_line = "192.168.1.10 - - [10:30:45] GET /admin 403"
+parts = log_line.split()
+print(parts[0])  # First part: the IP address
+
+# "in" keyword - check if text contains something
+user_agent = "Mozilla/5.0 Windows NT 10.0"
+if "Windows" in user_agent:
+    print("Windows user detected")
+\`\`\`
+
+**Try It Yourself:**
+\`\`\`python
+log_line = "192.168.1.10 - - [10:30:45] GET /admin 403"
+parts = log_line.split()
+print(f"IP: {parts[0]}")
+print(f"Status: {parts[-1]}")
+\`\`\`
+
+:::practice
+Create a variable \`target_url\` set to "http://example.com". Print it using an f-string like: "Target: http://example.com".
+:::
+
+---
+
+## 3. Integers
+
+**WHY:** Ports, timeouts, counts, and status codes are all numbers. You need integers to do math and comparisons.
+
+**Integers are whole numbers with no quotes.**
+
+\`\`\`python
+port = 80
 timeout = 30
+status_code = 403
+\`\`\`
+
+**Math operations:**
+\`\`\`python
 port_start = 1
 port_end = 1024
+total_ports = port_end - port_start + 1
+print(total_ports)  # 1024
 
-# Booleans
+# Check if a port is in a range
+port = 443
+if port >= 1 and port <= 1024:
+    print("Privileged port")
+\`\`\`
+
+**Convert strings to integers:**
+\`\`\`python
+status_str = "403"
+status_int = int(status_str)
+if status_int >= 400:
+    print("Client error")
+\`\`\`
+
+**Try It Yourself:**
+\`\`\`python
+port = 8080
+if port > 1024:
+    print("High port - not a system service")
+\`\`\`
+
+:::practice
+Create two variables: \`start_port\` (1) and \`end_port\` (1000). Calculate how many ports that is and print the result.
+:::
+
+---
+
+## 4. Booleans
+
+**WHY:** Your script needs to make decisions. Is the port open? Is the user an admin? Booleans answer YES or NO.
+
+**Think of Booleans as a light switch.** It is either ON (True) or OFF (False). Nothing in between.
+
+\`\`\`python
 is_vulnerable = True
 scan_complete = False
+is_admin = True
+\`\`\`
 
-# Lists (arrays)
-ports = [22, 80, 443, 8080, 8443]
-open_ports_list = []
-services = ["ssh", "http", "https"]
+**Booleans come from comparisons:**
+\`\`\`python
+port = 80
+print(port == 80)    # True  (is it equal?)
+print(port == 443)   # False
+print(port != 443)   # True  (is it NOT equal?)
+print(port > 1024)   # False (is it greater?)
+print(port < 1024)   # True  (is it less?)
+\`\`\`
 
-# Dictionaries (key-value pairs)
-target_info = {
+**Combining conditions:**
+\`\`\`python
+is_admin = True
+is_authenticated = True
+
+if is_admin and is_authenticated:
+    print("Full access")
+
+if is_admin or is_authenticated:
+    print("Some access")
+
+if not is_admin:
+    print("Not an admin")
+\`\`\`
+
+**Try It Yourself:**
+\`\`\`python
+port = 22
+is_open = True
+print(port == 22 and is_open)  # True
+\`\`\`
+
+:::practice
+Create a variable \`status_code\` set to 403. Check if it equals 403 using \`==\`. Print the result.
+:::
+
+---
+
+## 5. Lists
+
+**WHY:** You often have many items of the same type - a list of IPs, a list of ports, a list of usernames. Lists hold them all in one variable.
+
+**Think of a list as a numbered parking garage.** Each spot has a number starting from 0. You can put a car (value) in each spot.
+
+\`\`\`python
+ports = [22, 80, 443, 8080]
+print(ports[0])  # 22  (first spot)
+print(ports[1])  # 80  (second spot)
+print(ports[-1]) # 8080 (last spot)
+\`\`\`
+
+**Important:** Counting starts at 0, not 1.
+
+**Common list operations:**
+\`\`\`python
+# Add to a list
+ports = [22, 80]
+ports.append(443)
+print(ports)  # [22, 80, 443]
+
+# How many items?
+print(len(ports))  # 3
+
+# Check if something is in the list
+if 80 in ports:
+    print("Port 80 found!")
+
+# Loop through a list
+for port in ports:
+    print(f"Checking port {port}")
+\`\`\`
+
+**Try It Yourself:**
+\`\`\`python
+targets = ["192.168.1.1", "192.168.1.2", "192.168.1.3"]
+print(targets[0])
+print(len(targets))
+
+for ip in targets:
+    print(f"Scanning {ip}")
+\`\`\`
+
+:::practice
+Create a list of 3 usernames: "admin", "root", "test". Print the second one. Then loop through all of them.
+:::
+
+---
+
+## 6. Dictionaries
+
+**WHY:** Sometimes you need to store data with labels, not just numbers. A dictionary connects a key to a value, like a label on a box.
+
+**Think of a dictionary as a contact card.** The name is the key, the phone number is the value.
+
+\`\`\`python
+target = {
     "ip": "192.168.1.1",
     "hostname": "webserver.local",
     "os": "Ubuntu 22.04",
     "open_ports": [22, 80, 443]
 }
 
-# Print values
-print(target_ip)
-print(f"Scanning {target_ip} on ports {ports}")
-print(target_info["hostname"])
+print(target["ip"])          # 192.168.1.1
+print(target["hostname"])    # webserver.local
+print(target["open_ports"])  # [22, 80, 443]
 \`\`\`
 
-**Output:**
-\`\`\`
-192.168.1.1
-Scanning 192.168.1.1 on ports [22, 80, 443, 8080, 8443]
-webserver.local
+**Adding and changing values:**
+\`\`\`python
+target["status"] = "scanned"
+target["ip"] = "10.0.0.1"
+print(target)
 \`\`\`
 
-:::tip
-Use f-strings (f"...") for easy string interpolation. Put variables inside curly braces {}.
+**Looping through a dictionary:**
+\`\`\`python
+for key, value in target.items():
+    print(f"{key}: {value}")
+\`\`\`
+
+**Try It Yourself:**
+\`\`\`python
+user = {
+    "username": "admin",
+    "role": "administrator",
+    "active": True
+}
+
+print(f"User: {user['username']}")
+print(f"Role: {user['role']}")
+\`\`\`
+
+:::practice
+Create a dictionary for a server with keys: "ip", "port", and "service". Set the values to "10.0.0.5", 443, and "https". Print the service.
 :::
 
-## Step 4: String Operations
+---
+
+## 7. Loops
+
+**WHY:** Typing the same command 100 times is a waste of time. Loops let you repeat code automatically.
+
+### For Loop
+
+**Use a for loop when you have a list of items to go through.**
 
 \`\`\`python
-# Common string operations for security
-user_agent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"
-
-# Check if a string contains something
-if "Windows" in user_agent:
-    print("Windows user detected")
-
-# Split strings (parsing logs)
-log_line = "192.168.1.10 - - [22/Jun/2026:10:30:45] GET /admin HTTP/1.1 403"
-parts = log_line.split()
-ip_address = parts[0]
-timestamp = log_line.split("[")[1].split("]")[0]
-status_code = parts[-1]
-
-print(f"IP: {ip_address}")
-print(f"Time: {timestamp}")
-print(f"Status: {status_code}")
-
-# String formatting
-nmap_command = f"nmap -sV -p {port_start}-{port_end} {target_ip}"
-print(nmap_command)
-
-# Lowercase/uppercase for comparison
-response = "HTTP/1.1 200 OK"
-if response.lower().startswith("http/1.1 200"):
-    print("Successful response")
-
-# Replace and strip
-password_hash = "  5f4dcc3b5aa765d61d8327deb882cf99  "
-clean_hash = password_hash.strip()
-print(f"Clean hash: {clean_hash}")
-
-# Check string length
-api_key = "abc123def456"
-if len(api_key) < 16:
-    print("Warning: API key too short")
-\`\`\`
-
-**Output:**
-\`\`\`
-Windows user detected
-IP: 192.168.1.10
-Time: 22/Jun/2026:10:30:45
-Status: 403
-nmap -sV -p 1-1024 192.168.1.1
-Successful response
-Clean hash: 5f4dcc3b5aa765d61d8327deb882cf99
-Warning: API key too short
-\`\`\`
-
-## Step 5: Loops
-
-\`\`\`python
-# For loop - iterate over a list of targets
 targets = ["192.168.1.1", "192.168.1.2", "192.168.1.3"]
 
-for target in targets:
-    print(f"Scanning {target}...")
+for ip in targets:
+    print(f"Scanning {ip}...")
+\`\`\`
 
-# For loop with range - scan ports
-common_ports = [21, 22, 25, 53, 80, 443, 445, 3389]
+Output:
+\`\`\`
+Scanning 192.168.1.1...
+Scanning 192.168.1.2...
+Scanning 192.168.1.3...
+\`\`\`
 
-print("\\nCommon ports to scan:")
-for i, port in enumerate(common_ports):
-    print(f"  {i+1}. Port {port}")
+**Loop a specific number of times with range():**
+\`\`\`python
+for i in range(5):
+    print(f"Attempt {i + 1}")
+\`\`\`
 
-# While loop - keep trying until successful
+**Get both index and value with enumerate():**
+\`\`\`python
+ports = [22, 80, 443]
+for i, port in enumerate(ports):
+    print(f"  {i + 1}. Port {port}")
+\`\`\`
+
+### While Loop
+
+**Use a while loop when you want to keep going until something changes.**
+
+\`\`\`python
 attempts = 0
 max_attempts = 3
 
 while attempts < max_attempts:
     attempts += 1
-    print(f"Connection attempt {attempts}/{max_attempts}")
-    # Simulating a failed connection
-    connected = False
-    if not connected:
-        print("  Failed, retrying...")
-        continue
-    break
-
-print(f"Total attempts: {attempts}")
-
-# List comprehension - quick way to generate port ranges
-web_ports = [80, 443, 8000, 8080, 8443, 8888]
-filtered_ports = [p for p in web_ports if p > 8000]
-print(f"High ports: {filtered_ports}")
+    print(f"Attempt {attempts}/{max_attempts}")
 \`\`\`
 
-**Output:**
+Output:
 \`\`\`
-Scanning 192.168.1.1...
-Scanning 192.168.1.2...
-Scanning 192.168.1.3...
-
-Common ports to scan:
-  1. Port 21
-  2. Port 22
-  ...
-  8. Port 3389
-Connection attempt 1/3
-  Failed, retrying...
-Connection attempt 2/3
-  Failed, retrying...
-Connection attempt 3/3
-  Failed, retrying...
-Total attempts: 3
-High ports: [8080, 8443, 8888]
+Attempt 1/3
+Attempt 2/3
+Attempt 3/3
 \`\`\`
 
-## Step 6: Conditionals
+**Try It Yourself:**
+\`\`\`python
+common_ports = [21, 22, 25, 80, 443, 3389]
+
+for port in common_ports:
+    if port == 22:
+        print(f"Port {port} - SSH")
+    elif port == 80 or port == 443:
+        print(f"Port {port} - Web")
+    else:
+        print(f"Port {port} - Other")
+\`\`\`
+
+:::practice
+Write a for loop that prints numbers 1 to 5 using \`range(6)\`. Then write a while loop that counts down from 5 to 1.
+:::
+
+---
+
+## 8. If Statements
+
+**WHY:** Your script needs to make decisions. If the port is 22, do one thing. If it is 80, do another. That is what if statements do.
 
 \`\`\`python
-# Check port status
 port = 443
-service = "https"
 
 if port == 22:
-    print("SSH - possible brute-force target")
+    print("SSH service")
 elif port == 80 or port == 443:
-    print(f"Web server on {service} - check for web vulnerabilities")
+    print("Web service")
 elif port == 3306:
-    print("MySQL - check for SQL injection")
-elif port == 445:
-    print("SMB - check for EternalBlue or null session")
+    print("MySQL database")
 else:
-    print(f"Port {port} ({service}) - investigate further")
+    print("Unknown service")
+\`\`\`
 
-# Check HTTP status code
+Output: \`Web service\`
+
+**How it works:**
+- Python checks each condition from top to bottom
+- It runs the first one that is True
+- \`elif\` means "else if" - check this if the previous ones were False
+- \`else\` means "if nothing else matched"
+
+**Nested conditions:**
+\`\`\`python
 status_code = 403
 
-if status_code == 200:
-    print("Resource accessible")
-elif status_code == 301 or status_code == 302:
-    print("Redirect - follow the redirect")
-elif status_code == 403:
-    print("Forbidden - might need authentication bypass")
-elif status_code == 404:
-    print("Not found - path doesn't exist")
-elif status_code >= 500:
-    print("Server error - potential for input-based attacks")
+if status_code >= 400:
+    if status_code == 403:
+        print("Forbidden - access denied")
+    elif status_code == 404:
+        print("Not found")
+    else:
+        print(f"Other 4xx error: {status_code}")
+\`\`\`
 
-# Multiple conditions
-is_admin = True
-is_authenticated = True
+**Try It Yourself:**
+\`\`\`python
+ip = "192.168.1.1"
 
-if is_admin and is_authenticated:
-    print("Full access granted")
-elif is_authenticated and not is_admin:
-    print("Standard user access")
+if ip.startswith("192.168."):
+    print("Private IP - internal network")
+elif ip.startswith("10."):
+    print("Private IP - Class A")
 else:
-    print("Access denied - login required")
+    print("Public IP")
 \`\`\`
 
-**Output:**
-\`\`\`
-Web server on https - check for web vulnerabilities
-Forbidden - might need authentication bypass
-Full access granted
-\`\`\`
+:::practice
+Create a variable \`status_code\` set to 500. Write an if/elif/else that prints "Server error" for 500+, "Client error" for 400+, and "Success" for 200-299.
+:::
 
-## Step 7: Functions
+---
+
+## 9. Functions
+
+**WHY:** If you write the same code in multiple places, you will have to fix bugs in every place. A function is a reusable recipe - write it once, use it everywhere.
+
+**Think of a function as a recipe.** You give it ingredients (parameters), it does the steps, and gives you back a dish (return value).
 
 \`\`\`python
-# Function with parameters and return value
+def greet(name):
+    print(f"Hello, {name}!")
+
+greet("Alice")  # Hello, Alice!
+greet("Bob")    # Hello, Bob!
+\`\`\`
+
+**A function that returns a value:**
+\`\`\`python
+def build_scan_command(target, port):
+    cmd = f"nmap -sV -p {port} {target}"
+    return cmd
+
+result = build_scan_command("192.168.1.1", 80)
+print(result)
+\`\`\`
+
+Output: \`nmap -sV -p 80 192.168.1.1\`
+
+**Default parameters:**
+\`\`\`python
 def scan_port(ip, port, timeout=2):
-    """Attempt to connect to a specific port."""
-    import socket
-    try:
-        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        sock.settimeout(timeout)
-        result = sock.connect_ex((ip, port))
-        sock.close()
-        if result == 0:
-            return True
-        return False
-    except Exception as e:
-        return False
+    print(f"Scanning {ip}:{port} (timeout: {timeout}s)")
 
-# Function with multiple return values
-def parse_nmap_output(line):
-    """Parse a single line of nmap output."""
-    parts = line.strip().split()
-    if len(parts) >= 3:
-        port = parts[0]
-        state = parts[1]
-        service = parts[2]
-        return port, state, service
-    return None, None, None
-
-# Function with default parameters
-def create_nmap_command(target, ports="1-1000", scan_type="-sV", extra_args=""):
-    """Build an nmap command string."""
-    cmd = f"nmap {scan_type} -p {ports} {extra_args} {target}"
-    return cmd.strip()
-
-# Using the functions
-print(create_nmap_command("192.168.1.1"))
-print(create_nmap_command("10.0.0.1", ports="22,80,443", extra_args="-A"))
-
-# Function that processes a list
-def filter_open_ports(all_ports, target_ip):
-    """Scan a list of ports and return only open ones."""
-    open_ports = []
-    for port in all_ports:
-        if scan_port(target_ip, port):
-            open_ports.append(port)
-    return open_ports
-
-# Lambda functions (inline one-liners)
-is_privileged = lambda port: port < 1024
-print(f"Port 80 privileged: {is_privileged(80)}")
-print(f"Port 8080 privileged: {is_privileged(8080)}")
+scan_port("192.168.1.1", 80)        # Uses default timeout=2
+scan_port("192.168.1.1", 443, 5)   # Uses timeout=5
 \`\`\`
 
-**Output:**
-\`\`\`
-nmap -sV -p 1-1000  192.168.1.1
-nmap -sV -p 22,80,443 -A 10.0.0.1
-Port 80 privileged: True
-Port 8080 privileged: False
-\`\`\`
-
-## Step 8: File I/O
-
+**Try It Yourself:**
 \`\`\`python
-import os
+def is_high_port(port):
+    if port > 1024:
+        return True
+    return False
 
-# Create a lab directory if it doesn't exist
-lab_dir = os.path.expanduser("~/labs/python")
-os.makedirs(lab_dir, exist_ok=True)
+print(is_high_port(80))    # False
+print(is_high_port(8080))  # True
+\`\`\`
 
-# Write to a file
-targets_file = os.path.join(lab_dir, "targets.txt")
-with open(targets_file, "w") as f:
+:::practice
+Write a function called \`is_private_ip\` that takes an IP address string. Return True if it starts with "192.168." or "10.". Test it with "192.168.1.1" and "8.8.8.8".
+:::
+
+---
+
+## 10. Files
+
+**WHY:** Security tools read log files, write scan results, and save data. Python can read and write files easily.
+
+**Writing to a file:**
+\`\`\`python
+with open("targets.txt", "w") as f:
     f.write("192.168.1.1\\n")
     f.write("192.168.1.2\\n")
     f.write("192.168.1.3\\n")
-    f.write("10.0.0.1\\n")
-
-print(f"Written targets to {targets_file}")
-
-# Read the file back
-with open(targets_file, "r") as f:
-    content = f.read()
-    print(f"File contents:\\n{content}")
-
-# Read line by line
-with open(targets_file, "r") as f:
-    for line in f:
-        ip = line.strip()
-        if ip:  # skip empty lines
-            print(f"Target: {ip}")
-
-# Append to a file
-results_file = os.path.join(lab_dir, "results.txt")
-with open(results_file, "a") as f:
-    f.write("Scan started\\n")
-
-# Read and write simultaneously (copy with modification)
-backup_file = os.path.join(lab_dir, "targets_backup.txt")
-with open(targets_file, "r") as src, open(backup_file, "w") as dst:
-    for line in src:
-        dst.write(line.strip() + " (unscanned)\\n")
-
-print("Backup created")
 \`\`\`
 
-## Step 9: Security-Focused Example - Log Parser
+- \`"w"\` means write mode (creates new file or overwrites)
+- \`"a"\` means append mode (adds to the end)
+- \`with\` automatically closes the file when done
+
+**Reading from a file:**
+\`\`\`python
+# Read everything at once
+with open("targets.txt", "r") as f:
+    content = f.read()
+    print(content)
+
+# Read line by line (better for large files)
+with open("targets.txt", "r") as f:
+    for line in f:
+        ip = line.strip()  # Remove the newline character
+        print(f"Target: {ip}")
+\`\`\`
+
+**Try It Yourself:**
+\`\`\`python
+# Write some data
+with open("test.txt", "w") as f:
+    f.write("line one\\n")
+    f.write("line two\\n")
+
+# Read it back
+with open("test.txt", "r") as f:
+    for line in f:
+        print(line.strip())
+\`\`\`
+
+:::practice
+Create a file called "ports.txt" with three port numbers (one per line: 22, 80, 443). Then read the file and print each port.
+:::
+
+---
+
+## 11. Security Example: Log Parser
+
+Let's combine everything you learned. This script reads a fake SSH log and finds brute-force attackers.
 
 \`\`\`python
-import os
+# Sample log data (in real life, you would read from /var/log/auth.log)
+sample_log = [
+    "Failed password for root from 192.168.1.100 port 22",
+    "Failed password for admin from 192.168.1.100 port 22",
+    "Failed password for root from 192.168.1.100 port 22",
+    "Accepted publickey for user1 from 10.0.0.5 port 22",
+    "Failed password for root from 192.168.1.100 port 22",
+    "Failed password for root from 10.0.0.99 port 22",
+    "Accepted password for test from 192.168.1.50 port 22",
+]
 
-# Create a sample auth.log
-log_dir = os.path.expanduser("~/labs/web")
-os.makedirs(log_dir, exist_ok=True)
-
-sample_log = """Jun 22 10:01:23 server sshd[1234]: Failed password for root from 192.168.1.100 port 22 ssh2
-Jun 22 10:01:25 server sshd[1235]: Failed password for admin from 192.168.1.100 port 22 ssh2
-Jun 22 10:01:27 server sshd[1236]: Failed password for root from 192.168.1.100 port 22 ssh2
-Jun 22 10:02:01 server sshd[1237]: Accepted publickey for user1 from 10.0.0.5 port 22 ssh2
-Jun 22 10:02:15 server sshd[1238]: Failed password for root from 192.168.1.100 port 22 ssh2
-Jun 22 10:03:00 server sshd[1239]: Failed password for root from 10.0.0.99 port 22 ssh2
-Jun 22 10:03:05 server sshd[1240]: Connection closed by authenticating user root 192.168.1.100 port 22 [preauth]
-Jun 22 10:04:00 server sshd[1241]: Accepted password for test from 192.168.1.50 port 22 ssh2
-"""
-
-log_path = os.path.join(log_dir, "auth.log")
-with open(log_path, "w") as f:
-    f.write(sample_log)
-
-# Parse the log
+# Dictionary to count failed attempts per IP
 failed_attempts = {}
-success_logins = []
 
-with open(log_path, "r") as f:
-    for line in f:
-        if "Failed password" in line:
-            # Extract IP address
-            parts = line.split("from ")
-            if len(parts) > 1:
-                ip = parts[1].split(" ")[0]
-                failed_attempts[ip] = failed_attempts.get(ip, 0) + 1
-        elif "Accepted" in line:
-            parts = line.split("for ")
-            if len(parts) > 1:
-                username = parts[1].split(" from ")[0]
-                success_logins.append(username)
+for line in sample_log:
+    if "Failed password" in line:
+        parts = line.split("from ")
+        ip = parts[1].split(" ")[0]
+        if ip in failed_attempts:
+            failed_attempts[ip] += 1
+        else:
+            failed_attempts[ip] = 1
 
-# Report
-print("=== Failed Login Attempts ===")
-for ip, count in sorted(failed_attempts.items(), key=lambda x: x[1], reverse=True):
-    status = "BLOCK" if count >= 3 else "WATCH"
-    print(f"  {ip}: {count} attempts [{status}]")
-
-print(f"\\n=== Successful Logins ===")
-for user in success_logins:
-    print(f"  {user}")
+# Print results
+print("=== Suspicious IPs ===")
+for ip, count in failed_attempts.items():
+    if count >= 3:
+        print(f"BLOCK {ip}: {count} failed attempts")
+    else:
+        print(f"WATCH {ip}: {count} failed attempts")
 \`\`\`
 
-**Output:**
+Output:
 \`\`\`
-=== Failed Login Attempts ===
-  192.168.1.100: 4 attempts [BLOCK]
-  10.0.0.99: 1 attempts [WATCH]
-
-=== Successful Logins ===
-  user1
-  test
+=== Suspicious IPs ===
+BLOCK 192.168.1.100: 4 failed attempts
+WATCH 10.0.0.99: 1 failed attempts
 \`\`\`
 
-:::checkpoint
-1. What is the difference between a list and a dictionary in Python?
-2. Write a for loop that prints numbers 1-10.
-3. What does the 'with' statement do when opening files?
-4. How do you create an f-string with a variable inside?
-5. What does socket.connect_ex() return when a port is open?
-:::
+**What this script uses:**
+- **Variables** to store data
+- **Strings** to parse log lines
+- **Lists** to hold log entries
+- **Dictionaries** to count attempts per IP
+- **For loop** to go through each line
+- **If statements** to check for "Failed password"
+- **f-strings** to format the output
+
+---
+
+## Mini Quiz
+
+Test your knowledge. Answers are at the bottom.
+
+**Q1:** What is the index of "443" in this list: \`ports = [22, 80, 443, 8080]\`?
+
+**Q2:** What does \`f"IP: {target_ip}"\` do?
+
+**Q3:** What is the difference between \`=\` and \`==\`?
+
+**Q4:** What does \`"w"\` mean when opening a file?
+
+**Q5:** What does this print?
+\`\`\`python
+x = 10
+if x > 5:
+    print("big")
+else:
+    print("small")
+\`\`\`
+
+---
+
+**Answers:**
+
+1. Index 2 (counting starts at 0)
+2. It creates a string and inserts the value of \`target_ip\` into it
+3. \`=\` assigns a value. \`==\` compares two values.
+4. Write mode - creates a new file or overwrites an existing one
+5. "big"
 `,
         aiPrompt: "",
         labUrl: "",
@@ -2698,79 +2899,142 @@ for user in success_logins:
         type: "practice",
         duration: "5-6 hours",
         content: `:::objectives
-- Use the requests library to make HTTP requests
-- Use the socket module for network connections
-- Use hashlib for hashing strings
-- Use re for regular expression pattern matching
-- Build a complete log parser script
-- Build an HTTP security header checker script
+- Understand what Python libraries are and why they matter for security
+- Use requests to fetch web pages and check security headers
+- Use socket to resolve DNS and check open ports
+- Use hashlib to hash strings and verify file integrity
+- Use re to extract patterns like IP addresses from text
+- Combine all four libraries into a working log parser
 :::
 
-## Part 1: HTTP Requests with requests
+## Before We Begin
 
-### Install requests (if not already available)
+### What Are Libraries?
+
+Think of a library as a toolbox. Instead of building a wrench from scratch, you open a toolbox and grab one.
+
+Python comes with many built-in toolboxes. Today we use four:
+
+| Library | What It Does | Security Use |
+|---------|-------------|--------------|
+| requests | Talks to web servers | Check headers, fetch pages |
+| socket | Opens network connections | Port scanning, DNS lookups |
+| hashlib | Creates fingerprints of data | Verify file integrity, crack hashes |
+| re | Finds patterns in text | Extract IPs, parse logs |
+
+### Why This Matters
+
+Security work means talking to networks, checking websites, hashing files, and reading logs. These four libraries handle all of that.
+
+Open your VS Code terminal (Ctrl + backtick) and let's start.
+
+---
+
+## Part 1: requests — Sending a Letter
+
+Think of requests like sending a letter. You write a request, mail it to a server, and get a response back.
+
+### Install requests
 
 \`\`\`bash
 pip3 install requests
 \`\`\`
 
-### Basic HTTP Operations
+### GET Request — Asking for a Page
 
 \`\`\`python
 import requests
 
-# GET request
-response = requests.get("http://httpbin.org/get")
+response = requests.get("http://example.com")
 print(f"Status: {response.status_code}")
-print(f"Headers: {dict(response.headers)}")
+print(f"Server: {response.headers.get('Server', 'Unknown')}")
+\`\`\`
 
-# HEAD request (headers only)
-response = requests.head("http://httpbin.org/get")
-print(f"Content-Type: {response.headers.get('Content-Type')}")
+**What happened:**
+- You sent a GET request (like asking "give me this page")
+- The server replied with a status code (200 = OK)
+- The response headers tell you what software the server runs
 
-# POST request with data
+### Status Codes — The Server's Mood
+
+| Code | Meaning | Security Note |
+|------|---------|---------------|
+| 200 | OK | Page exists |
+| 301 | Moved | Redirect — follow it |
+| 403 | Forbidden | You're blocked |
+| 404 | Not Found | Page doesn't exist |
+| 500 | Server Error | Something broke (probe further) |
+
+### POST Request — Sending Data
+
+\`\`\`python
 data = {"username": "admin", "password": "test123"}
 response = requests.post("http://httpbin.org/post", data=data)
 print(f"POST status: {response.status_code}")
+\`\`\`
 
-# Check specific headers
+### Check Security Headers
+
+\`\`\`python
 response = requests.get("http://example.com")
-print(f"\\nServer: {response.headers.get('Server', 'Unknown')}")
-print(f"X-Powered-By: {response.headers.get('X-Powered-By', 'Not set')}")
-print(f"Content-Security-Policy: {response.headers.get('Content-Security-Policy', 'Not set')}")
+headers = response.headers
 
-# Handle errors gracefully
+security_headers = [
+    "Content-Security-Policy",
+    "Strict-Transport-Security",
+    "X-Content-Type-Options",
+    "X-Frame-Options"
+]
+
+print("=== Security Header Check ===")
+for header in security_headers:
+    value = headers.get(header)
+    if value:
+        print(f"  [PASS] {header}: {value[:50]}")
+    else:
+        print(f"  [MISSING] {header}")
+\`\`\`
+
+### Handle Errors
+
+\`\`\`python
 try:
     response = requests.get("http://nonexistent.invalid", timeout=5)
-    print(f"Status: {response.status_code}")
 except requests.exceptions.ConnectionError:
-    print("Connection failed - host unreachable")
+    print("Connection failed — host unreachable")
 except requests.exceptions.Timeout:
     print("Request timed out")
 except requests.exceptions.RequestException as e:
     print(f"Request failed: {e}")
 \`\`\`
 
-## Part 2: Socket Programming
+**Why timeout?** Without it, your script hangs forever if the server doesn't respond.
+
+### Try It Yourself
+
+1. Fetch \`http://httpbin.org/get\` and print the response body
+2. Check if \`https://google.com\` has a Content-Security-Policy header
+3. Try fetching a non-existent URL and catch the error
+
+---
+
+## Part 2: socket — Making a Phone Call
+
+Think of sockets like phone calls. You dial a number (IP + port), and if someone answers, the port is open.
+
+### DNS Resolution — Looking Up a Number
 
 \`\`\`python
 import socket
 
-# DNS resolution
 hostname = "example.com"
 ip = socket.gethostbyname(hostname)
 print(f"{hostname} resolves to {ip}")
+\`\`\`
 
-# Get full DNS info
-try:
-    result = socket.getaddrinfo(hostname, 80)
-    for info in result[:2]:
-        family, type, proto, canonname, sockaddr = info
-        print(f"  {sockfamily_to_str(family)}: {sockaddr[0]}")
-except socket.gaierror as e:
-    print(f"DNS resolution failed: {e}")
+### Check if a Port Is Open
 
-# Simple port check
+\`\`\`python
 def check_port(ip, port, timeout=1):
     """Check if a single port is open."""
     try:
@@ -2782,35 +3046,55 @@ def check_port(ip, port, timeout=1):
     except:
         return False
 
-# Test a few ports
 target = "127.0.0.1"
 test_ports = [22, 80, 443, 3306, 8080]
+
 for port in test_ports:
     status = "OPEN" if check_port(target, port) else "closed"
     print(f"  Port {port}: {status}")
 \`\`\`
 
-## Part 3: Hashing with hashlib
+**What connect_ex returns:**
+- 0 = port is open (someone answered the phone)
+- Non-zero = port is closed or blocked
+
+### Try It Yourself
+
+1. Resolve the IP address of \`scanme.nmap.org\`
+2. Check if ports 22, 80, and 443 are open on \`scanme.nmap.org\`
+3. Check what ports are open on \`127.0.0.1\` (your own machine)
+
+---
+
+## Part 3: hashlib — Fingerprinting Data
+
+Think of hashing like fingerprinting. Every file or string gets a unique fingerprint. Change one tiny thing, and the fingerprint changes completely.
+
+### Hash a String
 
 \`\`\`python
 import hashlib
 
-# Hash a string
 message = "password123"
 
-# MD5 (weak - don't use for security, but you'll see it in CTFs)
-md5_hash = hashlib.md5(message.encode()).hexdigest()
-print(f"MD5:    {md5_hash}")
+md5 = hashlib.md5(message.encode()).hexdigest()
+print(f"MD5:     {md5}")
 
-# SHA-1 (also weak)
-sha1_hash = hashlib.sha1(message.encode()).hexdigest()
-print(f"SHA-1:  {sha1_hash}")
+sha1 = hashlib.sha1(message.encode()).hexdigest()
+print(f"SHA-1:   {sha1}")
 
-# SHA-256 (strong)
-sha256_hash = hashlib.sha256(message.encode()).hexdigest()
-print(f"SHA-256: {sha256_hash}")
+sha256 = hashlib.sha256(message.encode()).hexdigest()
+print(f"SHA-256: {sha256}")
+\`\`\`
 
-# Hash a file (without loading entire file into memory)
+**Which to use?**
+- MD5 — broken, never use for security. But you'll see it in CTFs.
+- SHA-1 — also broken. Avoid.
+- SHA-256 — strong. Use this.
+
+### Verify a File
+
+\`\`\`python
 def hash_file(filepath):
     """Calculate SHA-256 hash of a file."""
     sha256 = hashlib.sha256()
@@ -2819,73 +3103,63 @@ def hash_file(filepath):
             sha256.update(chunk)
     return sha256.hexdigest()
 
-# Practical use: verify downloaded file integrity
-# expected = "abc123..."
-# actual = hash_file("/path/to/downloaded/file")
-# if actual == expected:
-#     print("File integrity verified")
-# else:
-#     print("File may be tampered with")
+# Create a test file to hash
+with open("/tmp/test.txt", "w") as f:
+    f.write("Hello, security!")
 
-# Crack common hashes (demo)
+file_hash = hash_file("/tmp/test.txt")
+print(f"File hash: {file_hash}")
+\`\`\`
+
+**Why read in chunks?** Large files won't fit in memory. Reading piece by piece works for any file size.
+
+### Crack a Hash (Demo)
+
+\`\`\`python
 known_hashes = {
-    "5f4dcc3b5aa765d61d8327deb882cf99": "password",
+    "482c811da5d5b4bc6d497ffa98491e38": "password123",
     "e99a18c428cb38d5f260853678922e03": "abc123",
     "d8578edf8458ce06fbc5bb76a58c5ca4": "qwerty"
 }
 
-target_hash = "5f4dcc3b5aa765d61d8327deb882cf99"
-if target_hash in known_hashes:
-    print(f"\\nCracked: {target_hash} = {known_hashes[target_hash]}")
+target = "482c811da5d5b4bc6d497ffa98491e38"
+if target in known_hashes:
+    print(f"Cracked: {target} = {known_hashes[target]}")
+else:
+    print("Hash not found in dictionary")
 \`\`\`
 
-**Output:**
-\`\`\`
-MD5:    482c811da5d5b4bc6d497ffa98491e38
-SHA-1:  f7e50f897fb6c4608d6cd8e3f5d427348a3fa02f
-SHA-256: ef92b778bafe771e89245b89ecbc08a44a4e166c06659911881f383d4473e94f
+### Try It Yourself
 
-Cracked: 5f4dcc3b5aa765d61d8327deb882cf99 = password
-\`\`\`
+1. Hash the string "admin" with SHA-256
+2. Create a file, hash it, then change one character and hash again — compare the results
+3. Look up the MD5 hash \`5f4dcc3b5aa765d61d8327deb882cf99\` — what does it crack to?
 
-## Part 4: Regular Expressions with re
+---
+
+## Part 4: re — Pattern Matching
+
+Think of regex like a metal detector. You tell it what pattern to look for, and it scans through text finding every match.
+
+### Find IP Addresses
 
 \`\`\`python
 import re
 
-# Find all IP addresses in a string
 log_data = """
 192.168.1.1 - - [22/Jun/2026] "GET /admin" 403
 10.0.0.5 - - [22/Jun/2026] "POST /login" 200
-172.16.0.100 - - [22/Jun/2026] "GET /api/users" 401
 Connection from 203.0.113.42 refused
 """
 
 ip_pattern = r'\\b(?:\\d{1,3}\\.){3}\\d{1,3}\\b'
 ips = re.findall(ip_pattern, log_data)
 print("IPs found:", ips)
+\`\`\`
 
-# Extract email addresses
-text = "Contact admin@company.com or support@example.org for help"
-email_pattern = r'[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}'
-emails = re.findall(email_pattern, text)
-print("Emails:", emails)
+### Parse Failed Logins
 
-# Parse HTTP status codes
-log_lines = [
-    '192.168.1.1 "GET /index.html" 200',
-    '192.168.1.2 "GET /admin" 403',
-    '192.168.1.3 "POST /login" 500'
-]
-
-status_pattern = r'"(GET|POST|PUT|DELETE)\\s+(\\S+)\\s+HTTP/\\d.?"\\s+(\\d{3})'
-for line in log_lines:
-    match = re.search(status_pattern, line)
-    if match:
-        method, path, status = match.groups()
-        print(f"  {method} {path} → {status}")
-
-# Find all failed login attempts
+\`\`\`python
 auth_log = """
 Failed password for root from 192.168.1.100 port 22
 Failed password for admin from 192.168.1.100 port 22
@@ -2895,25 +3169,37 @@ Failed password for root from 10.0.0.99 port 22
 
 failed_pattern = r'Failed password for (\\w+) from (\\S+)'
 failures = re.findall(failed_pattern, auth_log)
-print("\\nFailed logins:")
+
+print("Failed logins:")
 for user, ip in failures:
     print(f"  User: {user} from {ip}")
-
-# Replace sensitive data (mask passwords in logs)
-sensitive_log = 'User admin logged in with password=secret123 at 10:00'
-masked = re.sub(r'password=\\S+', 'password=***MASKED***', sensitive_log)
-print(f"\\nMasked: {masked}")
 \`\`\`
 
-## Part 5: Complete Log Parser Script
+### Mask Sensitive Data
 
-Save this as \`~/labs/web/log_parser.py\`:
+\`\`\`python
+sensitive = 'User admin logged in with password=secret123 at 10:00'
+masked = re.sub(r'password=\\S+', 'password=***', sensitive)
+print(masked)
+\`\`\`
+
+### Try It Yourself
+
+1. Extract all email addresses from: "Contact admin@corp.com or help@site.org"
+2. Count how many failed logins came from 192.168.1.100
+3. Write a pattern to find all URLs (http://...) in a block of text
+
+---
+
+## Part 5: Build a Log Parser
+
+Now let's combine everything. Save this as \`~/labs/web/log_parser.py\`:
 
 \`\`\`python
 #!/usr/bin/env python3
 """
-Security Log Parser - extracts failed logins, suspicious IPs, and status codes.
-Usage: python3 log_parser.py /path/to/auth.log
+Security Log Parser — extracts failed logins and suspicious IPs.
+Usage: python3 log_parser.py <logfile>
 """
 
 import re
@@ -2922,194 +3208,102 @@ from collections import Counter
 
 def parse_auth_log(filepath):
     """Parse an authentication log file."""
-    failed_logins = []
-    successful_logins = []
+    failed = []
+    successful = []
     ip_counter = Counter()
-    
-    failed_pattern = r'Failed password for (\w+) from (\S+) port (\d+)'
-    success_pattern = r'Accepted (?:password|publickey) for (\w+) from (\S+) port (\d+)'
-    
+
+    failed_pattern = r'Failed password for (\\w+) from (\\S+) port (\\d+)'
+    success_pattern = r'Accepted (?:password|publickey) for (\\w+) from (\\S+) port (\\d+)'
+
     with open(filepath, 'r') as f:
         for line_num, line in enumerate(f, 1):
             fail_match = re.search(failed_pattern, line)
             if fail_match:
                 user, ip, port = fail_match.groups()
-                failed_logins.append({
-                    'line': line_num,
-                    'user': user,
-                    'ip': ip,
-                    'port': port
-                })
+                failed.append({'line': line_num, 'user': user, 'ip': ip})
                 ip_counter[ip] += 1
                 continue
-            
+
             success_match = re.search(success_pattern, line)
             if success_match:
                 user, ip, port = success_match.groups()
-                successful_logins.append({
-                    'line': line_num,
-                    'user': user,
-                    'ip': ip,
-                    'port': port
-                })
-    
-    return failed_logins, successful_logins, ip_counter
+                successful.append({'line': line_num, 'user': user, 'ip': ip})
+
+    return failed, successful, ip_counter
 
 def generate_report(failed, successful, ip_counter):
     """Generate a security report."""
-    print("=" * 60)
-    print("SECURITY LOG ANALYSIS REPORT")
-    print("=" * 60)
-    
-    print(f"\\nTotal failed login attempts: {len(failed)}")
-    print(f"Total successful logins: {len(successful)}")
-    
-    print("\\n--- Failed Login Summary ---")
+    print("=" * 50)
+    print("SECURITY LOG ANALYSIS")
+    print("=" * 50)
+
+    print(f"\\nFailed logins: {len(failed)}")
+    print(f"Successful logins: {len(successful)}")
+
+    print("\\n--- Top Offending IPs ---")
     for ip, count in ip_counter.most_common(10):
         severity = "CRITICAL" if count >= 5 else "HIGH" if count >= 3 else "MEDIUM"
         print(f"  [{severity}] {ip}: {count} attempts")
-    
-    print("\\n--- Unique Targeted Users ---")
+
+    print("\\n--- Targeted Users ---")
     users = set(f['user'] for f in failed)
     for user in sorted(users):
-        attempts = sum(1 for f in failed if f['user'] == user)
-        print(f"  {user}: {attempts} attempts")
-    
-    print("\\n--- Successful Logins ---")
-    for s in successful:
-        print(f"  {s['user']} from {s['ip']} on port {s['port']}")
-    
-    print("\\n" + "=" * 60)
+        count = sum(1 for f in failed if f['user'] == user)
+        print(f"  {user}: {count} attempts")
+
+    print("\\n" + "=" * 50)
 
 if __name__ == "__main__":
     if len(sys.argv) != 2:
         print(f"Usage: {sys.argv[0]} <logfile>")
         sys.exit(1)
-    
+
     failed, successful, ip_counter = parse_auth_log(sys.argv[1])
     generate_report(failed, successful, ip_counter)
 \`\`\`
 
-Test it:
+**What this script uses:**
+- **re** to extract usernames and IPs from log lines
+- **Counter** to count attempts per IP
+- **sys.argv** to accept the log file path from the command line
 
-\`\`\`bash
-cd ~/labs/web
-python3 log_parser.py auth.log
-\`\`\`
+### Practice
 
-## Part 6: Security Header Checker
+1. Create a sample log file with some fake entries
+2. Run the parser on it
+3. Modify the script to also flag IPs with more than 3 failed attempts as "BLOCK"
 
-Save this as \`~/labs/web/header_checker.py\`:
+---
 
-\`\`\`python
-#!/usr/bin/env python3
-"""
-HTTP Security Header Checker - checks for recommended security headers.
-Usage: python3 header_checker.py <url>
-"""
+## Mini Quiz
 
-import requests
-import sys
+Test your knowledge. Answers are at the bottom.
 
-SECURITY_HEADERS = {
-    'Strict-Transport-Security': {
-        'description': 'Enforces HTTPS connections',
-        'severity': 'HIGH'
-    },
-    'Content-Security-Policy': {
-        'description': 'Prevents XSS and injection attacks',
-        'severity': 'HIGH'
-    },
-    'X-Content-Type-Options': {
-        'description': 'Prevents MIME-type sniffing',
-        'severity': 'MEDIUM'
-    },
-    'X-Frame-Options': {
-        'description': 'Prevents clickjacking',
-        'severity': 'MEDIUM'
-    },
-    'X-XSS-Protection': {
-        'description': 'Legacy XSS filter (deprecated but still useful)',
-        'severity': 'LOW'
-    },
-    'Referrer-Policy': {
-        'description': 'Controls referrer information leakage',
-        'severity': 'MEDIUM'
-    },
-    'Permissions-Policy': {
-        'description': 'Controls browser feature access',
-        'severity': 'LOW'
-    }
-}
+**Q1:** What does \`requests.get(url, timeout=5)\` do differently from \`requests.get(url)\`?
 
-def check_headers(url):
-    """Check security headers for a given URL."""
-    try:
-        response = requests.get(url, timeout=10, allow_redirects=True)
-    except requests.exceptions.RequestException as e:
-        print(f"Error: {e}")
-        return None
-    
-    headers = response.headers
-    results = []
-    
-    print(f"\\nChecking: {url}")
-    print(f"Status: {response.status_code}")
-    print(f"Server: {headers.get('Server', 'Not disclosed')}")
-    print("\\n--- Security Headers ---")
-    
-    for header, info in SECURITY_HEADERS.items():
-        value = headers.get(header)
-        if value:
-            status = "PASS"
-            print(f"  [PASS] {header}: {value[:50]}...")
-        else:
-            status = "MISSING"
-            print(f"  [FAIL] {header}: Not set ({info['severity']} risk)")
-        results.append((header, status, info['severity']))
-    
-    # Check for dangerous headers
-    dangerous = ['X-Powered-By', 'Server']
-    print("\\n--- Information Disclosure ---")
-    for header in dangerous:
-        value = headers.get(header)
-        if value:
-            print(f"  [WARN] {header}: {value} (consider removing)")
-    
-    # Summary
-    passed = sum(1 for _, s, _ in results if s == "PASS")
-    total = len(results)
-    score = (passed / total) * 100
-    print(f"\\nScore: {passed}/{total} headers present ({score:.0f}%)")
-    
-    return results
+**Q2:** What does \`socket.connect_ex()\` return when a port is open?
 
-if __name__ == "__main__":
-    if len(sys.argv) != 2:
-        print(f"Usage: {sys.argv[0]} <url>")
-        sys.exit(1)
-    
-    url = sys.argv[1]
-    if not url.startswith(('http://', 'https://')):
-        url = 'http://' + url
-    
-    check_headers(url)
-\`\`\`
+**Q3:** Why is SHA-256 better than MD5 for security?
 
-Test it:
+**Q4:** What does \`re.findall(pattern, text)\` return?
 
-\`\`\`bash
-cd ~/labs/web
-python3 header_checker.py http://example.com
-python3 header_checker.py https://google.com
-\`\`\`
+**Q5:** Why do we read files in chunks when hashing them?
 
+---
+
+**Answers:**
+
+1. It stops waiting after 5 seconds if the server doesn't respond, preventing the script from hanging
+2. It returns 0 (success)
+3. MD5 is broken — attackers can create collisions. SHA-256 is still strong.
+4. A list of all matches found in the text
+5. Large files may not fit in memory. Chunks let you process any file size.
 :::checkpoint
 1. What does requests.get() return?
-2. How do you extract all IP addresses from text using re?
+2. How do you find all IP addresses in a string using re?
 3. What is the difference between MD5 and SHA-256?
-4. Why should you use a timeout with requests.get()?
-5. What does Counter do in Python's collections module?
+4. Why use a timeout with requests.get()?
+5. What does connect_ex() return when a port is open?
 :::
 `,
         aiPrompt: "",
@@ -3273,307 +3467,543 @@ python3 header_checker.py https://google.com
         type: "project",
         duration: "5-6 hours",
         content: `:::objectives
-- Build a TCP port scanner using the socket module
-- Add multi-threading for scanning speed
-- Build a directory brute-forcer using the requests module
-- Accept command-line arguments for target configuration
-- Combine tools into a mini security toolkit
+- Understand why security pros build their own tools
+- Build a TCP port scanner step by step using Python sockets
+- Add threading to make the scanner fast
+- Build a directory brute-forcer step by step using requests
+- Combine both tools into a security toolkit
 :::
 
-## Project 1: Threaded Port Scanner
+## Before We Begin: Why Build Your Own Tools?
 
-Save this as \`~/tools/port_scanner.py\`:
+You already know how to use nmap and gobuster. So why build your own?
 
-\`\`\`python
-#!/usr/bin/env python3
-"""
-TCP Port Scanner - scans target ports with optional threading.
-Usage: python3 port_scanner.py <target> [start_port] [end_port] [threads]
-Example: python3 port_scanner.py 192.168.1.1 1 1024 50
-"""
+Three reasons:
 
-import socket
-import sys
-import time
-from concurrent.futures import ThreadPoolExecutor, as_completed
+1. **Understanding**. When you build a tool, you know exactly what it does. No magic.
+2. **Customization**. Off-the-shelf tools do one thing. Your tool can do exactly what you need.
+3. **Interviews**. Employers love candidates who can build, not just use.
 
-def scan_port(target, port, timeout=1):
-    """Scan a single port and return (port, is_open, service)."""
-    try:
-        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        sock.settimeout(timeout)
-        result = sock.connect_ex((target, port))
-        
-        if result == 0:
-            try:
-                service = socket.getservbyport(port, 'tcp')
-            except OSError:
-                service = 'unknown'
-            sock.close()
-            return port, True, service
-        else:
-            sock.close()
-            return port, False, None
-    except socket.error:
-        return port, False, None
-
-def scan_ports(target, start_port, end_port, max_threads=100):
-    """Scan a range of ports using a thread pool."""
-    open_ports = []
-    total_ports = end_port - start_port + 1
-    
-    print(f"\\nScanning {target} ports {start_port}-{end_port}")
-    print(f"Threads: {max_threads}")
-    print("-" * 50)
-    
-    start_time = time.time()
-    
-    with ThreadPoolExecutor(max_workers=max_threads) as executor:
-        futures = {
-            executor.submit(scan_port, target, port): port 
-            for port in range(start_port, end_port + 1)
-        }
-        
-        completed = 0
-        for future in as_completed(futures):
-            port, is_open, service = future.result()
-            completed += 1
-            
-            if is_open:
-                open_ports.append((port, service))
-                print(f"  [OPEN]  Port {port:5d}  {service}")
-            
-            # Progress indicator every 100 ports
-            if completed % 100 == 0:
-                elapsed = time.time() - start_time
-                rate = completed / elapsed if elapsed > 0 else 0
-                print(f"  ... scanned {completed}/{total_ports} ports ({rate:.0f} ports/sec)")
-    
-    elapsed = time.time() - start_time
-    
-    # Summary
-    print("\\n" + "=" * 50)
-    print(f"Scan complete in {elapsed:.2f} seconds")
-    print(f"Open ports found: {len(open_ports)}")
-    
-    if open_ports:
-        print("\\nOpen Port Summary:")
-        print(f"  {'Port':<10} {'Service':<20}")
-        print(f"  {'-'*10} {'-'*20}")
-        for port, service in sorted(open_ports):
-            print(f"  {port:<10} {service:<20}")
-    
-    return open_ports
-
-def main():
-    if len(sys.argv) < 2:
-        print(f"Usage: {sys.argv[0]} <target> [start_port] [end_port] [threads]")
-        print(f"Example: {sys.argv[0]} 192.168.1.1 1 1024 50")
-        sys.exit(1)
-    
-    target = sys.argv[1]
-    start_port = int(sys.argv[2]) if len(sys.argv) > 2 else 1
-    end_port = int(sys.argv[3]) if len(sys.argv) > 3 else 1024
-    threads = int(sys.argv[4]) if len(sys.argv) > 4 else 100
-    
-    # Resolve hostname
-    try:
-        target_ip = socket.gethostbyname(target)
-        print(f"Target: {target} ({target_ip})")
-    except socket.gaierror:
-        print(f"Error: Could not resolve {target}")
-        sys.exit(1)
-    
-    # Sanity check
-    if end_port > 65535:
-        print("Error: Maximum port number is 65535")
-        sys.exit(1)
-    
-    if start_port > end_port:
-        print("Error: Start port must be less than end port")
-        sys.exit(1)
-    
-    open_ports = scan_ports(target_ip, start_port, end_port, threads)
-    
-    # Save results
-    output_file = f"scan_{target}_{int(time.time())}.txt"
-    with open(output_file, "w") as f:
-        f.write(f"Port Scan Results for {target} ({target_ip})\\n")
-        f.write(f"Ports scanned: {start_port}-{end_port}\\n")
-        f.write(f"Open ports: {len(open_ports)}\\n\\n")
-        for port, service in sorted(open_ports):
-            f.write(f"{port}/tcp  open  {service}\\n")
-    
-    print(f"\\nResults saved to {output_file}")
-
-if __name__ == "__main__":
-    main()
-\`\`\`
-
-### Test the Port Scanner
-
-\`\`\`bash
-cd ~/tools
-chmod +x port_scanner.py
-
-# Scan common ports on your own machine
-python3 port_scanner.py 127.0.0.1 1 1000
-
-# Scan specific ports
-python3 port_scanner.py 127.0.0.1 22 443 10
-
-# Scan with more threads for speed
-python3 port_scanner.py 127.0.0.1 1 65535 500
-\`\`\`
+Think of it like cooking. You can order takeout. But if you know how to cook, you can make anything.
 
 :::warning
 Only scan systems you own or have explicit permission to test. Unauthorized scanning is illegal.
 :::
 
-## Project 2: Directory Brute-Forcer
+## Project 1: Port Scanner
 
-Save this as \`~/tools/dir_brute.py\`:
+We will build this in 5 steps. Each step adds one feature. Test after every step.
+
+### Step 1: Connect to One Port
+
+A port is like a door on a building. Each door leads to a different service.
+
+- Port 22 = SSH (remote login)
+- Port 80 = HTTP (web server)
+- Port 443 = HTTPS (secure web)
+
+Our first task: check if one door is open.
+
+Create the project folder:
+
+\`\`\`bash
+mkdir -p ~/tools
+cd ~/tools
+\`\`\`
+
+Save as \`~/tools/scanner_step1.py\`:
+
+\`\`\`python
+import socket
+
+target = "127.0.0.1"
+port = 80
+
+sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+sock.settimeout(1)
+result = sock.connect_ex((target, port))
+
+if result == 0:
+    print(f"Port {port} is OPEN")
+else:
+    print(f"Port {port} is CLOSED")
+
+sock.close()
+\`\`\`
+
+Run it:
+
+\`\`\`bash
+python3 scanner_step1.py
+\`\`\`
+
+**What is happening?**
+
+- \`socket.socket()\` creates a connection object
+- \`connect_ex()\` tries to connect. Returns 0 if success, error code if fail
+- We use \`connect_ex()\` instead of \`connect()\` because \`connect()\` throws an exception on failure. \`connect_ex()\` just returns a number. Cleaner code.
+
+:::checkpoint
+Try changing the port to 22, 443, 9999. What happens?
+:::
+
+### Step 2: Scan Multiple Ports
+
+One port is not useful. We need to check many ports.
+
+A \`for\` loop lets us repeat the connection test for each port number.
+
+Save as \`~/tools/scanner_step2.py\`:
+
+\`\`\`python
+import socket
+
+target = "127.0.0.1"
+
+print(f"Scanning {target}...")
+print("-" * 30)
+
+for port in range(1, 1025):
+    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    sock.settimeout(1)
+    result = sock.connect_ex((target, port))
+
+    if result == 0:
+        print(f"  Port {port} is OPEN")
+
+    sock.close()
+
+print("Done.")
+\`\`\`
+
+Run it:
+
+\`\`\`bash
+python3 scanner_step2.py
+\`\`\`
+
+**Problem**: This is slow. 1024 ports x 1 second timeout = up to 17 minutes.
+
+We need to make it faster.
+
+### Step 3: Add Threading for Speed
+
+Imagine you have 100 tasks. Doing them one by one takes 100 minutes.
+
+Now imagine you have 100 workers. Each does one task. Total time: 1 minute.
+
+That is threading. One thread = one worker.
+
+Python's \`ThreadPoolExecutor\` manages a pool of worker threads for us.
+
+Save as \`~/tools/scanner_step3.py\`:
+
+\`\`\`python
+import socket
+from concurrent.futures import ThreadPoolExecutor
+
+target = "127.0.0.1"
+
+def scan_port(port):
+    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    sock.settimeout(1)
+    result = sock.connect_ex((target, port))
+    sock.close()
+
+    if result == 0:
+        return port
+    return None
+
+print(f"Scanning {target} with threads...")
+print("-" * 30)
+
+open_ports = []
+
+with ThreadPoolExecutor(max_workers=100) as executor:
+    results = executor.map(scan_port, range(1, 1025))
+
+    for port in results:
+        if port is not None:
+            print(f"  Port {port} is OPEN")
+            open_ports.append(port)
+
+print(f"\\nDone. Open ports: {len(open_ports)}")
+\`\`\`
+
+Run it:
+
+\`\`\`bash
+python3 scanner_step3.py
+\`\`\`
+
+**What changed?**
+
+- \`ThreadPoolExecutor(max_workers=100)\` creates 100 worker threads
+- \`executor.map()\` sends each port number to a thread
+- All 100 ports are scanned at the same time
+- 1024 ports now take about 10 seconds instead of 17 minutes
+
+:::checkpoint
+Change \`max_workers\` to 10, then 500. What happens to the speed?
+:::
+
+### Step 4: Identify Services
+
+An open port is useful. But knowing *what service* runs on that port is more useful.
+
+\`socket.getservbyport()\` looks up the service name for a port number.
+
+Save as \`~/tools/scanner_step4.py\`:
+
+\`\`\`python
+import socket
+from concurrent.futures import ThreadPoolExecutor
+
+target = "127.0.0.1"
+
+def scan_port(port):
+    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    sock.settimeout(1)
+    result = sock.connect_ex((target, port))
+    sock.close()
+
+    if result == 0:
+        try:
+            service = socket.getservbyport(port, 'tcp')
+        except OSError:
+            service = "unknown"
+        return port, service
+    return None
+
+print(f"Scanning {target}...")
+print("-" * 40)
+
+open_ports = []
+
+with ThreadPoolExecutor(max_workers=100) as executor:
+    results = executor.map(scan_port, range(1, 1025))
+
+    for result in results:
+        if result is not None:
+            port, service = result
+            print(f"  Port {port:5d}  {service}")
+            open_ports.append((port, service))
+
+print(f"\\nDone. Open ports: {len(open_ports)}")
+\`\`\`
+
+Run it:
+
+\`\`\`bash
+python3 scanner_step4.py
+\`\`\`
+
+### Step 5: Add Output Formatting and File Saving
+
+Real tools save results. They also accept user input.
+
+Save as \`~/tools/port_scanner.py\` (our final version):
 
 \`\`\`python
 #!/usr/bin/env python3
-"""
-Directory Brute-Forcer - discovers hidden directories and files on web servers.
-Usage: python3 dir_brute.py <url> <wordlist> [threads]
-Example: python3 dir_brute.py http://192.168.1.1 /usr/share/wordlists/dirb/common.txt
-"""
-
-import requests
+import socket
 import sys
 import time
-from concurrent.futures import ThreadPoolExecutor, as_completed
+from concurrent.futures import ThreadPoolExecutor
 
-# Common HTTP status codes to report
-INTERESTING_CODES = {
-    200: "OK (Found)",
-    301: "Redirect (Moved Permanently)",
-    302: "Redirect (Found)",
-    401: "Unauthorized (Auth Required)",
-    403: "Forbidden (Access Denied)",
-    405: "Method Not Allowed",
-    500: "Internal Server Error"
-}
-
-def check_directory(url, path, timeout=5):
-    """Check if a directory/file exists on the target."""
-    full_url = f"{url.rstrip('/')}/{path.strip()}"
-    
+def scan_port(target, port):
     try:
-        response = requests.get(
-            full_url, 
-            timeout=timeout,
-            allow_redirects=False,
-            headers={'User-Agent': 'Mozilla/5.0 (compatible; SecurityScanner/1.0)'}
-        )
-        
-        if response.status_code in INTERESTING_CODES:
-            size = len(response.content)
-            return path, response.status_code, size, INTERESTING_CODES[response.status_code]
-    except requests.exceptions.RequestException:
+        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        sock.settimeout(1)
+        result = sock.connect_ex((target, port))
+        sock.close()
+
+        if result == 0:
+            try:
+                service = socket.getservbyport(port, 'tcp')
+            except OSError:
+                service = "unknown"
+            return port, service
+    except socket.error:
         pass
-    
     return None
 
-def brute_force(url, wordlist_path, max_threads=50):
-    """Brute-force directories using a wordlist."""
-    # Load wordlist
-    try:
-        with open(wordlist_path, 'r') as f:
-            words = [line.strip() for line in f if line.strip()]
-    except FileNotFoundError:
-        print(f"Error: Wordlist not found: {wordlist_path}")
-        sys.exit(1)
-    
-    print(f"\\nTarget: {url}")
-    print(f"Wordlist: {wordlist_path} ({len(words)} entries)")
-    print(f"Threads: {max_threads}")
-    print("-" * 60)
-    
-    found = []
-    start_time = time.time()
-    
-    with ThreadPoolExecutor(max_workers=max_threads) as executor:
-        futures = {
-            executor.submit(check_directory, url, word): word 
-            for word in words
-        }
-        
-        completed = 0
-        for future in as_completed(futures):
-            completed += 1
-            result = future.result()
-            
-            if result:
-                path, status, size, description = result
-                found.append((path, status, size))
-                print(f"  [{status}] /{path:<30} ({size} bytes) - {description}")
-            
-            # Progress every 100 requests
-            if completed % 100 == 0:
-                elapsed = time.time() - start_time
-                rate = completed / elapsed if elapsed > 0 else 0
-                print(f"  ... {completed}/{len(words)} checked ({rate:.0f} req/sec)")
-    
-    elapsed = time.time() - start_time
-    
-    # Summary
-    print("\\n" + "=" * 60)
-    print(f"Scan complete in {elapsed:.2f} seconds")
-    print(f"Directories/files found: {len(found)}")
-    
-    if found:
-        print("\\nFound Resources:")
-        print(f"  {'Status':<8} {'Path':<35} {'Size':<10}")
-        print(f"  {'-'*8} {'-'*35} {'-'*10}")
-        for path, status, size in sorted(found, key=lambda x: x[1]):
-            print(f"  {status:<8} /{path:<35} {size:<10}")
-    
-    return found
-
 def main():
-    if len(sys.argv) < 3:
-        print(f"Usage: {sys.argv[0]} <url> <wordlist> [threads]")
-        print(f"Example: {sys.argv[0]} http://192.168.1.1 /usr/share/wordlists/dirb/common.txt")
+    if len(sys.argv) < 2:
+        print(f"Usage: python3 {sys.argv[0]} <target> [start] [end] [threads]")
+        print(f"Example: python3 {sys.argv[0]} 192.168.1.1 1 1024 100")
         sys.exit(1)
-    
-    url = sys.argv[1]
-    wordlist = sys.argv[2]
-    threads = int(sys.argv[3]) if len(sys.argv) > 3 else 50
-    
-    # Ensure URL has protocol
-    if not url.startswith(('http://', 'https://')):
-        url = 'http://' + url
-    
-    found = brute_force(url, wordlist, threads)
-    
-    # Save results
-    output_file = f"dirscan_{url.split('//')[1].replace('/', '_')}_{int(time.time())}.txt"
-    with open(output_file, "w") as f:
-        f.write(f"Directory Scan Results for {url}\\n")
-        f.write(f"Wordlist: {wordlist}\\n")
-        f.write(f"Found: {len(found)} resources\\n\\n")
-        for path, status, size in sorted(found):
-            f.write(f"[{status}] /{path} ({size} bytes)\\n")
-    
-    print(f"\\nResults saved to {output_file}")
+
+    target = sys.argv[1]
+    start_port = int(sys.argv[2]) if len(sys.argv) > 2 else 1
+    end_port = int(sys.argv[3]) if len(sys.argv) > 3 else 1024
+    threads = int(sys.argv[4]) if len(sys.argv) > 4 else 100
+
+    try:
+        target_ip = socket.gethostbyname(target)
+        print(f"Target: {target} ({target_ip})")
+    except socket.gaierror:
+        print(f"Error: Cannot resolve {target}")
+        sys.exit(1)
+
+    print(f"Scanning ports {start_port}-{end_port} with {threads} threads")
+    print("-" * 50)
+
+    start_time = time.time()
+    open_ports = []
+
+    with ThreadPoolExecutor(max_workers=threads) as executor:
+        results = executor.map(lambda p: scan_port(target_ip, p), range(start_port, end_port + 1))
+
+        for result in results:
+            if result is not None:
+                port, service = result
+                print(f"  [OPEN]  {port:5d}  {service}")
+                open_ports.append((port, service))
+
+    elapsed = time.time() - start_time
+
+    print("-" * 50)
+    print(f"Scan complete in {elapsed:.2f} seconds")
+    print(f"Open ports found: {len(open_ports)}")
+
+    if open_ports:
+        output_file = f"scan_{target}_{int(time.time())}.txt"
+        with open(output_file, "w") as f:
+            for port, service in sorted(open_ports):
+                f.write(f"{port}/tcp  open  {service}\\n")
+        print(f"Results saved to {output_file}")
 
 if __name__ == "__main__":
     main()
 \`\`\`
 
-### Test the Directory Brute-Forcer
+Run it:
 
-First, create a small test wordlist:
+\`\`\`bash
+cd ~/tools
+python3 port_scanner.py 127.0.0.1 1 1024 100
+\`\`\`
+
+### Try It Yourself: Port Scanner
+
+Before moving on, try these:
+
+1. Run the scanner against \`scanme.nmap.org\` (nmap's legal test target)
+2. Change the timeout from 1 to 0.5 seconds. What happens?
+3. Add a progress indicator that prints every 100 ports scanned
+4. Add a \`--json\` flag that outputs results as JSON instead of text
+
+## Project 2: Directory Brute-Forcer
+
+Web servers have hidden pages. \`/admin\`, \`/backup\`, \`/config\`, \`.git\`.
+
+A directory brute-forcer tries a list of common paths and reports which ones exist.
+
+We build this in 4 steps.
+
+### Step 1: Make One HTTP Request
+
+Before we brute-force, we need to check one URL.
+
+The \`requests\` library makes HTTP requests in Python.
+
+Install it first:
+
+\`\`\`bash
+pip3 install requests
+\`\`\`
+
+Save as \`~/tools/dir_step1.py\`:
+
+\`\`\`python
+import requests
+
+url = "http://testphp.vulnweb.com/admin"
+response = requests.get(url)
+
+print(f"URL: {url}")
+print(f"Status: {response.status_code}")
+print(f"Size: {len(response.content)} bytes")
+\`\`\`
+
+Run it:
+
+\`\`\`bash
+python3 dir_step1.py
+\`\`\`
+
+**Status codes tell you what happened:**
+
+| Code | Meaning |
+|------|---------|
+| 200 | Found! Page exists |
+| 301 | Redirect (page moved) |
+| 403 | Forbidden (exists, but blocked) |
+| 404 | Not found |
+
+### Step 2: Read a Wordlist File
+
+A wordlist is a text file. One word per line. Each word is a path to try.
+
+\`\`\`
+admin
+login
+dashboard
+api
+backup
+.git
+.env
+\`\`\`
+
+Save as \`~/tools/dir_step2.py\`:
+
+\`\`\`python
+import requests
+
+# Create a small wordlist
+words = ["admin", "login", "dashboard", "api", "backup", "test", ".git", ".env"]
+
+url = "http://testphp.vulnweb.com"
+
+for word in words:
+    full_url = f"{url}/{word}"
+    response = requests.get(full_url)
+    print(f"[{response.status_code}] /{word}")
+\`\`\`
+
+Run it:
+
+\`\`\`bash
+python3 dir_step2.py
+\`\`\`
+
+### Step 3: Check Status Codes and Filter
+
+We do not care about 404 (not found). We only want interesting responses.
+
+Also, we should stop following redirects. A 301 is useful info by itself.
+
+Save as \`~/tools/dir_step3.py\`:
+
+\`\`\`python
+import requests
+
+words = ["admin", "login", "dashboard", "api", "backup", "test", ".git", ".env"]
+url = "http://testphp.vulnweb.com"
+
+print(f"Scanning {url}...")
+print("-" * 50)
+
+for word in words:
+    full_url = f"{url}/{word}"
+    response = requests.get(full_url, allow_redirects=False)
+
+    status = response.status_code
+
+    if status != 404:
+        size = len(response.content)
+        print(f"  [{status}] /{word:<20} ({size} bytes)")
+
+print("Done.")
+\`\`\`
+
+Run it:
+
+\`\`\`bash
+python3 dir_step3.py
+\`\`\`
+
+**Key change**: \`allow_redirects=False\`. This tells requests to stop at 301/302 instead of following them. We want to see the redirect, not the destination.
+
+### Step 4: Add Threading and Wordlist File
+
+Same idea as the port scanner. Use threads to check many URLs at once.
+
+Save as \`~/tools/dir_brute.py\` (final version):
+
+\`\`\`python
+#!/usr/bin/env python3
+import requests
+import sys
+import time
+from concurrent.futures import ThreadPoolExecutor
+
+def check_path(url, path):
+    full_url = f"{url.rstrip('/')}/{path.strip()}"
+    try:
+        response = requests.get(
+            full_url,
+            timeout=5,
+            allow_redirects=False,
+            headers={"User-Agent": "Mozilla/5.0 (SecurityScanner/1.0)"}
+        )
+        if response.status_code != 404:
+            return path, response.status_code, len(response.content)
+    except requests.exceptions.RequestException:
+        pass
+    return None
+
+def main():
+    if len(sys.argv) < 3:
+        print(f"Usage: python3 {sys.argv[0]} <url> <wordlist> [threads]")
+        print(f"Example: python3 {sys.argv[0]} http://192.168.1.1 wordlist.txt 50")
+        sys.exit(1)
+
+    url = sys.argv[1]
+    wordlist_path = sys.argv[2]
+    threads = int(sys.argv[3]) if len(sys.argv) > 3 else 50
+
+    if not url.startswith(("http://", "https://")):
+        url = "http://" + url
+
+    try:
+        with open(wordlist_path, "r") as f:
+            words = [line.strip() for line in f if line.strip()]
+    except FileNotFoundError:
+        print(f"Error: File not found: {wordlist_path}")
+        sys.exit(1)
+
+    print(f"Target: {url}")
+    print(f"Wordlist: {wordlist_path} ({len(words)} entries)")
+    print(f"Threads: {threads}")
+    print("-" * 50)
+
+    start_time = time.time()
+    found = []
+
+    with ThreadPoolExecutor(max_workers=threads) as executor:
+        results = executor.map(lambda w: check_path(url, w), words)
+
+        for result in results:
+            if result is not None:
+                path, status, size = result
+                print(f"  [{status}] /{path:<25} ({size} bytes)")
+                found.append((path, status, size))
+
+    elapsed = time.time() - start_time
+
+    print("-" * 50)
+    print(f"Done in {elapsed:.2f} seconds")
+    print(f"Found: {len(found)} paths")
+
+    if found:
+        output_file = f"dirscan_{url.split('//')[1].replace('/', '_')}_{int(time.time())}.txt"
+        with open(output_file, "w") as f:
+            for path, status, size in sorted(found):
+                f.write(f"[{status}] /{path} ({size} bytes)\\n")
+        print(f"Results saved to {output_file}")
+
+if __name__ == "__main__":
+    main()
+\`\`\`
+
+Create a test wordlist and run:
 
 \`\`\`bash
 cd ~/tools
 
-# Create a small test wordlist
-cat > test_wordlist.txt << 'EOF'
+cat > wordlist.txt << 'EOF'
 admin
 login
 dashboard
@@ -3591,31 +4021,32 @@ phpmyadmin
 server-status
 EOF
 
-# Test against a known target
-python3 dir_brute.py http://testphp.vulnweb.com test_wordlist.txt 10
+python3 dir_brute.py http://testphp.vulnweb.com wordlist.txt 20
 \`\`\`
 
-## Project 3: Combined Toolkit
+### Try It Yourself: Directory Brute-Forcer
 
-Save this as \`~/tools/security_toolkit.py\`:
+1. Add the response body size to the output. Does size help distinguish real pages from error pages?
+2. Try a bigger wordlist. Download from: \`wget https://github.com/danielmiessler/SecLists/raw/master/Discovery/Web-Content/common.txt\`
+3. Add a \`--status\` flag to only show responses with specific codes (e.g., \`--status 200,301\`)
+4. What happens if you remove \`allow_redirects=False\`? Test it.
+
+## Project 3: Security Toolkit
+
+Now combine both tools into one script.
+
+Save as \`~/tools/security_toolkit.py\`:
 
 \`\`\`python
 #!/usr/bin/env python3
-"""
-Mini Security Toolkit - combines port scanning, directory brute-forcing, and header checking.
-Usage: python3 security_toolkit.py <target_ip> <target_url>
-"""
-
 import socket
 import requests
 import sys
 from concurrent.futures import ThreadPoolExecutor
 
 def quick_scan(target, ports=[22, 80, 443, 8080, 8443, 3306, 3389]):
-    """Quick scan of common ports."""
     print("\\n[1] Quick Port Scan")
     print("-" * 40)
-    
     open_ports = []
     for port in ports:
         try:
@@ -3623,127 +4054,103 @@ def quick_scan(target, ports=[22, 80, 443, 8080, 8443, 3306, 3389]):
             sock.settimeout(1)
             result = sock.connect_ex((target, port))
             if result == 0:
-                service = socket.getservbyport(port, 'tcp')
+                try:
+                    service = socket.getservbyport(port, 'tcp')
+                except OSError:
+                    service = "unknown"
                 print(f"  OPEN  {port}/tcp  {service}")
                 open_ports.append((port, service))
             sock.close()
         except:
             pass
-    
     if not open_ports:
-        print("  No open ports found in common range")
+        print("  No open ports found")
     return open_ports
 
-def check_security_headers(url):
-    """Check for important security headers."""
+def check_headers(url):
     print("\\n[2] Security Header Check")
     print("-" * 40)
-    
     try:
         response = requests.get(url, timeout=10)
         headers = response.headers
-        
         checks = [
             ('Strict-Transport-Security', 'HSTS'),
             ('Content-Security-Policy', 'CSP'),
             ('X-Content-Type-Options', 'XCTO'),
             ('X-Frame-Options', 'XFO'),
-            ('X-Powered-By', 'Server Info'),
+            ('X-Powered-By', 'Server Info Leaked'),
         ]
-        
         for header, name in checks:
             value = headers.get(header)
-            if value:
-                if header.startswith('X-Powered-By'):
-                    print(f"  [WARN] {name}: {value} (should be removed)")
+            if header == 'X-Powered-By':
+                if value:
+                    print(f"  [WARN] {name}: {value}")
                 else:
-                    print(f"  [PASS] {name}: Present")
+                    print(f"  [OK]   {name}: Not present")
             else:
-                if header.startswith('X-Powered-By'):
-                    print(f"  [PASS] {name}: Not disclosed")
+                if value:
+                    print(f"  [OK]   {name}: Present")
                 else:
-                    print(f"  [FAIL] {name}: Missing")
-        
-        return True
+                    print(f"  [MISS] {name}: Missing")
     except Exception as e:
         print(f"  Error: {e}")
-        return False
-
-def resolve_target(target):
-    """Resolve target hostname to IP."""
-    print(f"\\nTarget: {target}")
-    try:
-        ip = socket.gethostbyname(target)
-        print(f"Resolved: {ip}")
-        return ip
-    except socket.gaierror:
-        print(f"Could not resolve {target}")
-        sys.exit(1)
 
 def main():
     if len(sys.argv) < 3:
-        print(f"Usage: {sys.argv[0]} <target_ip> <target_url>")
-        print(f"Example: {sys.argv[0]} 192.168.1.1 http://192.168.1.1")
+        print(f"Usage: python3 {sys.argv[0]} <ip> <url>")
+        print(f"Example: python3 {sys.argv[0]} 192.168.1.1 http://192.168.1.1")
         sys.exit(1)
-    
+
     target_ip = sys.argv[1]
     target_url = sys.argv[2]
-    
-    print("=" * 50)
-    print("SECURITY TOOLKIT - Quick Assessment")
-    print("=" * 50)
-    
-    # 1. Port scan
-    open_ports = quick_scan(target_ip)
-    
-    # 2. Header check
+
     if not target_url.startswith(('http://', 'https://')):
         target_url = 'http://' + target_url
-    check_security_headers(target_url)
-    
-    # Summary
+
+    print("=" * 50)
+    print("SECURITY TOOLKIT")
+    print("=" * 50)
+
+    open_ports = quick_scan(target_ip)
+    check_headers(target_url)
+
     print("\\n" + "=" * 50)
     print("SUMMARY")
     print("=" * 50)
     print(f"Open ports: {len(open_ports)}")
-    print(f"Recommendation: {'Review open services' if open_ports else 'No obvious entry points found'}")
 
 if __name__ == "__main__":
     main()
 \`\`\`
 
-### Test the Toolkit
+Run it:
 
 \`\`\`bash
 cd ~/tools
-chmod +x security_toolkit.py
-
-# Run against your own machine (safe test)
 python3 security_toolkit.py 127.0.0.1 http://127.0.0.1
 \`\`\`
 
-## Key Concepts
+### Try It Yourself: Toolkit
 
-:::concept
-### Threading for Speed
-Without threading, a port scan of 1000 ports at 1 second timeout = 1000 seconds (~17 minutes).
-With 100 threads, the same scan takes ~10 seconds.
-:::
+1. Add a third function that checks for \`/robots.txt\` and prints any disallowed paths
+2. Add a function that grabs the server banner (the \`Server\` header)
+3. Save all results to a single report file
 
-:::concept
-### Why Custom Tools?
-- **Understanding**: Building tools teaches you how they work
-- **Customization**: Modify for specific scenarios
-- **Stealth**: Custom tools have unique signatures
-- **Interview**: Shows deep technical capability
-:::
+## Practice
+
+Complete these to lock in your skills:
+
+1. **Modify the port scanner** to also scan UDP ports (hint: \`socket.SOCK_DGRAM\`)
+2. **Add a delay option** to the directory brute-forcer (e.g., \`--delay 0.1\` to wait 100ms between requests)
+3. **Build a subdomain scanner** that takes a domain and wordlist, then resolves \`word.domain.com\` for each word
+4. **Combine all three** (port scan + dir brute + subdomain) into one mega toolkit
 
 :::checkpoint
-1. Why does the port scanner use connect_ex() instead of connect()?
-2. What does ThreadPoolExecutor do?
-3. Why do we set allow_redirects=False in the directory brute-forcer?
-4. How does the progress indicator help during a long scan?
-5. What would you modify to make the port scanner output JSON?
+1. Why does the port scanner use \`connect_ex()\` instead of \`connect()\`?
+2. What does \`ThreadPoolExecutor\` do and why is it faster?
+3. Why do we set \`allow_redirects=False\` in the directory brute-forcer?
+4. What status codes does the brute-forcer report? Why skip 404?
+5. How would you modify the tools to output JSON for use with other programs?
 :::
 `,
         aiPrompt: "",
@@ -3907,44 +4314,38 @@ With 100 threads, the same scan takes ~10 seconds.
         type: "practice",
         duration: "3-4 hours",
         content: `:::objectives
-- Use grep with regular expressions to search logs
-- Use sed for find-and-replace operations
-- Use awk for column-based text processing
-- Analyze auth.log for failed SSH attempts
-- Parse /etc/passwd with text tools
-- Build piping techniques for security analysis
+- Understand why text processing is a core security skill
+- Use grep to search logs for attack patterns
+- Use sed to redact and transform log data
+- Use awk to extract columns from structured logs
+- Build a combined pipeline to analyze auth.log
 :::
 
-## Part 1: grep with Regular Expressions
+## Before We Begin: Why Text Processing Matters
 
-grep searches file contents for patterns. It's the most-used text processing tool in security.
+Imagine you are a security analyst. Your server just got attacked. You have a 2 GB log file. You need answers now.
+
+- Who attacked you?
+- When did it happen?
+- What did they try?
+
+You cannot read 2 GB by hand. You need tools that search, filter, and extract data fast. That is what grep, sed, and awk do. They are the foundation of security log analysis. Every SOC analyst, penetration tester, and incident responder uses them daily.
+
+:::tip
+Think of these three tools as specialized search functions:
+- **grep** = Find lines that match a pattern
+- **sed** = Edit or transform those lines
+- **awk** = Extract specific columns from those lines
+:::
+
+## Step 1: grep — Searching for a Word in a Book
+
+Imagine a 1000-page book. You want every page that says "password." You cannot read every page. grep does it instantly.
 
 ### Basic grep
 
 \`\`\`bash
-# Search for a string in a file
-grep "Failed" /var/log/auth.log
-
-# Case-insensitive search
-grep -i "failed" /var/log/auth.log
-
-# Show line numbers
-grep -n "Failed" /var/log/auth.log
-
-# Count matches
-grep -c "Failed password" /var/log/auth.log
-
-# Invert match (lines that don't contain the pattern)
-grep -v "^#" /etc/ssh/sshd_config
-
-# Search recursively in a directory
-grep -r "password" /etc/ --include="*.conf" 2>/dev/null
-\`\`\`
-
-### grep Regular Expressions
-
-\`\`\`bash
-# Create a sample log file to work with
+# Create a sample log file to practice with
 cat > ~/labs/web/sample_auth.log << 'EOF'
 Jun 22 10:01:23 server sshd[1234]: Failed password for root from 192.168.1.100 port 22 ssh2
 Jun 22 10:01:25 server sshd[1235]: Failed password for admin from 192.168.1.100 port 22 ssh2
@@ -3960,208 +4361,267 @@ Jun 22 10:06:00 server kernel: [UFW BLOCK] IN=eth0 SRC=203.0.113.42 DST=192.168.
 EOF
 \`\`\`
 
-| Pattern | Meaning | Example |
+\`\`\`bash
+# Find every line containing "Failed"
+grep "Failed" ~/labs/web/sample_auth.log
+
+# Case-insensitive search (matches "failed", "FAILED", "Failed")
+grep -i "failed" ~/labs/web/sample_auth.log
+
+# Show line numbers
+grep -n "Failed" ~/labs/web/sample_auth.log
+
+# Count how many lines match
+grep -c "Failed password" ~/labs/web/sample_auth.log
+
+# Show lines that do NOT match (invert)
+grep -v "sshd" ~/labs/web/sample_auth.log
+\`\`\`
+
+**Expected output for \`grep -c "Failed password":**
+\`\`\`
+5
+\`\`\`
+
+### grep Flags Cheat Sheet
+
+| Flag | What It Does | Example |
 |---|---|---|
-| \`.\` | Any single character | \`grep "r.o" file\` matches "root", "r oot" |
-| \`*\` | Zero or more of the previous | \`grep "ro*t" file\` matches "rt", "rot", "root" |
-| \`+\` | One or more of the previous (ERE) | \`grep -E "ro+t" file\` matches "rot", "root" |
-| \`?\` | Zero or one of the previous (ERE) | \`grep -E "ro?t" file\` matches "rt", "rot" |
-| \`[]\` | Character class | \`grep "[0-9]" file\` matches any digit |
+| \`-i\` | Case-insensitive | \`grep -i "error" log.txt\` |
+| \`-n\` | Show line numbers | \`grep -n "Failed" log.txt\` |
+| \`-c\` | Count matches only | \`grep -c "Failed" log.txt\` |
+| \`-v\` | Invert (show non-matches) | \`grep -v "sshd" log.txt\` |
+| \`-o\` | Show only the matched part | \`grep -o "root" log.txt\` |
+| \`-r\` | Search recursively in dirs | \`grep -r "password" /etc/\` |
+
+### grep with Regex
+
+Regex (regular expressions) are patterns. They let you search for things like "any IP address" instead of a fixed string.
+
+| Pattern | What It Matches | Example |
+|---|---|---|
+| \`.\` | Any single character | \`grep "r.o" file\` matches "root", "rXo" |
+| \`[0-9]\` | Any digit | \`grep "[0-9]" file\` matches lines with digits |
 | \`^\` | Start of line | \`grep "^Jun" file\` matches lines starting with Jun |
 | \`$\` | End of line | \`grep "ssh2$" file\` matches lines ending with ssh2 |
-| \`\\b\` | Word boundary | \`grep "\\broot\\b" file\` matches "root" as whole word |
-| \`\\d\` | Digit (with -P flag) | \`grep -P "\\d{1,3}" file\` matches 1-3 digit numbers |
+| \`.*\` | Any number of any character | \`grep "Failed.*root" file\` |
 
 \`\`\`bash
-# Find all failed password attempts
-grep "Failed password" ~/labs/web/sample_auth.log
-
-# Find attempts from a specific IP
-grep "192.168.1.100" ~/labs/web/sample_auth.log
-
-# Find all IP addresses (using extended regex)
-grep -oE "\\b[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}\\b" ~/labs/web/sample_auth.log
+# Find all IP addresses in the log
+grep -oE "[0-9]+\\.[0-9]+\\.[0-9]+\\.[0-9]+" ~/labs/web/sample_auth.log
 
 # Find lines with "Failed" or "Connection closed"
 grep -E "Failed|Connection closed" ~/labs/web/sample_auth.log
 
 # Find failed logins for root specifically
 grep "Failed password for root" ~/labs/web/sample_auth.log
-
-# Show 2 lines before and after each match
-grep -B2 -A2 "403" ~/labs/web/sample_auth.log
 \`\`\`
 
-**Expected output for failed root logins:**
-\`\`\`
-Jun 22 10:01:23 server sshd[1234]: Failed password for root from 192.168.1.100 port 22 ssh2
-Jun 22 10:01:27 server sshd[1236]: Failed password for root from 192.168.1.100 port 22 ssh2
-Jun 22 10:02:15 server sshd[1238]: Failed password for root from 192.168.1.100 port 22 ssh2
-Jun 22 10:03:00 server sshd[1239]: Failed password for root from 10.0.0.99 port 22 ssh2
-\`\`\`
+:::warning
+grep uses Basic Regex by default. Use \`-E\` for Extended Regex (supports \`+\`, \`?\`, \`|\`). Use \`-o\` to output only the matched text instead of the whole line.
+:::
 
-## Part 2: sed - Stream Editor
-
-sed performs find-and-replace and text transformations on streams.
+### Try It Yourself
 
 \`\`\`bash
-# Basic substitution (replace first occurrence per line)
-sed 's/old/new/' file.txt
+# 1. How many lines contain "Accepted"?
+grep -c "Accepted" ~/labs/web/sample_auth.log
 
-# Replace ALL occurrences per line
-sed 's/old/new/g' file.txt
+# 2. Show all lines that are NOT from sshd
+grep -v "sshd" ~/labs/web/sample_auth.log
 
-# In-place editing (modifies the file)
-sed -i 's/old/new/g' file.txt
+# 3. Extract every unique IP address from the log
+grep -oE "[0-9]+\\.[0-9]+\\.[0-9]+\\.[0-9]+" ~/labs/web/sample_auth.log | sort -u
+\`\`\`
 
-# Delete lines matching a pattern
-sed '/pattern/d' file.txt
+## Step 2: sed — Find and Replace
 
-# Print only matching lines (like grep)
-sed -n '/Failed/p' ~/labs/web/sample_auth.log
+sed is a stream editor. It reads text, applies changes, and outputs the result. Think of it as a smart find-and-replace.
 
-# Delete comments and blank lines
-sed '/^#/d; /^$/d' /etc/ssh/sshd_config
+### Basic Substitution
 
-# Mask IP addresses in logs (anonymize)
+\`\`\`bash
+# Replace first occurrence of "root" with "ADMIN" on each line
+sed 's/root/ADMIN/' ~/labs/web/sample_auth.log
+
+# Replace ALL occurrences on each line (add g flag)
+sed 's/root/ADMIN/g' ~/labs/web/sample_auth.log
+
+# Edit the file directly (careful!)
+sed -i 's/root/ADMIN/g' ~/labs/web/sample_auth.log
+\`\`\`
+
+:::danger
+\`sed -i\` modifies the file permanently. Always test your sed command without \`-i\` first. Use \`sed -i.bak\` to create a backup before modifying.
+:::
+
+### Deleting Lines
+
+\`\`\`bash
+# Delete all lines containing "sshd"
+sed '/sshd/d' ~/labs/web/sample_auth.log
+
+# Delete blank lines
+sed '/^$/d' ~/labs/web/sample_auth.log
+
+# Delete comment lines (starting with #)
+sed '/^#/d' /etc/ssh/sshd_config
+\`\`\`
+
+### Security Use Case: Mask IP Addresses
+
+When sharing logs for analysis, you must hide real IPs. sed does this easily.
+
+\`\`\`bash
+# Replace the last octet of each IP with XXX
 sed -E 's/([0-9]+\\.[0-9]+\\.[0-9]+)\\.[0-9]+/\\1.XXX/g' ~/labs/web/sample_auth.log
-\`\`\`
-
-**Expected output for IP masking:**
-\`\`\`
-Jun 22 10:01:23 server sshd[1234]: Failed password for root from 192.168.1.XXX port 22 ssh2
-Jun 22 10:01:25 server sshd[1235]: Failed password for admin from 192.168.1.XXX port 22 ssh2
-\`\`\`
-
-\`\`\`bash
-# Insert a line after every match
-sed '/Failed password/a\\ALERT: Failed login attempt detected' ~/labs/web/sample_auth.log | head -10
-
-# Extract specific fields
-cat /etc/passwd | sed 's/:/ /g' | awk '{print \$1, \$7}'
-\`\`\`
-
-## Part 3: awk - Pattern Processing
-
-awk processes text column-by-column. It's ideal for structured data.
-
-\`\`\`bash
-# Print specific columns (space-separated)
-awk '{print \$1, \$3}' ~/labs/web/sample_auth.log
-
-# Print first column only
-awk '{print \$1}' ~/labs/web/sample_auth.log
-
-# Print with custom delimiter
-awk -F: '{print \$1, \$6, \$7}' /etc/passwd
-
-# Filter rows based on column value
-awk '\$3 == "Failed" {print \$0}' ~/labs/web/sample_auth.log
-
-# Count lines (like wc -l)
-awk 'END {print NR}' ~/labs/web/sample_auth.log
-
-# Sum a column
-awk '{sum += \$NF} END {print "Total:", sum}' file.txt
-\`\`\`
-
-**Parse /etc/passwd:**
-\`\`\`bash
-# List all users with their shells
-awk -F: '{print \$1 " -> " \$7}' /etc/passwd
-
-# List users with /bin/bash (real users)
-awk -F: '\$7 == "/bin/bash" {print \$1}' /etc/passwd
-
-# List users with UID >= 1000 (regular users)
-awk -F: '\$3 >= 1000 {print \$1 " (UID: " \$3 ")"}' /etc/passwd
-
-# Show home directories
-awk -F: '\$3 >= 1000 {print \$1 " home: " \$6}' /etc/passwd
 \`\`\`
 
 **Expected output:**
 \`\`\`
-cyberlab home: /home/cyberlab
+Jun 22 10:01:23 server sshd[1234]: Failed password for root from 192.168.1.XXX port 22 ssh2
+Jun 22 10:01:25 server sshd[1235]: Failed password for admin from 192.168.1.XXX port 22 ssh2
+Jun 22 10:02:01 server sshd[1237]: Accepted publickey for user1 from 10.0.0.XXX port 22 ssh2
 \`\`\`
 
-## Part 4: Analyzing auth.log for Failed SSH Attempts
+### Try It Yourself
 
 \`\`\`bash
-# Count total failed attempts
-grep -c "Failed password" ~/labs/web/sample_auth.log
+# 1. Replace "Failed" with "ALERT" in the log
+sed 's/Failed/ALERT/g' ~/labs/web/sample_auth.log
 
-# Count failed attempts per IP
-grep "Failed password" ~/labs/web/sample_auth.log | \\
-  grep -oE "\\b[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}\\b" | \\
-  sort | uniq -c | sort -rn
+# 2. Delete all lines containing "Accepted" (show only rejections)
+sed '/Accepted/d' ~/labs/web/sample_auth.log
 
-# Same result using awk
-awk '/Failed password/ {for(i=1;i<=NF;i++) if(\$i=="from") print \$(i+1)}' ~/labs/web/sample_auth.log | \\
-  sort | uniq -c | sort -rn
-
-# Find unique usernames targeted
-grep "Failed password" ~/labs/web/sample_auth.log | \\
-  awk '{for(i=1;i<=NF;i++) if(\$i=="for") print \$(i+1)}' | sort -u
-
-# Show timeline of failed attempts
-grep "Failed password" ~/labs/web/sample_auth.log | \\
-  awk '{print \$1, \$2}' | sort | uniq -c
-
-# Find successful logins
-grep "Accepted" ~/labs/web/sample_auth.log
-
-# Show all unique IPs in the log
-grep -oE "\\b[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}\\b" ~/labs/web/sample_auth.log | sort -u
+# 3. Mask all usernames after "for" with "REDACTED"
+sed -E 's/for [a-z]+/for REDACTED/g' ~/labs/web/sample_auth.log
 \`\`\`
 
-**Expected output for failed attempts per IP:**
+## Step 3: awk — Reading a Spreadsheet
+
+awk processes text column by column. If grep finds the right lines, awk picks the right columns.
+
+Imagine a spreadsheet. Each line is a row. Each word is a column. awk lets you say "give me column 1 and column 7."
+
+\`\`\`bash
+# Print column 1 and column 3 from the log
+awk '{print $1, $3}' ~/labs/web/sample_auth.log
+
+# Print column 1 only
+awk '{print $1}' ~/labs/web/sample_auth.log
+\`\`\`
+
+### Custom Delimiters
+
+By default, awk splits on whitespace. Use \`-F\` to set a different delimiter.
+
+\`\`\`bash
+# Parse /etc/passwd (colon-delimited)
+# Format: username:password:UID:GID:comment:home:shell
+awk -F: '{print $1}' /etc/passwd        # usernames
+awk -F: '{print $6}' /etc/passwd        # home directories
+awk -F: '{print $1, $7}' /etc/passwd    # username + shell
+\`\`\`
+
+### Filtering Rows
+
+awk can filter rows based on column values, like a spreadsheet filter.
+
+\`\`\`bash
+# Show only lines where column 3 is "Failed"
+awk '$3 == "Failed" {print $0}' ~/labs/web/sample_auth.log
+
+# Show users with UID >= 1000 (real users)
+awk -F: '$3 >= 1000 {print $1, "(UID:", $3, ")"}' /etc/passwd
+
+# Show users with /bin/bash shell
+awk -F: '$7 == "/bin/bash" {print $1}' /etc/passwd
+\`\`\`
+
+**Expected output:**
+\`\`\`
+cyberlab (UID: 1000 )
+\`\`\`
+
+### Try It Yourself
+
+\`\`\`bash
+# 1. Print the date (column 1) and time (column 2) from the log
+awk '{print $1, $2}' ~/labs/web/sample_auth.log
+
+# 2. Print all usernames with their home directories from /etc/passwd
+awk -F: '{print $1, "->", $6}' /etc/passwd
+
+# 3. Show only lines that contain "nginx" in the program field
+awk '/nginx/ {print $0}' ~/labs/web/sample_auth.log
+\`\`\`
+
+## Step 4: Log Analysis Pipeline
+
+The real power comes from combining tools with pipes (\`|\`). A pipe sends the output of one command as input to the next.
+
+The standard security log analysis pattern:
+
+\`\`\`
+grep (filter lines) | awk (extract fields) | sort | uniq -c | sort -rn
+\`\`\`
+
+### Analyze auth.log
+
+\`\`\`bash
+# Count failed attempts per IP
+grep "Failed password" ~/labs/web/sample_auth.log | \\
+  awk '{for(i=1;i<=NF;i++) if($i=="from") print $(i+1)}' | \\
+  sort | uniq -c | sort -rn
+\`\`\`
+
+**Expected output:**
 \`\`\`
       4 192.168.1.100
       1 10.0.0.99
 \`\`\`
 
-**Expected output for unique usernames:**
-\`\`\`
-admin
-root
-test
-\`\`\`
+This tells you: IP 192.168.1.100 tried 4 times. That is a brute-force attempt.
 
-## Part 5: Building a Security Analysis Pipeline
-
-Combine grep, sed, awk, and pipes for powerful analysis:
+### Full Security Analysis Script
 
 \`\`\`bash
-# Full security analysis of the sample log
+cat > ~/labs/web/analyze.sh << 'SCRIPT'
+#!/bin/bash
+LOG=~/labs/web/sample_auth.log
+
 echo "=== SECURITY LOG ANALYSIS ==="
 echo ""
 
 echo "--- Failed Login Summary ---"
-grep "Failed password" ~/labs/web/sample_auth.log | \\
-  awk '/Failed password/ {for(i=1;i<=NF;i++) if(\$i=="from") print \$(i+1)}' | \\
+grep "Failed password" "$LOG" | \\
+  awk '{for(i=1;i<=NF;i++) if($i=="from") print $(i+1)}' | \\
   sort | uniq -c | sort -rn | \\
   while read count ip; do
-    if [ "\$count" -ge 3 ]; then
-      echo "  [BLOCK] \$ip: \$count attempts"
+    if [ "$count" -ge 3 ]; then
+      echo "  [BLOCK] $ip: $count attempts"
     else
-      echo "  [WATCH] \$ip: \$count attempts"
+      echo "  [WATCH] $ip: $count attempts"
     fi
   done
 
 echo ""
 echo "--- Targeted Usernames ---"
-grep "Failed password" ~/labs/web/sample_auth.log | \\
-  awk '{for(i=1;i<=NF;i++) if(\$i=="for") print \$(i+1)}' | sort -u
+grep "Failed password" "$LOG" | \\
+  awk '{for(i=1;i<=NF;i++) if($i=="for") print $(i+1)}' | sort -u
 
 echo ""
 echo "--- Successful Logins ---"
-grep "Accepted" ~/labs/web/sample_auth.log | \\
-  awk '{print \$9, \$11, \$14}'
+grep "Accepted" "$LOG" | \\
+  awk '{print $9, $11, $14}'
 
 echo ""
 echo "--- Non-SSH Activity ---"
-grep -v "sshd" ~/labs/web/sample_auth.log
+grep -v "sshd" "$LOG"
+SCRIPT
+
+chmod +x ~/labs/web/analyze.sh
+bash ~/labs/web/analyze.sh
 \`\`\`
 
 **Expected output:**
@@ -4188,28 +4648,46 @@ Jun 22 10:06:00 server kernel: [UFW BLOCK] IN=eth0 SRC=203.0.113.42 DST=192.168.
 \`\`\`
 
 :::tip
-Piping techniques: \`grep | awk | sort | uniq -c | sort -rn\` is the standard pattern for counting occurrences in security log analysis.
+In a real SOC, this is how analysts triage incidents. They pipe logs through grep and awk to quickly identify attackers, targeted accounts, and attack timelines.
 :::
+
+### Try It Yourself
+
+\`\`\`bash
+# 1. Find the top 3 IPs with the most connections in the log
+grep -oE "[0-9]+\\.[0-9]+\\.[0-9]+\\.[0-9]+" ~/labs/web/sample_auth.log | \\
+  sort | uniq -c | sort -rn | head -3
+
+# 2. Count how many successful vs failed logins
+echo "Failed: $(grep -c 'Failed' ~/labs/web/sample_auth.log)"
+echo "Accepted: $(grep -c 'Accepted' ~/labs/web/sample_auth.log)"
+
+# 3. Show a timeline: how many events per minute?
+awk '{print $1, $2}' ~/labs/web/sample_auth.log | cut -d: -f1,2 | sort | uniq -c
+\`\`\`
 
 ## Quick Reference
 
-| Task | Command |
-|---|---|
-| Search for pattern | \`grep "pattern" file\` |
-| Case-insensitive search | \`grep -i "pattern" file\` |
-| Count matches | \`grep -c "pattern" file\` |
-| Replace text | \`sed 's/old/new/g' file\` |
-| Delete matching lines | \`sed '/pattern/d' file\` |
-| Print columns | \`awk '{print \$1, \$2}' file\` |
-| Filter by column value | \`awk '\$3 == "value" {print \$0}' file\` |
-| Count occurrences | \`sort | uniq -c | sort -rn\` |
+| Task | Tool | Command |
+|---|---|---|
+| Find lines matching a pattern | grep | \`grep "pattern" file\` |
+| Case-insensitive search | grep | \`grep -i "pattern" file\` |
+| Count matches | grep | \`grep -c "pattern" file\` |
+| Show non-matching lines | grep | \`grep -v "pattern" file\` |
+| Replace text | sed | \`sed 's/old/new/g' file\` |
+| Delete matching lines | sed | \`sed '/pattern/d' file\` |
+| Edit file in-place | sed | \`sed -i 's/old/new/g' file\` |
+| Print columns | awk | \`awk '{print $1, $3}' file\` |
+| Use custom delimiter | awk | \`awk -F: '{print $1}' file\` |
+| Filter by column value | awk | \`awk '$3 == "value" {print $0}' file\` |
+| Count occurrences | combo | \`sort \\| uniq -c \\| sort -rn\` |
 
 :::checkpoint
-1. What is the difference between grep and sed?
-2. How do you make grep case-insensitive?
-3. What does 'sed -i' do?
-4. How would you extract the 3rd column from a file using awk?
-5. What pipe pattern counts occurrences of something in a log file?
+1. Why is grep the most-used tool for security log analysis?
+2. What is the difference between grep -v and grep -i?
+3. What does sed -i do, and why should you test first?
+4. How does awk know which column is $1, $2, $3?
+5. What is the standard pipe pattern for counting occurrences in logs?
 :::
 `,
         aiPrompt: "",
@@ -4347,181 +4825,223 @@ Piping techniques: \`grep | awk | sort | uniq -c | sort -rn\` is the standard pa
         type: "learn",
         duration: "3-4 hours",
         content: `:::objectives
-- Check IP addresses and routes with ip addr and ip route
-- Test connectivity with ping and traceroute
-- Perform DNS lookups with dig and nslookup
-- Test HTTP with curl and wget
-- View listening ports with ss
-- Understand iptables basics (ACCEPT, DROP, REJECT)
-- Read and interpret firewall rules
+- Find your IP address and understand routes
+- Test if other machines are reachable
+- Look up domain names and DNS records
+- Fetch web pages and inspect HTTP responses
+- See which ports are open on your system
+- Build basic firewall rules with iptables
 :::
 
-## Step 1: IP Addresses and Routes
+## Before We Begin
 
-### ip addr - Show Network Interfaces
+Network tools are your eyes on the network.
+
+Without them, you are blind. You cannot see who is talking. You cannot see what is open. You cannot see where traffic goes.
+
+With them, you see everything. Every connection. Every open port. Every hop between you and a target.
+
+Attackers use these tools to find targets. Defenders use them to find problems. You need to know both sides.
+
+All tools are already installed in your Ubuntu WSL2 environment. Open your terminal and follow along.
+
+## IP Addresses and Routes
+
+Every device on a network has an address. Like a street address for your house, an IP address tells the network where to find you.
+
+Your computer has at least two addresses:
+- **127.0.0.1** — loopback, means "myself"
+- **192.168.x.x** — your local network address
+
+### Find Your IP Address
 
 \`\`\`bash
-# Show all interfaces
 ip addr
-
-# Show specific interface
-ip addr show eth0
-ip addr show lo
-
-# Show only IP addresses
-ip -4 addr show
 \`\`\`
 
-**Expected output:**
+You will see output like this:
+
 \`\`\`
-1: lo: <LOOPBACK,UP,LOWER_UP> mtu 65536 qdisc noqueue state UNKNOWN group default qlen 1000
+1: lo: <LOOPBACK,UP,LOWER_UP>
     inet 127.0.0.1/8 scope host lo
-    inet6 ::1/128 scope host
-2: eth0: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc fq_codel state UP group default qlen 1000
+2: eth0: <BROADCAST,MULTICAST,UP,LOWER_UP>
     inet 192.168.1.50/24 brd 192.168.1.255 scope global eth0
-    inet6 fe80::a00:27ff:fe4e:66a1/64 scope link
 \`\`\`
 
-**Key info:**
-- \`127.0.0.1\` - loopback (your own machine)
-- \`192.168.1.50/24\` - your IP with subnet mask (/24 = 255.255.255.0)
-- \`fe80::...\` - link-local IPv6 address
+The \`lo\` interface is your loopback. The \`eth0\` interface is your real network card.
 
-### ip route - Show Routing Table
+The \`/24\` after the IP is the subnet mask. It means the first 24 bits are the network part. The rest is your device. Think of it like a zip code — the first part says which neighborhood, the rest says which house.
+
+### See Your Routes
+
+A route tells your computer: "to reach this network, go this way."
 
 \`\`\`bash
 ip route
 \`\`\`
 
-**Expected output:**
+Output:
+
 \`\`\`
-default via 192.168.1.1 dev eth0 proto dhcp metric 100
-192.168.1.0/24 dev eth0 proto kernel scope link src 192.168.1.50 metric 100
+default via 192.168.1.1 dev eth0
+192.168.1.0/24 dev eth0 scope link
 \`\`\`
 
-This tells you:
-- **Default gateway** (router): 192.168.1.1
-- **Local network**: 192.168.1.0/24
-- **Your IP on that network**: 192.168.1.50
+The \`default\` line is the most important. It says: "if you don't know where to send traffic, send it to 192.168.1.1." That is your router — your gateway to the internet.
+
+:::tip
+You can also use \`ip route get 8.8.8.8\` to see which route would be used to reach a specific destination.
+:::
+
+### Try It Yourself
+
+Run these commands and answer the questions:
 
 \`\`\`bash
-# Show the default route
+# What is your IP address?
+ip -4 addr show
+
+# What is your default gateway?
 ip route show default
 
-# Add a static route (temporary)
-# sudo ip route add 10.0.0.0/8 via 192.168.1.254
-
-# Show the IP of a specific interface
+# Which interface is used to reach Google's DNS?
 ip route get 8.8.8.8
 \`\`\`
 
-## Step 2: Connectivity Testing
+Write down your IP and gateway. You will need them later.
 
-### ping
+## Connectivity Testing
 
-\`\`\`bash
-# Ping a host (sends ICMP packets)
-ping -c 4 google.com
-\`\`\`
+Can you reach another machine? The \`ping\` command is like knocking on a door. You send a small packet and wait for a reply.
 
-**Expected output:**
-\`\`\`
-PING google.com (142.250.80.46) 56(84) bytes of data.
-64 bytes from iad23s58-in-f14.1e100.net (142.250.80.46): icmp_seq=1 ttl=116 time=12.3 ms
-64 bytes from iad23s58-in-f14.1e100.net (142.250.80.46): icmp_seq=2 ttl=116 time=11.8 ms
-64 bytes from iad23s58-in-f14.1e100.net (142.250.80.46): icmp_seq=3 ttl=116 time=12.1 ms
-64 bytes from iad23s58-in-f14.1e100.net (142.250.80.46): icmp_seq=4 ttl=116 time=11.9 ms
-
---- google.com ping statistics ---
-4 packets transmitted, 4 received, 0% packet loss, time 3005ms
-rtt min/avg/max/mdev = 11.812/12.025/12.327/0.198 ms
-\`\`\`
+### ping — Knock on the Door
 
 \`\`\`bash
-# Ping with count
-ping -c 4 192.168.1.1
-
-# Ping with interval (1 second between pings)
-ping -i 1 -c 10 192.168.1.1
-
-# Ping flood (requires root, for stress testing)
-# sudo ping -f 192.168.1.1
+# Send 4 pings to Google's DNS server
+ping -c 4 8.8.8.8
 \`\`\`
 
-### traceroute / tracepath
+Output:
+
+\`\`\`
+PING 8.8.8.8 (8.8.8.8) 56(84) bytes of data.
+64 bytes from 8.8.8.8: icmp_seq=1 ttl=116 time=12.3 ms
+64 bytes from 8.8.8.8: icmp_seq=2 ttl=116 time=11.8 ms
+64 bytes from 8.8.8.8: icmp_seq=3 ttl=116 time=12.1 ms
+64 bytes from 8.8.8.8: icmp_seq=4 ttl=116 time=11.9 ms
+
+--- 8.8.8.8 ping statistics ---
+4 packets transmitted, 4 received, 0% packet loss
+\`\`\`
+
+Key things to notice:
+- **time=12.3 ms** — how long the round trip took (latency)
+- **0% packet loss** — all packets arrived (good)
+- **ttl=116** — time to live, counts down at each router hop
+
+:::warning
+Some servers block ping (ICMP). If ping fails, it does not always mean the host is down. Use other tools to confirm.
+:::
+
+### traceroute — See the Path
+
+Traceroute shows every router between you and the destination. Like seeing every stop on a bus route.
 
 \`\`\`bash
-# Install traceroute if not available
-sudo apt install traceroute -y
-
-# Trace route to destination
-traceroute google.com
-
-# Trace route with DNS resolution
-traceroute -n google.com
+traceroute 8.8.8.8
 \`\`\`
 
-**Expected output (truncated):**
+Output (simplified):
+
 \`\`\`
-traceroute to google.com (142.250.80.46), 30 hops max, 60 byte packets
+traceroute to 8.8.8.8 (8.8.8.8), 30 hops max
  1  192.168.1.1 (192.168.1.1)  1.234 ms  1.102 ms  1.023 ms
  2  10.0.0.1 (10.0.0.1)  5.678 ms  5.543 ms  5.432 ms
  3  72.14.236.201 (72.14.236.201)  8.901 ms  8.765 ms  8.654 ms
 \`\`\`
 
-:::info
-Some hops show \`*\` because routers don't always respond to traceroute probes. This is normal.
-:::
+Hop 1 is your router. Each hop after that is another router on the path. Some hops show \`*\` — that router does not respond to traceroute. This is normal and often a security measure.
 
-## Step 3: DNS Lookups
-
-### dig - Detailed DNS Queries
+### Try It Yourself
 
 \`\`\`bash
-# Basic lookup
+# Can you reach your gateway?
+ping -c 2 192.168.1.1
+
+# Can you reach the internet?
+ping -c 2 8.8.8.8
+
+# Can you reach a website by name?
+ping -c 2 google.com
+
+# What is the path to Google?
+traceroute google.com
+\`\`\`
+
+If the first two work but the third fails, you have a DNS problem. If none work, check your network connection.
+
+## DNS Lookups
+
+DNS is the phone book of the internet. You type "google.com" — DNS turns that into an IP address like 142.250.80.46.
+
+Without DNS, you would have to memorize IP addresses for every website. DNS is what makes the internet usable.
+
+### dig — The Professional's Tool
+
+\`\`\`bash
+# Look up a domain
 dig google.com
 \`\`\`
 
-**Expected output (simplified):**
+The important part is the ANSWER SECTION:
+
 \`\`\`
 ;; ANSWER SECTION:
 google.com.         300     IN      A       142.250.80.46
 \`\`\`
 
+This means google.com points to 142.250.80.46. The \`300\` is the TTL — how many seconds until this record expires and must be looked up again.
+
+For a cleaner output:
+
 \`\`\`bash
-# Short answer only
+# Just the IP address
 dig +short google.com
-
-# Lookup specific record type
-dig google.com MX      # mail servers
-dig google.com NS      # name servers
-dig google.com TXT     # text records (SPF, etc.)
-dig google.com AAAA    # IPv6 address
-
-# Reverse DNS lookup
-dig -x 142.250.80.46
-
-# Query specific DNS server
-dig @8.8.8.8 google.com
-
-# Trace the full DNS resolution path
-dig +trace google.com
 \`\`\`
 
-### nslookup - Simpler DNS Tool
+### Different Record Types
+
+DNS stores different kinds of information:
 
 \`\`\`bash
-# Basic lookup
-nslookup google.com
+# Mail servers (who handles email for this domain)
+dig google.com MX
 
-# Reverse lookup
-nslookup 142.250.80.46
+# Name servers (who is authoritative for this domain)
+dig google.com NS
 
-# Query specific DNS server
-nslookup google.com 8.8.8.8
+# Text records (SPF, DKIM, verification strings)
+dig google.com TXT
+
+# IPv6 address
+dig google.com AAAA
+
+# Reverse lookup — what domain belongs to this IP?
+dig -x 142.250.80.46
 \`\`\`
 
-**Expected output:**
+:::info
+Security professionals use DNS records to map a target's infrastructure. MX records reveal email providers. NS records reveal DNS providers. TXT records can leak internal information.
+:::
+
+### nslookup — Simpler Alternative
+
+\`\`\`bash
+nslookup google.com
+\`\`\`
+
+Output:
+
 \`\`\`
 Server:         127.0.0.53
 Address:        127.0.0.53#53
@@ -4531,192 +5051,252 @@ Name:   google.com
 Address: 142.250.80.46
 \`\`\`
 
-:::tip
-dig is preferred over nslookup for security professionals because it provides more detail and supports all record types. nslookup is simpler but less informative.
-:::
+Use \`nslookup\` for quick lookups. Use \`dig\` when you need detail.
 
-## Step 4: HTTP Testing with curl and wget
-
-### curl - Transfer Data with URLs
+### Try It Yourself
 
 \`\`\`bash
-# GET request
+# What is the IP of your favorite website?
+dig +short your-favorite-site.com
+
+# What mail servers does google.com use?
+dig google.com MX +short
+
+# What name servers does github.com use?
+dig github.com NS +short
+
+# Can you trace the full DNS resolution path?
+dig +trace google.com
+\`\`\`
+
+## HTTP Testing
+
+HTTP is how your browser talks to web servers. \`curl\` and \`wget\` let you speak HTTP from the command line.
+
+Think of it like sending a letter. You write a request, send it to an address, and get a reply.
+
+### curl — Your HTTP Swiss Army Knife
+
+\`\`\`bash
+# Get a web page (like your browser does)
 curl http://example.com
 
-# Show headers only (HEAD request)
+# See only the response headers (like checking an envelope without opening it)
 curl -I http://example.com
 
-# Show response headers and body
+# See headers AND body
 curl -i http://example.com
 
-# Follow redirects
+# Follow redirects (important — many sites redirect)
 curl -L http://example.com
+\`\`\`
 
-# POST request with data
+### Security-Relevant curl Usage
+
+\`\`\`bash
+# Check HTTP status codes (useful for finding hidden pages)
+for path in admin login dashboard api config backup .git; do
+  code=$(curl -s -o /dev/null -w "%{http_code}" http://target/\$path)
+  echo "  /\$path -> \$code"
+done
+\`\`\`
+
+Status codes tell you what happened:
+- **200** — found it
+- **301/302** — redirected
+- **403** — forbidden (exists, but you can't access it)
+- **404** — not found
+- **500** — server error
+
+\`\`\`bash
+# Send POST data (like submitting a form)
 curl -X POST -d "username=admin&password=test" http://target/login
 
-# POST with JSON
+# Send JSON data
 curl -X POST -H "Content-Type: application/json" \\
   -d '{"username":"admin","password":"test"}' \\
   http://target/api/login
 
-# Send cookies
+# Send cookies (session hijacking checks)
 curl -b "session=abc123" http://target/dashboard
-
-# Save cookies to file
-curl -c cookies.txt http://target/login
-
-# Download a file
-curl -O http://target/file.zip
-
-# Silent mode (no progress)
-curl -s -o /dev/null -w "%{http_code}" http://target
 \`\`\`
 
-**HTTP status code check (useful for security scanning):**
-\`\`\`bash
-# Check if a page returns 200, 403, 404, etc.
-for path in admin login dashboard api config backup; do
-  code=$(curl -s -o /dev/null -w "%{http_code}" http://target/$path)
-  echo "  /$path -> $code"
-done
-\`\`\`
-
-### wget - Download Files
+### wget — Download Files
 
 \`\`\`bash
 # Download a file
 wget http://target/file.zip
 
-# Download with custom name
-wget -O custom_name.zip http://target/file.zip
+# Download with a different name
+wget -O output.zip http://target/file.zip
 
-# Download entire site (mirror)
-wget -m -p -E -k http://target/
-
-# Resume a download
+# Resume an interrupted download
 wget -c http://target/large_file.iso
-
-# Download in background
-wget -b http://target/large_file.iso
 \`\`\`
 
-:::info
-curl is better for API testing and scripting. wget is better for downloading files and mirroring websites.
+:::tip
+Use \`curl\` for testing APIs and inspecting HTTP details. Use \`wget\` for downloading files. Both are essential.
 :::
 
-## Step 5: Checking Listening Ports with ss
+### Try It Yourself
 
 \`\`\`bash
-# All listening TCP and UDP ports
+# Fetch a web page and see the HTML
+curl -s http://example.com | head -20
+
+# Check if a site redirects (and where to)
+curl -s -o /dev/null -w "%{redirect_url}" http://google.com
+
+# Get only the HTTP status code
+curl -s -o /dev/null -w "%{http_code}" http://example.com
+\`\`\`
+
+## Checking Open Ports
+
+Open ports are doors into your system. Each open port is a service listening for connections. An attacker scans for open ports to find targets.
+
+### ss — See What Is Listening
+
+\`\`\`bash
+# Show all listening TCP ports with process info
+sudo ss -tlnp
+\`\`\`
+
+Output:
+
+\`\`\`
+State   Recv-Q  Send-Q   Local Address:Port    Process
+LISTEN  0       128          0.0.0.0:22         users:(("sshd",pid=567,fd=3))
+LISTEN  0       4096         0.0.0.0:80         users:(("nginx",pid=890,fd=6))
+\`\`\`
+
+The flags mean:
+- **-t** — TCP only
+- **-l** — listening (waiting for connections)
+- **-n** — numeric (don't resolve names, faster)
+- **-p** — show the process using each port
+
+\`\`\`bash
+# Show all listening ports (TCP and UDP)
 ss -tlnu
 
-# TCP listening ports with process info
-sudo ss -tlnp
-
-# Show established connections
+# Show established (active) connections
 ss -tnp
 
-# Filter for specific port
-ss -tlnp | grep :80
+# Filter for a specific port
+ss -tlnp | grep :22
 \`\`\`
 
-**Expected output of ss -tlnp:**
-\`\`\`
-State   Recv-Q  Send-Q   Local Address:Port    Peer Address:Port  Process
-LISTEN  0       128          0.0.0.0:22           0.0.0.0:*    users:(("sshd",pid=567,fd=3))
-LISTEN  0       4096         0.0.0.0:80           0.0.0.0:*    users:(("nginx",pid=890,fd=6))
-LISTEN  0       128             [::]:22              [::]:*    users:(("sshd",pid=567,fd=4))
-\`\`\`
+### Quick Security Check
 
-**Quick port check:**
 \`\`\`bash
-# Is port 80 open?
-ss -tlnp | grep -q ":80" && echo "Port 80 OPEN" || echo "Port 80 CLOSED"
-
 # List all open ports as a simple list
 ss -tlnp | awk 'NR>1 {print \$4}' | grep -oE ':[0-9]+' | sort -t: -k2 -n | uniq
+
+# Check if a specific port is open
+ss -tlnp | grep -q ":80" && echo "Port 80 OPEN" || echo "Port 80 CLOSED"
 \`\`\`
 
-## Step 6: iptables - Linux Firewall
+:::warning
+Every open port is a potential attack vector. If you don't recognize a port, investigate it. Close services you don't need.
+:::
 
-iptables is the traditional Linux firewall. It processes packets through a chain of rules.
+### Try It Yourself
 
-### Understanding Chains
+\`\`\`bash
+# What ports are open on your machine right now?
+sudo ss -tlnp
 
-| Chain | When It Processes Packets |
+# Do you see anything unexpected?
+# Common ports: 22 (SSH), 80 (HTTP), 443 (HTTPS), 53 (DNS)
+
+# Check a specific port
+ss -tlnp | grep :22
+\`\`\`
+
+## iptables Firewall
+
+A firewall is a security guard for your network. It checks every packet coming in or going out and decides: let it through, or block it.
+
+iptables is the traditional Linux firewall. It works with rules organized in chains.
+
+### The Three Chains
+
+| Chain | What It Controls |
 |---|---|
-| **INPUT** | Incoming packets destined for this machine |
-| **OUTPUT** | Outgoing packets from this machine |
-| **FORWARD** | Packets being routed through this machine |
+| **INPUT** | Traffic coming INTO your machine |
+| **OUTPUT** | Traffic going OUT from your machine |
+| **FORWARD** | Traffic passing THROUGH your machine (like a router) |
 
-### Common iptables Commands
+### Actions: What to Do With Packets
+
+| Action | What It Does | Use When |
+|---|---|---|
+| \`ACCEPT\` | Let the packet through | You want to allow this traffic |
+| \`DROP\` | Silently discard — no response | You want to hide (attacker gets no feedback) |
+| \`REJECT\` | Discard and send error back | You want to be polite (sender knows it was blocked) |
+| \`LOG\` | Record the packet, then continue | You want to see what is happening |
+
+### View Current Rules
 
 \`\`\`bash
-# View current rules
 sudo iptables -L -n -v
-
-# View rules with line numbers
-sudo iptables -L -n -v --line-numbers
 \`\`\`
 
-**Expected output:**
-\`\`\`
-Chain INPUT (policy ACCEPT 0 packets, 0 bytes)
- pkts bytes target     prot opt in     out     source               destination
-    0     0 ufw-before-iptables-user-  all  --  *      *       0.0.0.0/0            0.0.0.0/0
+This shows all rules in all chains. The \`-n\` flag prevents DNS lookups (faster). The \`-v\` flag shows packet counts.
 
-Chain FORWARD (policy DROP 0 packets, 0 bytes)
- pkts bytes target     prot opt in     out     source               destination
+### Build a Basic Firewall
 
-Chain OUTPUT (policy ACCEPT 0 packets, 0 bytes)
- pkts bytes target     prot opt in     out     source               destination
-\`\`\`
-
-### Basic iptables Rules
+**CRITICAL: Always allow SSH first, or you will lock yourself out.**
 
 \`\`\`bash
-# Allow SSH (don't lock yourself out!)
+# Step 1: Allow SSH (so you can still log in)
 sudo iptables -A INPUT -p tcp --dport 22 -j ACCEPT
 
-# Allow HTTP and HTTPS
+# Step 2: Allow established connections (replies to your requests)
+sudo iptables -A INPUT -m state --state ESTABLISHED,RELATED -j ACCEPT
+
+# Step 3: Allow loopback (local traffic)
+sudo iptables -A INPUT -i lo -j ACCEPT
+
+# Step 4: Allow HTTP and HTTPS (if running a web server)
 sudo iptables -A INPUT -p tcp --dport 80 -j ACCEPT
 sudo iptables -A INPUT -p tcp --dport 443 -j ACCEPT
 
-# Allow established connections
-sudo iptables -A INPUT -m state --state ESTABLISHED,RELATED -j ACCEPT
-
-# Allow loopback (local traffic)
-sudo iptables -A INPUT -i lo -j ACCEPT
-
-# Drop all other incoming traffic
+# Step 5: Drop everything else
 sudo iptables -P INPUT DROP
-
-# Reject with ICMP port unreachable (sends error back)
-sudo iptables -A INPUT -p tcp --dport 3306 -j REJECT
-
-# Block a specific IP
-sudo iptables -A INPUT -s 203.0.113.42 -j DROP
-
-# Log dropped packets
-sudo iptables -A INPUT -j LOG --log-prefix "DROPPED: "
 \`\`\`
 
-### Actions (Targets)
-
-| Target | Behavior |
-|---|---|
-| \`ACCEPT\` | Allow the packet through |
-| \`DROP\` | Silently discard the packet (no response) |
-| \`REJECT\` | Discard and send error response back |
-| \`LOG\` | Log the packet and continue processing |
-| \`MASQUERADE\` | NAT for outgoing traffic |
-
-:::warning
-Always allow SSH (port 22) before setting DROP as the default policy. Otherwise you'll lock yourself out of the server.
+:::danger
+If you set the default policy to DROP before allowing SSH, you will lose access to your own machine. Always add ACCEPT rules first.
 :::
 
-### Saving and Restoring Rules
+### Block a Specific IP
+
+\`\`\`bash
+# Block all traffic from a malicious IP
+sudo iptables -A INPUT -s 203.0.113.42 -j DROP
+
+# Block a specific port from everyone
+sudo iptables -A INPUT -p tcp --dport 3306 -j REJECT
+\`\`\`
+
+### Delete Rules
+
+\`\`\`bash
+# List rules with line numbers
+sudo iptables -L -n -v --line-numbers
+
+# Delete a specific rule by line number
+sudo iptables -D INPUT 3
+
+# Flush all rules (reset — be careful!)
+sudo iptables -F
+\`\`\`
+
+### Save and Restore Rules
+
+Rules are lost on reboot unless you save them:
 
 \`\`\`bash
 # Save current rules
@@ -4724,59 +5304,68 @@ sudo iptables-save > ~/iptables-rules.txt
 
 # Restore rules from file
 sudo iptables-restore < ~/iptables-rules.txt
-
-# Flush all rules (reset to default - be careful!)
-sudo iptables -F
 \`\`\`
 
-### Reading iptables Output
-
-The \`-v\` (verbose) output shows:
-
-| Column | Meaning |
-|---|---|
-| \`pkts\` | Number of packets matched |
-| \`bytes\` | Total bytes matched |
-| \`target\` | Action taken (ACCEPT, DROP, etc.) |
-| \`prot\` | Protocol (tcp, udp, icmp, all) |
-| \`opt\` | IP options |
-| \`in\` | Input interface |
-| \`out\` | Output interface |
-| \`source\` | Source IP/CIDR |
-| \`destination\` | Destination IP/CIDR |
-
-## Step 7: Network Troubleshooting Workflow
+### Try It Yourself
 
 \`\`\`bash
-# 1. Check your own IP
+# View your current rules
+sudo iptables -L -n -v
+
+# Add a rule to block port 8080
+sudo iptables -A INPUT -p tcp --dport 8080 -j DROP
+
+# Verify the rule was added
+sudo iptables -L -n -v
+
+# Delete the rule (use line number from the list)
+sudo iptables -D INPUT <line-number>
+\`\`\`
+
+## Network Troubleshooting Workflow
+
+When something breaks, follow this order. Always start from the bottom and work up.
+
+### Step-by-Step Process
+
+\`\`\`bash
+# 1. Check your own IP — do you have an address?
 ip addr show
 
-# 2. Check you can reach your gateway
+# 2. Check your gateway — can you reach your router?
 ip route show default
 ping -c 2 192.168.1.1
 
-# 3. Check external connectivity
+# 3. Check internet — can you reach the outside world?
 ping -c 2 8.8.8.8
 
-# 4. Check DNS resolution
+# 4. Check DNS — can you resolve domain names?
 dig google.com +short
-nslookup google.com
 
-# 5. Check if a specific port is open on a target
-nc -zv target_ip 80
+# 5. Check the service — is the specific port open?
+curl -s -o /dev/null -w "%{http_code}" http://target
 
-# 6. Check what's listening locally
+# 6. Check local ports — what is listening?
 sudo ss -tlnp
 
-# 7. Check firewall rules
+# 7. Check firewall — is traffic being blocked?
 sudo iptables -L -n -v
-
-# 8. Check network interface errors
-ip -s link show eth0
 \`\`\`
 
+### The Order Matters
+
+| Step | Layer | Question | Tool |
+|---|---|---|---|
+| 1 | Physical/IP | Do I have an address? | \`ip addr\` |
+| 2 | Network | Can I reach my gateway? | \`ping\` |
+| 3 | Network | Can I reach the internet? | \`ping 8.8.8.8\` |
+| 4 | DNS | Can I resolve names? | \`dig\` |
+| 5 | Application | Is the service responding? | \`curl\` |
+| 6 | Local | What is listening? | \`ss\` |
+| 7 | Firewall | Is traffic blocked? | \`iptables\` |
+
 :::tip
-The troubleshooting order is: physical layer → IP layer → DNS → application layer. Always start from the bottom and work up.
+If step 3 works but step 4 fails, you have a DNS problem. If step 2 works but step 3 fails, you have a routing or firewall problem. Work through the layers.
 :::
 
 ## Quick Reference
@@ -4793,13 +5382,14 @@ The troubleshooting order is: physical layer → IP layer → DNS → applicatio
 | Show listening ports | \`ss -tlnp\` |
 | View firewall rules | \`sudo iptables -L -n -v\` |
 | Allow a port | \`sudo iptables -A INPUT -p tcp --dport PORT -j ACCEPT\` |
+| Block an IP | \`sudo iptables -A INPUT -s IP -j DROP\` |
 
 :::checkpoint
-1. What is the difference between ip addr and ifconfig?
-2. What does ping -c 4 do?
-3. What is the difference between dig and nslookup?
-4. When would you use curl vs wget?
-5. What does 'sudo iptables -A INPUT -p tcp --dport 22 -j ACCEPT' do?
+1. What is the difference between \`ip addr\` and \`ip route\`?
+2. What does \`ping -c 4\` do, and what does the output tell you?
+3. Why do security professionals prefer \`dig\` over \`nslookup\`?
+4. What is the difference between \`curl\` and \`wget\`?
+5. What is the difference between DROP and REJECT in iptables?
 :::
 `,
         aiPrompt: "",
